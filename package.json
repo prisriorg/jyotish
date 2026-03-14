@@ -1,0 +1,30 @@
+{
+  "name": "@prisri/jyotish",
+  "version": "1.0.0",
+  "description": "A library for Jyotish (Vedic astrology) calculations.",
+  "keywords": [
+    "Jyotish",
+    "Vedic astrology",
+    "Astrology",
+    "Hindu astrology",
+
+    "Prisri",
+    "Priyansh",
+    "Srivastava"
+  ],
+  "homepage": "https://github.com/prisriorg/jyotish#readme",
+  "bugs": {
+    "url": "https://github.com/prisriorg/jyotish/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/prisriorg/jyotish.git"
+  },
+  "license": "ISC",
+  "author": "Priyansh Srivastava",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  }
+}
