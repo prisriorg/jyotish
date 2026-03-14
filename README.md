@@ -64,7 +64,6 @@ Direct access to underlying calculations like Tithi or Nakshatra is also availab
 
 ```typescript
 import { getAyanamsa, getTithi, getNakshatra } from '@prisri/jyotish';
-import { Body } from 'astronomy-engine';
 
 const date = new Date();
 const ayanamsa = getAyanamsa(date);
