@@ -1751,7 +1751,7 @@ export function getSpecialYoga(vara: number, nakshatraIndex: number): { name: st
     return yogas;
 }
 
-export function calculateVimshottariDasha(moonLon: number, birthDate: Date) {
+export function calculateVimshottariDasha(moonLon: number, birthDate: Date): DashaResult {
     return getVimshottariDasha(moonLon, birthDate);
 }
 

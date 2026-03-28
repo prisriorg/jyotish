@@ -1,6 +1,6 @@
 {
   "name": "@prisri/jyotish",
-  "version": "1.0.4",
+  "version": "1.0.6",
   "description": "A library for Jyotish (Vedic astrology) calculations.",
   "keywords": [
     "Jyotish",
@@ -23,6 +23,7 @@
   "author": "Priyansh Srivastava",
   "type": "commonjs",
   "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "files": [
     "dist"
   ],

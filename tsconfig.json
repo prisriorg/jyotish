@@ -2,6 +2,8 @@
   "compilerOptions": {
     "outDir": "./dist",
     "target": "es2017" /* Set the JavaScript language version for emitted JavaScript and include compatible library declarations. */,
+    "declaration": true /* Generate .d.ts files */,
+    "declarationMap": true /* Generate declaration source maps */,
 
     /* Modules */
     "module": "commonjs" /* Specify what module code is generated. */,

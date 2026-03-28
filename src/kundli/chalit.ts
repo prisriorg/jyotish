@@ -17,45 +17,55 @@ export function getChalitChart(kundli: Kundli): ChalitChart {
 
     // Iterate through all planets and calculate their chalit positions
     for (const [planetName, planetData] of Object.entries(kundli.planets)) {
+        const pLon = planetData.longitude;
+        
         // Find which house this planet falls into
-        const house = kundli.houses.find((h) => {
-            const pLon = planetData.longitude;
+        // Handle the wrap-around case properly (when we cross 0°/360°)
+        let house = kundli.houses.find((h) => {
+            const normalizedStart = h.startLongitude;
+            const normalizedEnd = h.endLongitude === 0 ? 360 : h.endLongitude;
             
-            // Normal case: Start < End (e.g., 30 to 60)
-            if (h.startLongitude < h.endLongitude) {
-                return pLon >= h.startLongitude && pLon < h.endLongitude;
-            }
-            // Wrap case: Start > End (e.g., 330 to 0/360 - Pisces crossing 0)
-            else {
-                return pLon >= h.startLongitude || pLon < h.endLongitude;
+            if (normalizedStart < normalizedEnd) {
+                // Normal case: 30 to 60
+                return pLon >= normalizedStart && pLon < normalizedEnd;
+            } else {
+                // Wrap case: 330 to 360 (treating 0 as 360)
+                return pLon >= normalizedStart || pLon < normalizedEnd;
             }
         });
 
         if (house) {
-            // Calculate degree, minute, second from longitude
-            const degreeDecimal = planetData.longitude % 30;
-            const degrees = Math.floor(degreeDecimal);
-            const minutesDecimal = (degreeDecimal - degrees) * 60;
+            // Calculate degree, minute, second within the Rashi (sign)
+            const rashiIndex = Math.floor(pLon / 30);
+            const degreeInRashi = pLon - (rashiIndex * 30); // 0-30°
+            const degrees = Math.floor(degreeInRashi);
+            const minutesDecimal = (degreeInRashi - degrees) * 60;
             const minutes = Math.floor(minutesDecimal);
             const seconds = Math.round((minutesDecimal - minutes) * 60);
 
-            // Calculate position within the house
-            let housePositionLon = planetData.longitude - house.startLongitude;
+            // Calculate position within the house (0-30° degrees)
+            const normalizedEnd = house.endLongitude === 0 ? 360 : house.endLongitude;
+            let housePositionLon = pLon - house.startLongitude;
+            
+            // Handle wrap-around for house position
             if (housePositionLon < 0) {
                 housePositionLon += 360;
+            }
+            if (housePositionLon >= 30) {
+                // Should not happen if house finding is correct, but safety check
+                housePositionLon = housePositionLon % 30;
             }
 
             const housePositionDegree = Math.floor(housePositionLon);
             const housePositionMinutesDecimal = (housePositionLon - housePositionDegree) * 60;
             const housePositionMinute = Math.floor(housePositionMinutesDecimal);
 
-            // Get rashi information
-            const rashiIndex = Math.floor(planetData.longitude / 30);
+            // Get rashi information (0-11)
             const rashiname = rashiNames[rashiIndex];
 
             const chalitPlanet: ChalitPlanet = {
                 name: planetName,
-                longitude: planetData.longitude,
+                longitude: pLon,
                 degree: degrees,
                 minute: minutes,
                 second: seconds,
