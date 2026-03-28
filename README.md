@@ -11,6 +11,7 @@ npm install @prisri/jyotish
 ## Features
 
 - **Kundli (Birth Chart)**: Generate detailed Ascendant (Lagna), planetary positions, houses, Vimshottari Dasha, and divisional charts (Vargas D1 to D60).
+- **Chalit Chart**: Calculate exact planetary positions within houses for precise placement analysis.
 - **Panchangam**: Calculate core elements like Tithi, Nakshatra, Yoga, Karana, and Vara.
 - **Match Making**: Ashtakoota Guna Milan for marriage compatibility.
 - **Festivals**: Determine Vedic festivals and fasting days (Ekadashi) accurately based on Tithis.
@@ -72,13 +73,45 @@ const ayanamsa = getAyanamsa(date);
 // Add specific observer/location data depending on your required precision and helper outputs
 ```
 
+### 4. Chalit Chart (Sphuta Chart)
+
+Generate a Chalit Chart to see the exact positions of planets within their houses. The Chalit Chart shows how many degrees/minutes into each house a planet is positioned, providing precise placement analysis.
+
+```typescript
+import { getKundli, getChalitChart, formatChalitChart, getPlanetChalitInfo, getPlanetsInHouse, Observer } from '@prisri/jyotish';
+
+// First, generate the Kundli
+const date = new Date('1990-01-01T10:00:00Z');
+const observer = new Observer(28.6139, 77.2090, 0); // New Delhi
+const kundli = getKundli(date, observer);
+
+// Get the Chalit Chart
+const chalitChart = getChalitChart(kundli);
+
+// Format and display the entire Chalit Chart
+console.log(formatChalitChart(chalitChart));
+
+// Get specific planet's Chalit information
+const sunChalit = getPlanetChalitInfo(chalitChart, 'Sun');
+console.log('Sun in house:', sunChalit?.house);
+console.log('Sun degrees into house:', sunChalit?.housePositionDegree);
+
+// Get all planets in a specific house
+const house6Planets = getPlanetsInHouse(chalitChart, 6);
+console.log('Planets in 6th house:', house6Planets);
+
+// Get planet's progression into its house
+const moonProgress = getPlanetHouseProgress(chalitChart, 'Moon');
+console.log('Moon has progressed', moonProgress?.percentage, '% into house', moonProgress?.house);
+```
+
 ## API Overview
 
 The library encompasses the following broad modules:
 
 - `core/calculations`: Fundamentals like planetary positions, nodes (Rahu/Ketu), Udaya Lagna, Tithi, Nakshatra.
 - `core/ayanamsa`: Calculates the sidereal offset (Ayanamsa) using standard astrological models.
-- `kundli`: Logic for generating and building a full birth chart structure (`getKundli()`), Vargas, and Houses.
+- `kundli`: Logic for generating and building a full birth chart structure (`getKundli()`), Vargas, Houses, and Chalit Chart.
 - `matching`: Logic for calculating Ashtakoota compatibility between individuals.
 - `core/muhurta`: Contains logic for determining auspicious/inauspicious times and specific astrological indicators (Sade Sati, Tarabalam, etc.).
 

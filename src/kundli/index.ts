@@ -16,6 +16,13 @@ import { getHouses } from "./houses";
 import { getAllVargas } from "./vargas";
 import { Kundli, KundliConfig, Bhava } from "./types";
 import { RASHI_LORDS } from "../matching/constants";
+import {
+  getChalitChart,
+  formatChalitChart,
+  getPlanetChalitInfo,
+  getPlanetsInHouse,
+  getPlanetHouseProgress,
+} from "./chalit";
 
 /**
  * Generates a Janam Kundli (Birth Chart) for a given date and location.
@@ -217,3 +224,6 @@ export const getExactAge = (birthDate: Date): AgeResult => {
     totalSeconds: Math.floor(diffMs / 1000),
   }
 }
+
+// Export Chalit Chart functions
+export { getChalitChart, formatChalitChart, getPlanetChalitInfo, getPlanetsInHouse, getPlanetHouseProgress };

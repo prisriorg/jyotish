@@ -76,3 +76,43 @@ export interface VargaChart {
     }>;
     houses: Bhava[];
 }
+
+/**
+ * Represents a planet's position in the Chalit Chart.
+ * Shows the exact position of a planet within its house.
+ */
+export interface ChalitPlanet {
+    name: string;                  // Planet name (e.g., "Sun", "Moon")
+    longitude: number;             // Exact longitude (0-360)
+    degree: number;                // Degrees within the rashi (0-29)
+    minute: number;                // Minutes (0-59)
+    second: number;                // Seconds (0-59)
+    house: number;                 // House number (1-12)
+    housePosition: number;          // Position within the house (0-30 degrees)
+    housePositionDegree: number;    // Degrees into the house
+    housePositionMinute: number;    // Minutes into the house
+    rashi: number;                  // Rashi number (0-11)
+    rashiName: string;              // Rashi name
+    isRetrograde?: boolean;         // Is planet retrograde
+    isCombust?: boolean;            // Is planet combust
+}
+
+/**
+ * Represents the complete Chalit Chart (Sphuta Chart).
+ * Shows the exact positions of planets within their houses.
+ */
+export interface ChalitChart {
+    ascendant: {
+        rashi: number;
+        rashiName: string;
+        longitude: number;
+    };
+    planets: ChalitPlanet[];
+    housesCusps: {
+        houseNumber: number;
+        startLongitude: number;
+        endLongitude: number;
+        rashi: number;
+        rashiName: string;
+    }[];
+}
