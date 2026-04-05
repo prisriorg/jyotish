@@ -19,6 +19,7 @@ import {
 import { getFestivals } from "./festivals";
 import { calculateChoghadiya } from "./muhurta/choghadiya";
 import { calculateGowriPanchangam } from "./muhurta/gowri";
+import { ayanaNames, nakshatraLords, nakshatraNames, tithiNames, varjyamStartGhatis, yogaNames } from "./constants";
 
 /**
  * Validates inputs for getPanchangam / getPanchangamDetails.
@@ -228,13 +229,19 @@ export function getPanchangam(date: Date, observer: Observer, options?: Panchang
     varjyam.sort(sortByStart);
 
     return {
-        tithi,
-        nakshatra: getNakshatra(moonLon),
+        tithi: tithi + 1,
+        tithiName: tithiNames[tithi],
+        nakshatra: getNakshatra(moonLon) + 1,
+        nakshatraName: nakshatraNames[getNakshatra(moonLon)],
+        nakshatraLord: nakshatraLords[nakshatraNames[getNakshatra(moonLon)]],
         yoga: getYoga(sunLon, moonLon),
+        yogaName: yogaNames[getYoga(sunLon, moonLon)],
         karana: getKarana(sunLon, moonLon),
 
-        vara,
-        ayanamsa,
+        vara:vara+1,
+        varaName: "" ,
+        ayanamsa: ayanamsa,
+        ayanamsaName: ayanaNames[ayanamsa],
         sunrise,
         sunset,
         moonrise,
@@ -314,7 +321,8 @@ export function getPanchangam(date: Date, observer: Observer, options?: Panchang
         masa,
         paksha,
         ritu,
-        ayana,
+        ayana:ayana+1,
+        ayanaName: ayanaNames[ayana],
         samvat
     };
 }

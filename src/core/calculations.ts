@@ -1046,7 +1046,7 @@ export function getPaksha(tithi: number): string {
     return (tithi >= 0 && tithi <= 14) ? pakshaNames[0] : pakshaNames[1];
 }
 
-export function getAyana(sunLon: number): string {
+export function getAyana(sunLon: number): number {
     // Sun tropical longitude.
     // 0-90: Uttarayana (Spring)
     // 90-180: Dakshinayana (Summer) 
@@ -1056,9 +1056,9 @@ export function getAyana(sunLon: number): string {
     // 90 -> 180 -> 270 is Dakshinayana.
 
     if (sunLon >= 90 && sunLon < 270) {
-        return ayanaNames[1]; // Dakshinayana
+        return 1; // Dakshinayana
     } else {
-        return ayanaNames[0]; // Uttarayana
+        return 0; // Uttarayana
     }
 }
 

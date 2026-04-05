@@ -107,11 +107,17 @@ export interface PanchangamOptions {
 
 export interface Panchangam {
     tithi: number;
+    tithiName: string;
     nakshatra: number;
+    nakshatraName:string;
+    nakshatraLord: string;
     yoga: number;
+    yogaName: string;
     karana: string;
     vara: number;
-    ayanamsa: number; // The Ayanamsa value used (Lahiri)
+    varaName: string;
+    ayanamsa: number;
+    ayanamsaName: string;
     sunrise: Date | null;
     sunset: Date | null;
     moonrise: Date | null;
@@ -199,7 +205,8 @@ export interface Panchangam {
     };
     paksha: string;         // Shukla or Krishna
     ritu: string;           // Vasant, Grishma, etc.
-    ayana: string;          // Uttarayana or Dakshinayana
+    ayana: number;          // 1 or 2 (Dakshinayana or Uttarayana)
+    ayanaName: string;     // Name of the Ayana (Uttarayana or Dakshinayana)
     samvat: {
         vikram: number;     // Vikram Samvat Year
         shaka: number;      // Shaka Samvat Year
