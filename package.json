@@ -1,6 +1,6 @@
 {
   "name": "@prisri/jyotish",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "A library for Jyotish (Vedic astrology) calculations.",
   "keywords": [
     "Jyotish",
@@ -30,7 +30,7 @@
   "scripts": {
     "build": "tsc",
     "prepublishOnly": "npm run build",
-    "publish": "npm publish --access public"
+    "release": "npm publish --access public"
   },
   "publishConfig": {
     "registry": "https://registry.npmjs.org/",
