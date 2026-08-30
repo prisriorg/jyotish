@@ -23,6 +23,17 @@ import {
   getPlanetsInHouse,
   getPlanetHouseProgress,
 } from "./chalit";
+import {
+  getKpChart,
+  formatKpChart,
+  getKpPlanetInfo,
+  getPlanetsInKpHouse,
+  getKpCuspInfo,
+  getKpSignificators,
+  getKpRulingPlanets,
+} from "./kp";
+
+export * from "./kp-types";
 
 /**
  * Generates a Janam Kundli (Birth Chart) for a given date and location.
@@ -36,7 +47,7 @@ export function getKundli(
   observer: Observer,
   config: KundliConfig = {},
 ): Kundli {
-  const ayanamsa = getAyanamsa(date);
+  const ayanamsa = getAyanamsa(date, config.ayanamsa || "lahiri");
 
   // 1. Calculate Ascendant (Lagna)
   const lagnaLon = getUdayaLagna(date, observer, ayanamsa);
@@ -135,8 +146,7 @@ export function getKundli(
   // 6. Calculate Vargas (D1-D12)
   const vargas = getAllVargas(lagnaLon, planets);
 
-
-  return {
+  const kundliResult: Kundli = {
     birthDetails: {
       date: date.toLocaleDateString("en-IN", {
         timeZone: "Asia/Kolkata",
@@ -147,7 +157,7 @@ export function getKundli(
       lat: observer.latitude,
       lon: observer.longitude,
       timezone: date.getTimezoneOffset(),
-      age: getExactAge(date)
+      age: getExactAge(date),
     },
     ascendant,
     planets,
@@ -155,60 +165,71 @@ export function getKundli(
     dasha,
     vargas,
   };
-}
 
+  if (config.includeChalit) {
+    kundliResult.chalit = getChalitChart(kundliResult);
+  }
+
+  if (config.includeKp) {
+    kundliResult.kp = getKpChart(date, observer, {
+      ayanamsa: config.ayanamsa === "kp" ? "kp" : undefined,
+    });
+  }
+
+  return kundliResult;
+}
 
 type AgeResult = {
-  years: number
-  months: number
-  days: number
-  hours: number
-  minutes: number
-  seconds: number
-  totalMonths: number
-  totalDays: number
-  totalHours: number
-  totalMinutes: number
-  totalSeconds: number
-}
+  years: number;
+  months: number;
+  days: number;
+  hours: number;
+  minutes: number;
+  seconds: number;
+  totalMonths: number;
+  totalDays: number;
+  totalHours: number;
+  totalMinutes: number;
+  totalSeconds: number;
+};
 
 export const getExactAge = (birthDate: Date): AgeResult => {
-  const now = new Date()
+  const now = new Date();
 
-  let years = now.getFullYear() - birthDate.getFullYear()
-  let months = now.getMonth() - birthDate.getMonth()
-  let days = now.getDate() - birthDate.getDate()
-  let hours = now.getHours() - birthDate.getHours()
-  let minutes = now.getMinutes() - birthDate.getMinutes()
-  let seconds = now.getSeconds() - birthDate.getSeconds()
+  let years = now.getFullYear() - birthDate.getFullYear();
+  let months = now.getMonth() - birthDate.getMonth();
+  let days = now.getDate() - birthDate.getDate();
+  let hours = now.getHours() - birthDate.getHours();
+  let minutes = now.getMinutes() - birthDate.getMinutes();
+  let seconds = now.getSeconds() - birthDate.getSeconds();
 
   if (seconds < 0) {
-    seconds += 60
-    minutes--
+    seconds += 60;
+    minutes--;
   }
 
   if (minutes < 0) {
-    minutes += 60
-    hours--
+    minutes += 60;
+    hours--;
   }
 
   if (hours < 0) {
-    hours += 24
-    days--
+    hours += 24;
+    days--;
   }
 
   if (days < 0) {
-    const prevMonth = new Date(now.getFullYear(), now.getMonth(), 0)
-    days += prevMonth.getDate()
-    months--
+    const prevMonth = new Date(now.getFullYear(), now.getMonth(), 0);
+    days += prevMonth.getDate();
+    months--;
   }
 
   if (months < 0) {
-    months += 12
-    years--
+    months += 12;
+    years--;
   }
 
-  const diffMs = now.getTime() - birthDate.getTime()
+  const diffMs = now.getTime() - birthDate.getTime();
 
   return {
     years,
@@ -222,8 +243,25 @@ export const getExactAge = (birthDate: Date): AgeResult => {
     totalHours: Math.floor(diffMs / (1000 * 60 * 60)),
     totalMinutes: Math.floor(diffMs / (1000 * 60)),
     totalSeconds: Math.floor(diffMs / 1000),
-  }
-}
+  };
+};
 
 // Export Chalit Chart functions
-export { getChalitChart, formatChalitChart, getPlanetChalitInfo, getPlanetsInHouse, getPlanetHouseProgress };
+export {
+  getChalitChart,
+  formatChalitChart,
+  getPlanetChalitInfo,
+  getPlanetsInHouse,
+  getPlanetHouseProgress,
+};
+
+// Export KP Chart functions
+export {
+  getKpChart,
+  formatKpChart,
+  getKpPlanetInfo,
+  getPlanetsInKpHouse,
+  getKpCuspInfo,
+  getKpSignificators,
+  getKpRulingPlanets,
+};

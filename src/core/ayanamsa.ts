@@ -1,4 +1,6 @@
-export function getAyanamsa(date: Date): number {
+export type AyanamsaType = 'lahiri' | 'raman' | 'kp';
+
+export function getAyanamsa(date: Date, type: AyanamsaType = 'lahiri'): number {
     // Julian Day Calculation
     // We can use astronomy-engine's utilities if exposed, or implement standard formula
     // Using a high precision formula for Lahiri Ayanamsa (Chitra Paksha)
@@ -18,7 +20,21 @@ export function getAyanamsa(date: Date): number {
     const offsetSeconds = 5029.0966 * T + 1.11161 * T * T;
     const initialAyanamsaSeconds = (23 * 3600) + (51 * 60) + 25.532;
 
-    const ayanamsaSeconds = initialAyanamsaSeconds + offsetSeconds;
+    const lahiriSeconds = initialAyanamsaSeconds + offsetSeconds;
+    const lahiriAyanamsa = lahiriSeconds / 3600;
 
-    return ayanamsaSeconds / 3600;
+    if (type === 'kp') {
+        // KP (Krishnamurti) Ayanamsa is approx 5' 54" (354 arcsec) less than Lahiri
+        const kpOffsetSeconds = 354.0;
+        return (lahiriSeconds - kpOffsetSeconds) / 3600;
+    }
+
+    if (type === 'raman') {
+        // Raman Ayanamsa is approx 1° 26' 47" (5207 arcsec) less than Lahiri
+        const ramanOffsetSeconds = 5207.0;
+        return (lahiriSeconds - ramanOffsetSeconds) / 3600;
+    }
+
+    return lahiriAyanamsa;
 }
+

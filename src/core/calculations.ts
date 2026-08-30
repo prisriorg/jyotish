@@ -1755,4 +1755,151 @@ export function calculateVimshottariDasha(moonLon: number, birthDate: Date): Das
     return getVimshottariDasha(moonLon, birthDate);
 }
 
+/**
+ * Calculates the Midheaven (MC / Dasham Bhava Madhya) for a given date, observer, and ayanamsa.
+ * 
+ * @param date Observation date/time
+ * @param observer Geographic location
+ * @param ayanamsa Sidereal ayanamsa in degrees
+ * @returns Sidereal longitude of the Midheaven (0-360 degrees)
+ */
+export function getMidheaven(date: Date, observer: Observer, ayanamsa: number): number {
+    const gmst = SiderealTime(date);
+    const lmstHours = gmst + (observer.longitude / 15.0);
+    const lmstNorm = ((lmstHours % 24) + 24) % 24;
+    const ramc = lmstNorm * 15.0; // Convert to degrees
+
+    const time = MakeTime(date);
+    const oblInfo = e_tilt(time);
+    const eps = oblInfo.tobl; // True Obliquity in degrees
+
+    const rad = (d: number) => (d * Math.PI) / 180;
+    const deg = (r: number) => (r * 180) / Math.PI;
+
+    const theta = rad(ramc);
+    const epsilon = rad(eps);
+
+    let tropicalMC = deg(Math.atan2(Math.sin(theta), Math.cos(theta) * Math.cos(epsilon)));
+    if (tropicalMC < 0) tropicalMC += 360;
+
+    const siderealMC = (tropicalMC - ayanamsa + 360) % 360;
+    return siderealMC;
+}
+
+export interface KpSubLordDetails {
+    longitude: number;
+    rashiIndex: number;
+    rashiName: string;
+    rashiLord: string;
+    degreeInRashi: number;
+    nakshatraIndex: number;
+    nakshatraName: string;
+    nakshatraLord: string;
+    pada: number;
+    subLord: string;
+    subSubLord: string;
+    subSpan: { start: number; end: number; duration: number };
+    subSubSpan: { start: number; end: number; duration: number };
+}
+
+/**
+ * Calculates the KP 4-fold planetary rulers (Sign Lord, Star Lord, Sub Lord, Sub-Sub Lord)
+ * for any given sidereal longitude according to the standard Krishnamurti Paddhati system.
+ * 
+ * @param longitude Sidereal longitude in degrees (0-360)
+ * @returns KpSubLordDetails with Sign, Nakshatra, Sub, and Sub-Sub rulers
+ */
+export function getKpSubLordDetails(longitude: number): KpSubLordDetails {
+    const normLon = ((longitude % 360) + 360) % 360;
+    const rashiIndex = Math.floor(normLon / 30);
+    const rashiName = rashiNames[rashiIndex];
+    const rashiLord = RASHI_LORDS[rashiIndex];
+    const degreeInRashi = normLon - rashiIndex * 30;
+
+    const nakshatraSpan = 13 + 1 / 3; // 13° 20' = 13.333333333°
+    const nakshatraIndex = Math.floor(normLon / nakshatraSpan);
+    const nakshatraName = nakshatraNames[nakshatraIndex];
+    const nakshatraLord = vimshottariLords[nakshatraIndex % 9];
+    const pada = Math.floor((normLon % nakshatraSpan) / (nakshatraSpan / 4)) + 1;
+
+    const nakshatraStart = nakshatraIndex * nakshatraSpan;
+    const offsetInNak = normLon - nakshatraStart;
+
+    // Sub-Lord calculation: Nakshatra is divided into 9 unequal parts
+    // proportional to Vimshottari Dasha years (total 120 years),
+    // beginning with the Star Lord itself.
+    const startLordIdx = nakshatraIndex % 9;
+    let accumulatedSub = 0;
+    let chosenSubLord = nakshatraLord;
+    let subStartDeg = 0;
+    let subEndDeg = 0;
+    let subDuration = 0;
+
+    for (let i = 0; i < 9; i++) {
+        const currentLordIdx = (startLordIdx + i) % 9;
+        const lordYears = vimshottariDurations[currentLordIdx];
+        const span = (lordYears / 120) * nakshatraSpan;
+
+        const nextSubAccum = accumulatedSub + span;
+        if (offsetInNak >= accumulatedSub && (offsetInNak < nextSubAccum || i === 8)) {
+            chosenSubLord = vimshottariLords[currentLordIdx];
+            subStartDeg = nakshatraStart + accumulatedSub;
+            subEndDeg = nakshatraStart + nextSubAccum;
+            subDuration = span;
+            break;
+        }
+        accumulatedSub = nextSubAccum;
+    }
+
+    // Sub-Sub Lord calculation: Sub-span is further divided into 9 parts
+    // proportional to Vimshottari Dasha years, beginning with the Sub Lord itself.
+    const chosenSubLordIdx = vimshottariLords.indexOf(chosenSubLord);
+    const offsetInSub = normLon - subStartDeg;
+    let accumulatedSubSub = 0;
+    let chosenSubSubLord = chosenSubLord;
+    let subSubStartDeg = 0;
+    let subSubEndDeg = 0;
+    let subSubDuration = 0;
+
+    for (let j = 0; j < 9; j++) {
+        const currentSubSubLordIdx = (chosenSubLordIdx + j) % 9;
+        const lordYears = vimshottariDurations[currentSubSubLordIdx];
+        const span = (lordYears / 120) * subDuration;
+
+        const nextSubSubAccum = accumulatedSubSub + span;
+        if (offsetInSub >= accumulatedSubSub && (offsetInSub < nextSubSubAccum || j === 8)) {
+            chosenSubSubLord = vimshottariLords[currentSubSubLordIdx];
+            subSubStartDeg = subStartDeg + accumulatedSubSub;
+            subSubEndDeg = subStartDeg + nextSubSubAccum;
+            subSubDuration = span;
+            break;
+        }
+        accumulatedSubSub = nextSubSubAccum;
+    }
+
+    return {
+        longitude: normLon,
+        rashiIndex,
+        rashiName,
+        rashiLord,
+        degreeInRashi,
+        nakshatraIndex,
+        nakshatraName,
+        nakshatraLord,
+        pada,
+        subLord: chosenSubLord,
+        subSubLord: chosenSubSubLord,
+        subSpan: {
+            start: subStartDeg,
+            end: subEndDeg,
+            duration: subDuration
+        },
+        subSubSpan: {
+            start: subSubStartDeg,
+            end: subSubEndDeg,
+            duration: subSubDuration
+        }
+    };
+}
+
 
