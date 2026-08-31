@@ -341,6 +341,93 @@ export function getMarriagePrediction(kundli: Kundli): MarriagePrediction {
   relationshipAdvice.push("Match horoscopes (Kundli Milan) with emphasis on Nadi and Bhakoot kootas before finalizing marriage.");
   relationshipAdvice.push("Marriage after age 25 brings greater emotional maturity and financial stability.");
 
+  // --- Spouse Age Difference (+ / - Age Gap) Calculation ---
+  let ageWeight = 0;
+  const ageReasons: string[] = [];
+
+  if (planetsIn7.includes("Saturn")) {
+    ageWeight += 3;
+    ageReasons.push("Saturn in 7th House: Strong classical indicator of a mature spouse or notable age difference (+2 to +5 years).");
+  }
+  if (saturnHouse === 5 && house7?.number === 7) {
+    ageWeight += 1.5;
+    ageReasons.push("Saturn aspecting 7th House: Imparts seriousness, emotional stability, and mature demeanor to spouse.");
+  }
+  if (lord7 === "Saturn") {
+    ageWeight += 2;
+    ageReasons.push("7th Lord is Saturn: Partner tends to be older or carries higher professional and emotional maturity.");
+  }
+
+  if (planetsIn7.includes("Mercury")) {
+    ageWeight -= 2.5;
+    ageReasons.push("Mercury in 7th House: Mercury (Kumar) indicates a younger partner with youthful, lively demeanor.");
+  }
+  if (lord7 === "Mercury") {
+    ageWeight -= 2;
+    ageReasons.push("7th Lord is Mercury: High likelihood of spouse being 2 to 4 years younger.");
+  }
+
+  if (planetsIn7.includes("Venus")) {
+    ageWeight -= 1;
+    ageReasons.push("Venus in 7th House: Indicates peer age or slightly younger spouse (within 1 to 2 years).");
+  }
+  if (planetsIn7.includes("Moon")) {
+    ageWeight -= 1;
+    ageReasons.push("Moon in 7th House: Emotional peer age or 1 to 2 years younger.");
+  }
+  if (planetsIn7.includes("Jupiter")) {
+    ageWeight += 1;
+    ageReasons.push("Jupiter in 7th House: Well-balanced maturity, dignified wisdom, and traditional gap.");
+  }
+  if (planetsIn7.includes("Rahu")) {
+    ageReasons.push("Rahu in 7th House: Unconventional age difference (can create wider gap outside standard norms).");
+  }
+
+  let relativeAge: MarriagePrediction["spouseAgeDifference"]["relativeAge"] = "Similar Age (Peer)";
+  let estimatedDifferenceYears = "-1 to -3 years younger";
+  let minGapYears = 1;
+  let maxGapYears = 3;
+  let partnerIsOlder = false;
+
+  if (planetsIn7.includes("Saturn") || (lord7 === "Saturn" && planetsIn7.includes("Rahu"))) {
+    relativeAge = "Older";
+    partnerIsOlder = true;
+    minGapYears = 1;
+    maxGapYears = 4;
+    estimatedDifferenceYears = "+1 to +4 years older (or notable age gap / career seniority)";
+  } else if (planetsIn7.includes("Mercury") || lord7 === "Mercury") {
+    relativeAge = "Younger";
+    partnerIsOlder = false;
+    minGapYears = 2;
+    maxGapYears = 4;
+    estimatedDifferenceYears = "-2 to -4 years younger (youthful persona)";
+  } else if (ageWeight > 1) {
+    relativeAge = "Similar Age (Peer)";
+    partnerIsOlder = false;
+    minGapYears = 0;
+    maxGapYears = 2;
+    estimatedDifferenceYears = "Similar age (0 to -2 years younger / peer age with high mental maturity & wisdom)";
+  } else {
+    relativeAge = "Younger";
+    partnerIsOlder = false;
+    minGapYears = 1;
+    maxGapYears = 3;
+    estimatedDifferenceYears = "-1 to -3 years younger";
+  }
+
+  const ageReason = ageReasons.length > 0
+    ? ageReasons.join(" ")
+    : "Influences of 7th house and its rulers indicate standard contemporary age difference.";
+
+  const spouseAgeDifference: MarriagePrediction["spouseAgeDifference"] = {
+    relativeAge,
+    estimatedDifferenceYears,
+    minGapYears,
+    maxGapYears,
+    partnerIsOlder,
+    reason: ageReason,
+  };
+
   return {
     maritalHarmonyRating,
     favorableAgeRange,
@@ -354,6 +441,7 @@ export function getMarriagePrediction(kundli: Kundli): MarriagePrediction {
     },
     marriageType,
     mangalDosha,
+    spouseAgeDifference,
     relationshipAdvice,
   };
 }

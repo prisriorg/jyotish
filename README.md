@@ -406,6 +406,7 @@ const marriage = getMarriagePrediction(kundli);
 console.log('Marriage Type:', marriage.marriageType.recommendation);
 console.log(`Love: ${marriage.marriageType.loveScore}/100 | Arranged: ${marriage.marriageType.arrangedScore}/100`);
 console.log('Intercaste Likely:', marriage.marriageType.isIntercasteLikely, `(${marriage.marriageType.intercasteProbability}%)`);
+console.log('Spouse Age Gap:', marriage.spouseAgeDifference.relativeAge, `(${marriage.spouseAgeDifference.estimatedDifferenceYears})`);
 console.log('Predicted Timing Years:', marriage.predictedTimingYears);
 console.log('Partner Nature:', marriage.partnerCharacteristics.nature);
 

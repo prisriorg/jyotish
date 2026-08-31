@@ -58,6 +58,14 @@ export interface MarriagePrediction {
     isCancelled: boolean;
     description: string;
   };
+  spouseAgeDifference: {
+    relativeAge: 'Younger' | 'Older' | 'Similar Age (Peer)';
+    estimatedDifferenceYears: string;
+    minGapYears: number;
+    maxGapYears: number;
+    partnerIsOlder: boolean;
+    reason: string;
+  };
   relationshipAdvice: string[];
 }
 
