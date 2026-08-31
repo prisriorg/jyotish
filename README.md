@@ -23,6 +23,7 @@ A high-performance, developer-friendly TypeScript/JavaScript library for **Jyoti
   - [7. Complete Panchangam & Muhurta](#7-complete-panchangam--muhurta)
   - [8. Transits, Sade Sati & Daily Strengths](#8-transits-sade-sati--daily-strengths)
   - [9. Festivals & Ekadashis](#9-festivals--ekadashis)
+  - [10. Life Predictions & Guidance (Career, Wealth, Marriage, Remedies)](#10-life-predictions--guidance-career-wealth-marriage-remedies)
 - [Configuration Options](#-configuration-options)
 - [TypeScript Types Reference](#-typescript-types-reference)
 - [License](#-license)
@@ -370,6 +371,55 @@ console.log('Ekadashi:', ekadashi); // e.g. "Prabodhini / Devutthana Ekadashi"
 
 ---
 
+### 10. Life Predictions & Guidance (Career, Wealth, Marriage, Remedies)
+
+Deterministic classical Vedic rules engines that evaluate D1, D9, D10, Ashtakavarga house balances, and Vimshottari Dashas to produce structured insights and complete formatted Markdown reports:
+
+```typescript
+import { 
+  getKundli, 
+  getCareerPrediction, 
+  getWealthPrediction, 
+  getMarriagePrediction, 
+  getRemedies, 
+  getComprehensiveReport,
+  Observer 
+} from '@prisri/jyotish';
+
+const kundli = getKundli(new Date('2004-02-20T07:15:00+05:30'), new Observer(25.872, 82.685, 0));
+
+// 1. Career: Job vs Business, Suitable Fields, Leadership Level
+const career = getCareerPrediction(kundli);
+console.log('Recommendation:', career.recommendation);
+console.log(`Scores -> Business: ${career.businessScore}/100 | Job: ${career.jobScore}/100`);
+console.log('Suitable Fields:', career.suitableFields);
+console.log('Leadership Capacity:', career.leadershipCapacity);
+
+// 2. Wealth: Dhana Yogas, Income Potential, SAV Surplus Ratio
+const wealth = getWealthPrediction(kundli);
+console.log('Wealth Rating:', wealth.wealthRating);
+console.log('Active Dhana Yogas:', wealth.dhanaYogas.map(y => y.name));
+console.log(`Gains vs Expenses (SAV Surplus): +${wealth.savMetrics.surplusRatio} bindus`);
+
+// 3. Marriage: Timing Years, Partner Nature, Mangal Dosha
+const marriage = getMarriagePrediction(kundli);
+console.log('Harmony Rating:', marriage.maritalHarmonyRating);
+console.log('Predicted Timing Years:', marriage.predictedTimingYears);
+console.log('Partner Nature:', marriage.partnerCharacteristics.nature);
+
+// 4. Actionable Remedies & Weakness Rectification
+const remedies = getRemedies(kundli);
+console.log('Weak Houses Identified:', remedies.weakHousesIdentified);
+console.log('Practical Do\'s & Don\'ts:', remedies.practicalDoAndDonts[0]);
+console.log('Recommended Mantras:', remedies.mantras.map(m => `${m.deity}: ${m.mantra}`));
+
+// 5. Complete Life Report (Structured JSON + Markdown)
+const report = getComprehensiveReport(kundli);
+console.log(report.formattedMarkdown); // Full formatted Markdown reading!
+```
+
+---
+
 ## ⚙️ Configuration Options
 
 ### Ayanamsa Systems
@@ -419,7 +469,12 @@ import type {
   KootaResult,
   TarabalamInfo,
   ChandrashtamaInfo,
-  DishaShoola
+  DishaShoola,
+  CareerPrediction,
+  WealthPrediction,
+  MarriagePrediction,
+  RemediesPrediction,
+  ComprehensiveReport
 } from '@prisri/jyotish';
 ```
 

@@ -65,14 +65,23 @@ export interface DashaInfo {
     fractionLeft: number;
 }
 
+export interface DashaPeriodInfo {
+    planet: string;
+    startTime: Date;
+    endTime: Date;
+    durationYears?: number;
+    progressPercent?: number;
+    antars?: DashaPeriodInfo[];
+    pratyantars?: DashaPeriodInfo[];
+}
+
 export interface DashaResult {
     birthNakshatra: string;
     nakshatraPada: number;
-    mahadashas: Array<{
-        planet: string;
-        startTime: Date;
-        endTime: Date;
-    }>;
+    mahadashas: DashaPeriodInfo[];
+    currentMahadasha?: any;
+    currentAntar?: any;
+    currentPratyantar?: any;
 }
 
 export interface PlanetaryPosition {
