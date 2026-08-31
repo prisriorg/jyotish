@@ -33,6 +33,12 @@ import {
   getKpRulingPlanets,
 } from "./kp";
 
+import { getGrahaDrishti } from "./drishti";
+import { getAshtakavarga } from "../ashtakavarga";
+export { getGrahaDrishti } from "./drishti";
+export { getAshtakavarga } from "../ashtakavarga";
+export * from "./drishti";
+export * from "../ashtakavarga";
 export * from "./kp-types";
 
 /**
@@ -114,7 +120,7 @@ export function getKundli(
   // Default to 'whole_sign' if not specified
   // Explicitly cast or handle default for compiler safety
   const houseSystem = config.houseSystem || "whole_sign";
-  const houses = getHouses(lagnaLon, houseSystem);
+  const houses = getHouses(lagnaLon, houseSystem, date, observer, ayanamsa);
 
   // 4. Map Planets to Houses
   // Iterate through planets and find which house they fall into
@@ -154,6 +160,7 @@ export function getKundli(
       time: date.toLocaleTimeString("en-IN", {
         timeZone: "Asia/Kolkata",
       }),
+      rawDate: date,
       lat: observer.latitude,
       lon: observer.longitude,
       timezone: date.getTimezoneOffset(),
@@ -165,6 +172,12 @@ export function getKundli(
     dasha,
     vargas,
   };
+
+  // Calculate Graha Drishti (Planetary Aspects)
+  kundliResult.drishti = getGrahaDrishti(kundliResult);
+
+  // Calculate Ashtakavarga (BAV & SAV)
+  kundliResult.ashtakavarga = getAshtakavarga(kundliResult);
 
   if (config.includeChalit) {
     kundliResult.chalit = getChalitChart(kundliResult);

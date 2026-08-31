@@ -31,6 +31,11 @@ export interface KundliConfig {
 /**
  * The complete Janam Kundli (Horoscope) object.
  */
+import { DrishtiResult } from './drishti';
+import { AshtakavargaResult } from '../ashtakavarga';
+export * from './drishti';
+export * from '../ashtakavarga';
+
 export interface Kundli {
     // Basic Details
     birthDetails: {
@@ -39,6 +44,7 @@ export interface Kundli {
         lat: number;
         lon: number;
         timezone: number; // Offset in minutes
+        rawDate?: Date;
         age: {
             years: number;
             months: number;
@@ -77,6 +83,8 @@ export interface Kundli {
     vargas?: Record<string, VargaChart>;
     chalit?: ChalitChart;
     kp?: KpChart;
+    drishti?: DrishtiResult;
+    ashtakavarga?: AshtakavargaResult;
 }
 
 export interface VargaChart {

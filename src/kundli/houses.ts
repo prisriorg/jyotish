@@ -1,15 +1,23 @@
 import { Bhava, KundliConfig } from "./types";
+import { Observer } from "astronomy-engine";
+import { getMidheaven } from "../core/calculations";
 
 /**
  * Calculates the House (Bhava) cusps and spans based on the given system.
  *
  * @param ascendantLongitude Sidereal longitude of the Ascendant (Lagna) in degrees (0-360).
  * @param system 'whole_sign' | 'equal_house' (Default: 'whole_sign')
+ * @param date Optional birth Date object for astronomical MC calculation in Sripati
+ * @param observer Optional Observer for latitude/longitude
+ * @param ayanamsa Optional sidereal ayanamsa value in degrees
  * @returns Array of 12 Bhava objects.
  */
 export function getHouses(
   ascendantLongitude: number,
   system: KundliConfig["houseSystem"] = "whole_sign",
+  date?: Date,
+  observer?: Observer,
+  ayanamsa?: number,
 ): Bhava[] {
   const bhavas: Bhava[] = [];
 
@@ -62,7 +70,12 @@ export function getHouses(
 
   // 3. Sripati Bhava Chalit System
   else if (system === "sripati") {
-    const mc = (ascendantLongitude - 90 + 360) % 360; // Approximate MC without observer
+    let mc: number;
+    if (date && observer && ayanamsa !== undefined) {
+      mc = getMidheaven(date, observer, ayanamsa);
+    } else {
+      mc = (ascendantLongitude - 90 + 360) % 360; // Fallback without observer
+    }
     const ic = (mc + 180) % 360;
     const madhyas: number[] = new Array(12);
     madhyas[0] = ascendantLongitude;

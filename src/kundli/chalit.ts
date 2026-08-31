@@ -59,16 +59,40 @@ export function getChalitChart(kundli: Kundli, system: 'sripati' | 'equal_house'
         try {
             if (kundli.birthDetails && kundli.birthDetails.lat !== undefined && kundli.birthDetails.lon !== undefined) {
                 const observer = new Observer(kundli.birthDetails.lat, kundli.birthDetails.lon, 0);
-                // Attempt to parse ISO / standard date if available
-                let dateObj: Date | null = null;
-                const dStr = kundli.birthDetails.date;
-                const tStr = kundli.birthDetails.time;
-                if (dStr) {
-                    const combined = new Date(`${dStr} ${tStr || ''}`);
-                    if (!isNaN(combined.getTime())) {
-                        dateObj = combined;
+                let dateObj: Date | null = kundli.birthDetails.rawDate || null;
+
+                if (!dateObj && kundli.birthDetails.date) {
+                    const dStr = kundli.birthDetails.date;
+                    const tStr = kundli.birthDetails.time || '';
+                    const parts = dStr.split(/[\/\-\.]/);
+                    if (parts.length === 3) {
+                        let day = parseInt(parts[0], 10);
+                        let month = parseInt(parts[1], 10);
+                        let year = parseInt(parts[2], 10);
+                        if (parts[0].length === 4) {
+                            year = parseInt(parts[0], 10);
+                            month = parseInt(parts[1], 10);
+                            day = parseInt(parts[2], 10);
+                        }
+                        let hours = 0, minutes = 0, seconds = 0;
+                        const tMatch = tStr.match(/(\d+):(\d+)(?::(\d+))?\s*(am|pm)?/i);
+                        if (tMatch) {
+                            hours = parseInt(tMatch[1], 10);
+                            minutes = parseInt(tMatch[2], 10);
+                            seconds = tMatch[3] ? parseInt(tMatch[3], 10) : 0;
+                            const ampm = tMatch[4]?.toLowerCase();
+                            if (ampm === 'pm' && hours < 12) hours += 12;
+                            if (ampm === 'am' && hours === 12) hours = 0;
+                        }
+                        const parsed = new Date(year, month - 1, day, hours, minutes, seconds);
+                        if (!isNaN(parsed.getTime())) dateObj = parsed;
+                    }
+                    if (!dateObj) {
+                        const fallback = new Date(`${dStr} ${tStr}`);
+                        if (!isNaN(fallback.getTime())) dateObj = fallback;
                     }
                 }
+
                 if (dateObj) {
                     const ayanamsa = getAyanamsa(dateObj);
                     mcLon = getMidheaven(dateObj, observer, ayanamsa);

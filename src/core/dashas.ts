@@ -117,46 +117,78 @@ export function getVimshottariDasha(moonLon: number, birthDate: Date, asOf: Date
     }
 
 
-    // Now for each mahadasha compute its antardashas and pratyantars
+    // Helper to calculate antars & pratyantars for a Mahadasha.
+    // For the first (birth) Mahadasha, the period theoretically began before birthDate.
+    // We compute the true uncompressed antardashas and pratyantars from theoreticalMahaStart,
+    // and for the native's chart we only include periods that end after birthDate.
+    const elapsedYears = lordDurationYears * fractionElapsed;
+    const theoreticalMahaStart = new Date(birthDate.getTime() - elapsedYears * MS_PER_YEAR);
+
     for (let m = 0; m < mahadashas.length; m++) {
         const maha = mahadashas[m];
-        // actual mahadasha duration in years (handle partial)
-        const mahaDurYears = yearsBetweenMs(maha.endTime.getTime() - maha.startTime.getTime());
-
-        // antar sequence starts from the mahadasha lord
+        const isFirstMaha = m === 0;
         const startLordIndex = vimshottariLords.indexOf(maha.planet);
+        const fullMahaDurationYears = vimshottariDurations[startLordIndex];
+        
+        // For first Mahadasha, calculate from theoretical start before birth; for others, from maha.startTime
+        let antarStart = isFirstMaha ? new Date(theoreticalMahaStart) : new Date(maha.startTime);
         maha.antars = [];
-        let antarStart = new Date(maha.startTime);
 
         for (let a = 0; a < 9; a++) {
             const antarLordIdx = (startLordIndex + a) % 9;
             const antarLord = vimshottariLords[antarLordIdx];
-            // antar duration = mahaDurYears * (duration_of_antarLord / 120)
-            const antarDurYears = mahaDurYears * (vimshottariDurations[antarLordIdx] / 120);
-            const antarEnd = addYearsMs(antarStart, antarDurYears);
+            // Antar duration is based on the full standard Mahadasha duration
+            const fullAntarDurYears = fullMahaDurationYears * (vimshottariDurations[antarLordIdx] / 120);
+            const antarEnd = addYearsMs(antarStart, fullAntarDurYears);
+
+            // If this Antardasha finished before birth, skip it for the native's timeline
+            if (isFirstMaha && antarEnd.getTime() <= birthDate.getTime()) {
+                antarStart = antarEnd;
+                continue;
+            }
+
+            // If this Antardasha was active at birth, clamp its effective start to birthDate
+            const effectiveAntarStart = (isFirstMaha && antarStart.getTime() < birthDate.getTime())
+                ? new Date(birthDate)
+                : new Date(antarStart);
+            const effectiveAntarDurYears = yearsBetweenMs(antarEnd.getTime() - effectiveAntarStart.getTime());
 
             const antarPeriod: DashaPeriod = {
                 planet: antarLord,
-                startTime: new Date(antarStart),
+                startTime: effectiveAntarStart,
                 endTime: new Date(antarEnd),
-                durationYears: antarDurYears
+                durationYears: effectiveAntarDurYears
             };
 
-            // now pratyantar inside this antar
+            // Now calculate Pratyantars inside this Antardasha
             antarPeriod.pratyantars = [];
             let pratyStart = new Date(antarStart);
+
             for (let p = 0; p < 9; p++) {
                 const pratyLordIdx = (antarLordIdx + p) % 9;
                 const pratyLord = vimshottariLords[pratyLordIdx];
-                // pratyantar dur = antarDurYears * (duration_of_pratyLord / 120)
-                const pratyDurYears = antarDurYears * (vimshottariDurations[pratyLordIdx] / 120);
-                const pratyEnd = addYearsMs(pratyStart, pratyDurYears);
+                // Pratyantar duration based on the full uncompressed Antar duration
+                const fullPratyDurYears = fullAntarDurYears * (vimshottariDurations[pratyLordIdx] / 120);
+                const pratyEnd = addYearsMs(pratyStart, fullPratyDurYears);
+
+                // If this Pratyantar ended before birth, skip it
+                if (isFirstMaha && pratyEnd.getTime() <= birthDate.getTime()) {
+                    pratyStart = pratyEnd;
+                    continue;
+                }
+
+                const effectivePratyStart = (isFirstMaha && pratyStart.getTime() < birthDate.getTime())
+                    ? new Date(birthDate)
+                    : new Date(pratyStart);
+                const effectivePratyDurYears = yearsBetweenMs(pratyEnd.getTime() - effectivePratyStart.getTime());
+
                 antarPeriod.pratyantars.push({
                     planet: pratyLord,
-                    startTime: new Date(pratyStart),
+                    startTime: effectivePratyStart,
                     endTime: new Date(pratyEnd),
-                    durationYears: pratyDurYears
+                    durationYears: effectivePratyDurYears
                 });
+
                 pratyStart = pratyEnd;
             }
 

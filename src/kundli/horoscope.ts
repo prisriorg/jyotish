@@ -4,42 +4,38 @@ import { Kundli } from "./types";
 const data = [
     {
         "planet": "Sun",
-        "nature": "authority, self, ego, health, father; retro-nature: internalised authority, delayed recognition, karmic review of identity",
-        "retro_general": "Apne aap ko phir se parakhne ka daur; public recognition dheere mil sakti hai; health/energy par focus zaroori.",
-        "rashi_behavior_general": "Retro Sun rashi mein adhik inner leadership, self-doubts aur karmic father/authority issues lekar aata hai; exaltation/own signs mein internal responsibility badhti hai.",
+        "nature": "soul, vitality, self, authority, leadership, father",
         "houses": {
-            "1": { "prediction": "Self-image par internal change; pehchaan aur health me late but deep transformation.", "rashi_effect": "Lagna mein retro Sun se personality serious, introspective aur karmic lessons heavy." },
-            "2": { "prediction": "Wealth/voice me delays; family prestige par review; speech-related caution.", "rashi_effect": "Dhan/bolne me instability; parivaar sambandh reconsider karne padte hain." },
-            "3": { "prediction": "Courage, siblings, short-trips me delays; efforts rearranged.", "rashi_effect": "Communication style retrograde thinking; siblings se sambandh confusing." },
-            "4": { "prediction": "Home, mother, emotional security me past matters wapas aate hain; property decisions delay.", "rashi_effect": "Aadhaar/ghar mein inner restructuring." },
-            "5": { "prediction": "Creativity, children, education me delay; past karmic affairs of romance resurface.", "rashi_effect": "Creativity ko rework karna padta hai." },
-            "6": { "prediction": "Health/competitions: retro Sun reduces external conflicts but asks for internal healing.", "rashi_effect": "Service/health matters re-evaluated." },
-            "7": { "prediction": "Partnerships: egoic issues in marriage/ business slow results; karmic partners may appear.", "rashi_effect": "Relationship recognition delayed; partner's authority questioned." },
-            "8": { "prediction": "Sudden transformations, inheritances delayed; karmic endings intensified.", "rashi_effect": "Deep psychological review; occult interest increases." },
-            "9": { "prediction": "Philosophy, father, long journeys: beliefs re-examined; foreign travel delays.", "rashi_effect": "Spiritual beliefs get challenged; fatherly relationships karmic." },
-            "10": { "prediction": "Career: recognition delayed but karmic lessons in vocation; public role redefined.", "rashi_effect": "Professional identity restructured." },
-            "11": { "prediction": "Gains & networks: income from status late; aspirations reworked.", "rashi_effect": "Friends/networks bring lessons; gains slower but more karmic." },
-            "12": { "prediction": "Losses, isolation: hidden enemies or past karma surface; retreat helps healing.", "rashi_effect": "Spiritual retreat, sacrifice; hidden expenditures increase." }
+            "1": { "prediction": "Strong vitality, confident personality, natural leadership qualities, and commanding presence.", "rashi_effect": "Self-respect and dignity in public persona." },
+            "2": { "prediction": "Focus on family prestige, authoritative speech, wealth through government or independent efforts.", "rashi_effect": "Direct communication and concern for family reputation." },
+            "3": { "prediction": "High courage, strong initiative, determined efforts, energetic communication and travel.", "rashi_effect": "Self-reliant nature and dynamic drive." },
+            "4": { "prediction": "Leadership in family, focus on heritage and property, dignified home environment.", "rashi_effect": "Strong domestic influence and attachment to ancestral roots." },
+            "5": { "prediction": "Sharp intellect, creative authority, interest in governance or higher wisdom, proud lineage.", "rashi_effect": "Creative vitality and confident educational pursuits." },
+            "6": { "prediction": "Ability to overcome competitors and debts, strong immune resilience, victory over obstacles.", "rashi_effect": "Authoritative problem solving and determined work ethic." },
+            "7": { "prediction": "Commanding partner, high standards in relationships, public recognition through partnerships.", "rashi_effect": "Strong personality in marriage and social dealings." },
+            "8": { "prediction": "Deep interest in occult or research, transformative life path, hidden resilience.", "rashi_effect": "Intense psychological insight and profound inner power." },
+            "9": { "prediction": "Dharmic inclinations, respect for tradition and mentors, auspicious long journeys and spiritual growth.", "rashi_effect": "Principled worldview and noble character." },
+            "10": { "prediction": "High career ambitions, administrative power, public status, recognition in profession.", "rashi_effect": "Natural executive capability and career prominence." },
+            "11": { "prediction": "Gains through influential connections, ambitious long-term goals, leadership in community.", "rashi_effect": "Authoritative social network and steady fulfillment of desires." },
+            "12": { "prediction": "Spiritual retreat, interest in meditation, connections with distant places, charitable nature.", "rashi_effect": "Inner contemplation and detachment from ego." }
         }
     },
     {
         "planet": "Moon",
-        "nature": "mind, emotions, mother, habits; retro-nature: emotional reprocessing, memory, moods revisit",
-        "retro_general": "Bhavnaon ka punarvichar; emotional patterns phir se saamne aate hain; decision lene se pehle inner cleansing zaruri.",
-        "rashi_behavior_general": "Retro Moon signs me sensitivity badhti; in own/benefic signs internal nurturing stronger; in malefic houses mood swings aur nostalgic tendencies.",
+        "nature": "mind, emotions, intuition, mother, peace, mental happiness",
         "houses": {
-            "1": { "prediction": "Emotional identity fluctuate; mood swings visible; public persona sensitive.", "rashi_effect": "Lagna mein emotionality intense; self-image changeable." },
-            "2": { "prediction": "Family wealth & speech impacted by past emotions; food/habits re-examined.", "rashi_effect": "Sustenance/values influenced by nostalgia." },
-            "3": { "prediction": "Siblings & communication colored by past wounds; short travels bring memories.", "rashi_effect": "Courage may be subdued; thinking back to old efforts." },
-            "4": { "prediction": "Home & mother: emotional revisits, mother-related care or reconnection.", "rashi_effect": "Domestic life becomes focus of healing." },
-            "5": { "prediction": "Creativity & children: past romances, creative blocks reappear.", "rashi_effect": "Emotional investment in creativity reviewed." },
-            "6": { "prediction": "Health & service: emotional causes of illness come up; work routines change.", "rashi_effect": "Care for health, possible psychosomatic issues." },
-            "7": { "prediction": "Partners: emotional history affects marriage/partnerships; reconciliation possible.", "rashi_effect": "Relationships reworked emotionally." },
-            "8": { "prediction": "Deep emotional transformations; inherited or shared psychology surfaces.", "rashi_effect": "Psychological depth, secrets coming up." },
-            "9": { "prediction": "Beliefs & teachers: past faith issues resurface; travel for healing.", "rashi_effect": "Spiritual/emotional reassessment." },
-            "10": { "prediction": "Public image: emotions influence career choices; maternal reputation matters.", "rashi_effect": "Career decisions become emotionally driven." },
-            "11": { "prediction": "Friends & hopes: social ties revisit; old circles reappear.", "rashi_effect": "Emotional gains may be delayed." },
-            "12": { "prediction": "Isolation & subconscious: past trauma surfaces; need for solitude.", "rashi_effect": "Dreams, intuition heighten; healing required." }
+            "1": { "prediction": "Sensitive nature, magnetic charm, emotional responsiveness, caring and nurturing personality.", "rashi_effect": "Adaptive, expressive, and emotionally receptive temperament." },
+            "2": { "prediction": "Sweet speech, family attachment, fluctuating finances with steady nurturing instincts.", "rashi_effect": "Resource preservation and emotional bonding with family." },
+            "3": { "prediction": "Curious mind, expressive communication, affectionate relationship with siblings, frequent short travels.", "rashi_effect": "Artistic communication and intuitive learning." },
+            "4": { "prediction": "Deep maternal connection, domestic peace, comfort in home environment, emotional security.", "rashi_effect": "Strong inner contentment and love for ancestral home." },
+            "5": { "prediction": "Creative imagination, emotional warmth with children, romantic and intuitive intellect.", "rashi_effect": "Poetic expression and joyful creative projects." },
+            "6": { "prediction": "Service-oriented mind, attention to health routines, emotional resilience in handling daily tasks.", "rashi_effect": "Empathetic problem solving and desire to help others." },
+            "7": { "prediction": "Emotional bonding with spouse, romantic partnership, public popularity and social grace.", "rashi_effect": "Sympathetic and cooperative relationship dynamics." },
+            "8": { "prediction": "Deep intuition, psychic sensitivity, emotional transformations, interest in the mysterious.", "rashi_effect": "Intense emotional depth and investigative mind." },
+            "9": { "prediction": "Devotion, love for pilgrimages and philosophy, ethical mindset, guidance from elders.", "rashi_effect": "Philosophical optimism and spiritual curiosity." },
+            "10": { "prediction": "Public appeal, career in public welfare, leadership with compassion, high reputation.", "rashi_effect": "Emotionally satisfying profession and broad public rapport." },
+            "11": { "prediction": "Warm friendships, supportive circles, steady gains through social goodwill and hopes.", "rashi_effect": "Pleasant social life and fulfilled emotional aspirations." },
+            "12": { "prediction": "Vivid dreams, spiritual imagination, inclination for quiet retreats, charitable empathy.", "rashi_effect": "Subconscious insight, meditative peace, and compassion." }
         }
     },
     {
@@ -219,10 +215,10 @@ export function generateHoroscope(chart: Kundli): string {
                 houseContent += `\n#### ${dataPlanetName}\n`;
                 houseContent += `- **Nature:** ${planetData.nature}\n`;
 
-                if (planetDetails && planetDetails.isRetrograde) {
+                if (planetDetails && planetDetails.isRetrograde && (planetData as any).retro_general) {
                     houseContent += `- **Retrograde Status:** Planet is Retrograde\n`;
-                    houseContent += `- **Retrograde Effect:** ${planetData.retro_general}\n`;
-                    houseContent += `- **Rashi Behavior:** ${planetData.rashi_behavior_general}\n`;
+                    houseContent += `- **Retrograde Effect:** ${(planetData as any).retro_general}\n`;
+                    houseContent += `- **Rashi Behavior:** ${(planetData as any).rashi_behavior_general}\n`;
                 }
 
                 const houseStr = house.number.toString() as keyof typeof planetData.houses;

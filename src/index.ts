@@ -20,4 +20,5 @@ export * from './types/festivals';
 export { getFestivals, getFestivalsByTithi, getEkadashiName } from './core/festivals';
 export * from './core/udaya-tithi';
 
-export * from './core/sadesati'
+export * from './core/sadesati';
+export * from './ashtakavarga/index';
