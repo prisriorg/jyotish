@@ -45,6 +45,14 @@ export interface MarriagePrediction {
     dominantTraits: string[];
     directionOrBackground: string;
   };
+  marriageType: {
+    recommendation: 'Love Marriage' | 'Arranged Marriage' | 'Love-cum-Arranged (Self-Choice with Family Approval)';
+    loveScore: number;     // 0 - 100
+    arrangedScore: number; // 0 - 100
+    isIntercasteLikely: boolean;
+    intercasteProbability: number; // 0 - 100%
+    keyIndicators: string[];
+  };
   mangalDosha: {
     hasDosha: boolean;
     isCancelled: boolean;

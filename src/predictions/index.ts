@@ -74,11 +74,20 @@ export function getComprehensiveReport(kundli: Kundli): ComprehensiveReport {
 
   // Marriage Section
   md += `\n## 💍 3. Marriage, Relationships & Timing\n\n`;
+  md += `- **Marriage Type Recommendation:** **${marriage.marriageType.recommendation}** (Love: ${marriage.marriageType.loveScore}/100 | Arranged: ${marriage.marriageType.arrangedScore}/100)\n`;
+  md += `- **Intercaste / Cross-Cultural Likelihood:** **${marriage.marriageType.isIntercasteLikely ? 'High Probability' : 'Traditional Community'}** (${marriage.marriageType.intercasteProbability}%)\n`;
   md += `- **Marital Harmony Status:** **${marriage.maritalHarmonyRating}**\n`;
   md += `- **Optimal Age Window:** ${marriage.favorableAgeRange}\n`;
   md += `- **Astrologically Supported Timing Years:** ${marriage.predictedTimingYears.join(", ")}\n`;
   md += `- **Dasha Support:** ${marriage.dashaSupportExplanation}\n`;
   md += `- **Mangal Dosha Analysis:** ${marriage.mangalDosha.description}\n\n`;
+  if (marriage.marriageType.keyIndicators.length > 0) {
+    md += `### Marriage Type Astrological Factors:\n`;
+    marriage.marriageType.keyIndicators.forEach((ind) => {
+      md += `- ${ind}\n`;
+    });
+    md += `\n`;
+  }
   md += `### Partner Traits & Characteristics:\n`;
   md += `- **General Nature:** ${marriage.partnerCharacteristics.nature}\n`;
   md += `- **Key Attributes:** ${marriage.partnerCharacteristics.dominantTraits.join(", ")}\n`;

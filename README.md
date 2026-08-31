@@ -401,9 +401,11 @@ console.log('Wealth Rating:', wealth.wealthRating);
 console.log('Active Dhana Yogas:', wealth.dhanaYogas.map(y => y.name));
 console.log(`Gains vs Expenses (SAV Surplus): +${wealth.savMetrics.surplusRatio} bindus`);
 
-// 3. Marriage: Timing Years, Partner Nature, Mangal Dosha
+// 3. Marriage: Type (Love vs Arranged), Intercaste Probability, Timing Years
 const marriage = getMarriagePrediction(kundli);
-console.log('Harmony Rating:', marriage.maritalHarmonyRating);
+console.log('Marriage Type:', marriage.marriageType.recommendation);
+console.log(`Love: ${marriage.marriageType.loveScore}/100 | Arranged: ${marriage.marriageType.arrangedScore}/100`);
+console.log('Intercaste Likely:', marriage.marriageType.isIntercasteLikely, `(${marriage.marriageType.intercasteProbability}%)`);
 console.log('Predicted Timing Years:', marriage.predictedTimingYears);
 console.log('Partner Nature:', marriage.partnerCharacteristics.nature);
 
