@@ -371,9 +371,9 @@ console.log('Ekadashi:', ekadashi); // e.g. "Prabodhini / Devutthana Ekadashi"
 
 ---
 
-### 10. Life Predictions & Guidance (Career, Wealth, Marriage, Remedies)
+### 10. Multi-System Life Predictions & Guidance (Parashari, Jaimini, Chalit, KP & Lal Kitab)
 
-Deterministic classical Vedic rules engines that evaluate D1, D9, D10, Ashtakavarga house balances, and Vimshottari Dashas to produce structured insights and complete formatted Markdown reports:
+A unified Vedic prediction suite synthesizing **Classical Parashari (D1/D9/D10)**, **Jaimini Chara Karakas**, **Sripati Bhava Chalit**, **KP Astrology (Cusp Sub-Lords)**, and **Lal Kitab Teva & Totke** for pinpoint accuracy on any chart:
 
 ```typescript
 import { 
@@ -382,43 +382,61 @@ import {
   getWealthPrediction, 
   getMarriagePrediction, 
   getRemedies, 
+  getChalitAnalysis,
+  getKpAnalysis,
+  getLalKitabAnalysis,
+  getJaiminiKarakas,
   getComprehensiveReport,
   Observer 
 } from '@prisri/jyotish';
 
 const kundli = getKundli(new Date('2004-02-20T07:15:00+05:30'), new Observer(25.872, 82.685, 0));
 
-// 1. Career: Job vs Business, Suitable Fields, Leadership Level
+// 1. Career: Job vs Business, 10th Lord Placement, Jaimini AmK, KP 10th Sub-Lord
 const career = getCareerPrediction(kundli);
 console.log('Recommendation:', career.recommendation);
-console.log(`Scores -> Business: ${career.businessScore}/100 | Job: ${career.jobScore}/100`);
-console.log('Suitable Fields:', career.suitableFields);
-console.log('Leadership Capacity:', career.leadershipCapacity);
+console.log('10th Lord Shastra Placement:', career.tenthLordPlacementResult);
+console.log('Jaimini Amatyakaraka (AmK):', career.amatyakarakaInsight);
+console.log('KP 10th Sub-Lord Insight:', career.kpInsight);
 
-// 2. Wealth: Dhana Yogas, Income Potential, SAV Surplus Ratio
+// 2. Wealth: Dhana Yogas, Vipreet Raj Yogas, 2nd & 11th Lord Placements, Lal Kitab Kismat
 const wealth = getWealthPrediction(kundli);
 console.log('Wealth Rating:', wealth.wealthRating);
-console.log('Active Dhana Yogas:', wealth.dhanaYogas.map(y => y.name));
-console.log(`Gains vs Expenses (SAV Surplus): +${wealth.savMetrics.surplusRatio} bindus`);
+console.log('2nd Lord Placement:', wealth.secondLordPlacementResult);
+console.log('11th Lord Placement:', wealth.eleventhLordPlacementResult);
+console.log('Vipreet Raj Yogas:', wealth.vipreetRajYogas);
 
-// 3. Marriage: Type (Love vs Arranged), Intercaste Probability, Timing Years
+// 3. Marriage: Type (Love vs Arranged), Age Gap (+ -), Jaimini Darakaraka (DK), KP 7th Sub-Lord
 const marriage = getMarriagePrediction(kundli);
 console.log('Marriage Type:', marriage.marriageType.recommendation);
-console.log(`Love: ${marriage.marriageType.loveScore}/100 | Arranged: ${marriage.marriageType.arrangedScore}/100`);
-console.log('Intercaste Likely:', marriage.marriageType.isIntercasteLikely, `(${marriage.marriageType.intercasteProbability}%)`);
 console.log('Spouse Age Gap:', marriage.spouseAgeDifference.relativeAge, `(${marriage.spouseAgeDifference.estimatedDifferenceYears})`);
-console.log('Predicted Timing Years:', marriage.predictedTimingYears);
-console.log('Partner Nature:', marriage.partnerCharacteristics.nature);
+console.log('7th Lord Placement:', marriage.seventhLordPlacementResult);
+console.log('Jaimini Darakaraka (Spouse):', marriage.darakarakaInsight);
 
-// 4. Actionable Remedies & Weakness Rectification
-const remedies = getRemedies(kundli);
-console.log('Weak Houses Identified:', remedies.weakHousesIdentified);
-console.log('Practical Do\'s & Don\'ts:', remedies.practicalDoAndDonts[0]);
-console.log('Recommended Mantras:', remedies.mantras.map(m => `${m.deity}: ${m.mantra}`));
+// 4. Jaimini Chara Karakas (AK, AmK, BK, MK, PK, GK, DK)
+const jaimini = getJaiminiKarakas(kundli);
+console.log('Atmakaraka (Soul):', jaimini.atmakaraka.planet, `(${jaimini.atmakaraka.formattedDegree})`);
+console.log('Amatyakaraka (Career):', jaimini.amatyakaraka.planet, `(${jaimini.amatyakaraka.formattedDegree})`);
+console.log('Darakaraka (Spouse):', jaimini.darakaraka.planet, `(${jaimini.darakaraka.formattedDegree})`);
 
-// 5. Complete Life Report (Structured JSON + Markdown)
+// 5. Bhava Chalit Analysis (Planetary Shifts & Real Occupants)
+const chalit = getChalitAnalysis(kundli);
+console.log('Shifted Planets (D1 -> Chalit):', chalit.shiftedPlanets);
+
+// 6. KP System (Krishnamurti Paddhati Cusp Sub-Lords)
+const kp = getKpAnalysis(kundli);
+console.log('Career Cusp 10 Sub-Lord:', kp.careerCusp10.subLord);
+console.log('Marriage Cusp 7 Sub-Lord:', kp.marriageCusp7.subLord);
+
+// 7. Lal Kitab Teva & Authentic Totke
+const lalkitab = getLalKitabAnalysis(kundli);
+console.log('Teva Classification:', lalkitab.tevaType); // e.g. "Dharmi Teva (Blessed / Auspicious)"
+console.log('Kismat Ka Grah:', lalkitab.kismatKaGrah.planet, `(House ${lalkitab.kismatKaGrah.house})`);
+console.log('Lal Kitab Actionable Totke:', lalkitab.lalKitabRemedies);
+
+// 8. Complete Multi-System Grand Report (Structured JSON + Markdown)
 const report = getComprehensiveReport(kundli);
-console.log(report.formattedMarkdown); // Full formatted Markdown reading!
+console.log(report.formattedMarkdown); // Full multi-system formatted Markdown reading!
 ```
 
 ---

@@ -3,6 +3,8 @@ import { RASHI_LORDS } from "../matching/constants";
 import { rashiNames } from "../core/constants";
 import { checkMangalDosha } from "../matching/index";
 import { MarriagePrediction } from "./types";
+import { getChalitAnalysis, getKpAnalysis, getLalKitabAnalysis } from "./multisystem";
+import { getJaiminiKarakas } from "./jaimini";
 
 export function getMarriagePrediction(kundli: Kundli): MarriagePrediction {
   const houses = kundli.houses || [];
@@ -428,6 +430,35 @@ export function getMarriagePrediction(kundli: Kundli): MarriagePrediction {
     reason: ageReason,
   };
 
+  const chalit = getChalitAnalysis(kundli);
+  const kp = getKpAnalysis(kundli);
+  const lalKitab = getLalKitabAnalysis(kundli);
+  const jaimini = getJaiminiKarakas(kundli);
+
+  // Classical 7th Lord in Houses 1-12 Dictionary (Brihat Parashara & Phaladeepika)
+  const seventhLordDictionary: Record<number, string> = {
+    1: `7th Lord (${lord7}) in 1st House: Creates deeply devoted and affectionate marital bonding. Partner becomes central to the native's life, decisions, and public status.`,
+    2: `7th Lord (${lord7}) in 2nd House: Partner brings monetary prosperity, financial intelligence, sweet speech, and traditional family harmony into the household.`,
+    3: `7th Lord (${lord7}) in 3rd House: Spouse is dynamic, skilled in digital communications, creative arts, or tech, acting as an energetic partner in ventures.`,
+    4: `7th Lord (${lord7}) in 4th House: Union brings great domestic peace, comfortable home, luxury conveyances, and strong bonds with extended family.`,
+    5: `7th Lord (${lord7}) in 5th House: Romantic affinity and intellectual chemistry. Partner is highly educated, artistic, affectionate, and shares mutual devotion.`,
+    6: `7th Lord (${lord7}) in 6th House: Partner is likely in professional service, healthcare, or legal administration. Requires patience and conscious conflict resolution.`,
+    7: `7th Lord (${lord7}) in 7th House: Swa-Kshetra partnership. Blessed matrimonial dignity, exceptional physical/mental compatibility, and mutual social prestige.`,
+    8: `7th Lord (${lord7}) in 8th House: Deep, transformative emotional bond. Partner brings unexpected financial resources, research intellect, and metaphysical depth.`,
+    9: `7th Lord (${lord7}) in 9th House: Divine blessing. Spouse is virtuous, ethical, wise, and brings luck, global travel, and spiritual elevation after marriage.`,
+    10: `7th Lord (${lord7}) in 10th House: Ambitious and accomplished partner who commands professional respect and elevates the native's societal influence.`,
+    11: `7th Lord (${lord7}) in 11th House: Highly prosperous union. Partner brings lucrative alliances, expansive friend circles, and assists in fulfilling lifelong ambitions.`,
+    12: `7th Lord (${lord7}) in 12th House: Cross-cultural or distant origins. Partner is spiritually inclined, fond of travel, or linked to overseas/multinational environments.`,
+  };
+  const seventhLordPlacementResult = seventhLordDictionary[lord7House] || seventhLordDictionary[7];
+
+  // Jaimini Darakaraka (Spouse Indicator)
+  const darakarakaInsight = `Jaimini Darakaraka (DK) is ${jaimini.darakaraka.planet} (at ${jaimini.darakaraka.formattedDegree} in ${jaimini.darakaraka.rashiName}, House ${jaimini.darakaraka.house}): ${jaimini.darakaraka.signification}`;
+
+  const chalitInsight = `Chalit Bhava 7 is occupied by ${chalit.actualHouseOccupants[7]?.length ? chalit.actualHouseOccupants[7].join(", ") : "its natural lord"}, providing exact cuspal partnership foundation.`;
+  const kpInsight = `${kp.marriageCusp7.marriagePromise} ${kp.marriageCusp7.typeIndication}`;
+  const lalKitabInsight = `Lal Kitab: Teva is ${lalKitab.tevaType}. 7th house dynamic reflects high mutual integrity.`;
+
   return {
     maritalHarmonyRating,
     favorableAgeRange,
@@ -435,7 +466,7 @@ export function getMarriagePrediction(kundli: Kundli): MarriagePrediction {
     currentDashaFavorableForMarriage: currentDashaFavorable,
     dashaSupportExplanation,
     partnerCharacteristics: {
-      nature: partnerInfo.nature,
+      nature: `${partnerInfo.nature}. Jaimini DK (${jaimini.darakaraka.planet}) emphasizes: ${jaimini.darakaraka.signification}`,
       dominantTraits: partnerInfo.traits,
       directionOrBackground: partnerInfo.direction,
     },
@@ -443,5 +474,10 @@ export function getMarriagePrediction(kundli: Kundli): MarriagePrediction {
     mangalDosha,
     spouseAgeDifference,
     relationshipAdvice,
+    seventhLordPlacementResult,
+    darakarakaInsight,
+    chalitInsight,
+    kpInsight,
+    lalKitabInsight,
   };
 }

@@ -13,6 +13,12 @@ export interface CareerPrediction {
   };
   leadershipCapacity: 'Executive / High Authority' | 'Mid-to-Senior Leadership' | 'Individual Contributor / Specialist';
   strategicAdvice: string[];
+  tenthLordPlacementResult?: string;
+  amatyakarakaInsight?: string;
+  panchaMahapurushaYoga?: string;
+  chalitInsight?: string;
+  kpInsight?: string;
+  lalKitabInsight?: string;
 }
 
 export interface WealthPrediction {
@@ -30,8 +36,14 @@ export interface WealthPrediction {
     description: string;
     strength: 'Powerful' | 'Moderate';
   }[];
+  vipreetRajYogas?: string[];
+  secondLordPlacementResult?: string;
+  eleventhLordPlacementResult?: string;
   bestWealthSources: string[];
   financialCautions: string[];
+  chalitInsight?: string;
+  kpInsight?: string;
+  lalKitabInsight?: string;
 }
 
 export interface MarriagePrediction {
@@ -67,6 +79,11 @@ export interface MarriagePrediction {
     reason: string;
   };
   relationshipAdvice: string[];
+  seventhLordPlacementResult?: string;
+  darakarakaInsight?: string;
+  chalitInsight?: string;
+  kpInsight?: string;
+  lalKitabInsight?: string;
 }
 
 export interface RemedyItem {
@@ -97,6 +114,95 @@ export interface RemediesPrediction {
   }[];
   lifestyleHabits: string[];
   remedyList: RemedyItem[];
+  lalKitabRemedies?: {
+    area: string;
+    remedy: string;
+    caution: string;
+  }[];
+}
+
+export interface ChalitAnalysis {
+  shiftedPlanets: {
+    planet: string;
+    d1House: number;
+    chalitBhava: number;
+    shiftDirection: 'Forward (+1)' | 'Backward (-1)';
+    impact: string;
+  }[];
+  actualHouseOccupants: Record<number, string[]>;
+  keyBhavaInsights: string[];
+}
+
+export interface KpAnalysis {
+  cuspSubLords: {
+    cuspNumber: number;
+    subLord: string;
+    starLord: string;
+  }[];
+  careerCusp10: {
+    subLord: string;
+    starLord: string;
+    significationVerdict: string;
+  };
+  marriageCusp7: {
+    subLord: string;
+    starLord: string;
+    marriagePromise: string;
+    typeIndication: string;
+  };
+  wealthCusps: {
+    cusp2SubLord: string;
+    cusp11SubLord: string;
+    financialSignification: string;
+  };
+}
+
+export interface LalKitabAnalysis {
+  tevaType: 'Dharmi Teva (Blessed / Auspicious)' | 'Aam Teva (Standard)' | 'Paapi Teva (Challenging)';
+  kismatKaGrah: {
+    planet: string;
+    house: number;
+    role: string;
+  };
+  sleepingHouses: number[];
+  awakenedHouses: number[];
+  specialYogas: {
+    name: string;
+    planets: string[];
+    house: number;
+    effect: string;
+  }[];
+  karmicDebts: {
+    debtType: string;
+    isAfflicted: boolean;
+    description: string;
+    remedy: string;
+  }[];
+  lalKitabRemedies: {
+    area: string;
+    remedy: string;
+    caution: string;
+  }[];
+}
+
+export interface KarakaInfo {
+  planet: string;
+  degreeInSign: number;
+  formattedDegree: string;
+  rashiName: string;
+  house: number;
+  role: string;
+  signification: string;
+}
+
+export interface JaiminiKarakas {
+  atmakaraka: KarakaInfo;
+  amatyakaraka: KarakaInfo;
+  bhratrikaraka: KarakaInfo;
+  matrikaraka: KarakaInfo;
+  putrakaraka: KarakaInfo;
+  gnatikaraka: KarakaInfo;
+  darakaraka: KarakaInfo;
 }
 
 export interface ComprehensiveReport {
@@ -105,5 +211,10 @@ export interface ComprehensiveReport {
   wealth: WealthPrediction;
   marriage: MarriagePrediction;
   remedies: RemediesPrediction;
+  chalitAnalysis: ChalitAnalysis;
+  kpAnalysis: KpAnalysis;
+  lalKitabAnalysis: LalKitabAnalysis;
+  jaiminiKarakas: JaiminiKarakas;
   formattedMarkdown: string;
 }
+

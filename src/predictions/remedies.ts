@@ -1,6 +1,7 @@
 import { Kundli } from "../kundli/types";
 import { rashiNames } from "../core/constants";
 import { RemediesPrediction, RemedyItem } from "./types";
+import { getLalKitabAnalysis } from "./multisystem";
 
 export function getRemedies(kundli: Kundli): RemediesPrediction {
   const sav = kundli.ashtakavarga?.sav;
@@ -139,6 +140,8 @@ export function getRemedies(kundli: Kundli): RemediesPrediction {
     donts.push("Do not neglect physical fitness during intensive work sprints.");
   }
 
+  const lalKitab = getLalKitabAnalysis(kundli);
+
   return {
     weakHousesIdentified,
     practicalDoAndDonts: [
@@ -150,5 +153,6 @@ export function getRemedies(kundli: Kundli): RemediesPrediction {
     mantras,
     lifestyleHabits,
     remedyList,
+    lalKitabRemedies: lalKitab.lalKitabRemedies,
   };
 }
