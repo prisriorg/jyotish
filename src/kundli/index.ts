@@ -164,6 +164,7 @@ export function getKundli(
       lat: observer.latitude,
       lon: observer.longitude,
       timezone: date.getTimezoneOffset(),
+      gender: config.gender,
       age: getExactAge(date),
     },
     ascendant,

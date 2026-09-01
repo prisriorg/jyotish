@@ -77,6 +77,12 @@ export interface MarriagePrediction {
     maxGapYears: number;
     partnerIsOlder: boolean;
     reason: string;
+    maturityLevel: 'High / Senior Demeanor' | 'Balanced / Peer-Level' | 'Youthful / Energetic';
+    unconventionalGapLikely?: boolean;
+    genderPerspective?: {
+      ifMaleNative: string;
+      ifFemaleNative: string;
+    };
   };
   relationshipAdvice: string[];
   seventhLordPlacementResult?: string;

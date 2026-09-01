@@ -23,3 +23,4 @@ export * from './core/udaya-tithi';
 export * from './core/sadesati';
 export * from './ashtakavarga/index';
 export * from './predictions/index';
+export * from './transit/index';

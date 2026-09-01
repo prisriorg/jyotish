@@ -108,8 +108,14 @@ export function getComprehensiveReport(kundli: Kundli): ComprehensiveReport {
   md += `\n## 💍 3. Marriage, Relationships & Timing\n\n`;
   md += `- **Marriage Type Recommendation:** **${marriage.marriageType.recommendation}** (Love: ${marriage.marriageType.loveScore}/100 | Arranged: ${marriage.marriageType.arrangedScore}/100)\n`;
   md += `- **Intercaste / Cross-Cultural Likelihood:** **${marriage.marriageType.isIntercasteLikely ? 'High Probability' : 'Traditional Community'}** (${marriage.marriageType.intercasteProbability}%)\n`;
-  md += `- **Spouse Age Difference:** **${marriage.spouseAgeDifference.relativeAge}** (${marriage.spouseAgeDifference.estimatedDifferenceYears})\n`;
+  md += `- **Spouse Age Difference:** **${marriage.spouseAgeDifference.relativeAge}** (${marriage.spouseAgeDifference.estimatedDifferenceYears}) | Maturity: ${marriage.spouseAgeDifference.maturityLevel}\n`;
+  if (marriage.spouseAgeDifference.unconventionalGapLikely) {
+    md += `- **Unconventional Age Alignment:** ⚡ Astrological indicators show non-traditional age alignment defying orthodox norms.\n`;
+  }
   md += `- **Age Gap Astrological Basis:** ${marriage.spouseAgeDifference.reason}\n`;
+  if (marriage.spouseAgeDifference.genderPerspective) {
+    md += `- **Gender Context:** ${marriage.spouseAgeDifference.genderPerspective.ifMaleNative} • ${marriage.spouseAgeDifference.genderPerspective.ifFemaleNative}\n`;
+  }
   md += `- **Marital Harmony Status:** **${marriage.maritalHarmonyRating}**\n`;
   md += `- **Optimal Age Window:** ${marriage.favorableAgeRange}\n`;
   md += `- **Astrologically Supported Timing Years:** ${marriage.predictedTimingYears.join(", ")}\n`;

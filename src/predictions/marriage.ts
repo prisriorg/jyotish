@@ -6,7 +6,10 @@ import { MarriagePrediction } from "./types";
 import { getChalitAnalysis, getKpAnalysis, getLalKitabAnalysis } from "./multisystem";
 import { getJaiminiKarakas } from "./jaimini";
 
-export function getMarriagePrediction(kundli: Kundli): MarriagePrediction {
+export function getMarriagePrediction(
+  kundli: Kundli,
+  options?: { gender?: "male" | "female" | "other" }
+): MarriagePrediction {
   const houses = kundli.houses || [];
   const planets = kundli.planets || {};
   const house7 = houses.find((h) => h.number === 7) || houses[6];
@@ -190,6 +193,9 @@ export function getMarriagePrediction(kundli: Kundli): MarriagePrediction {
   const ketuHouse = getPlanetHouse("Ketu");
   const saturnHouse = getPlanetHouse("Saturn");
   const jupiterHouse = getPlanetHouse("Jupiter");
+  const mercuryHouse = getPlanetHouse("Mercury");
+  const sunHouse = getPlanetHouse("Sun");
+  const moonHouse = getPlanetHouse("Moon");
 
   let loveScore = 45;
   let arrangedScore = 45;
@@ -343,83 +349,235 @@ export function getMarriagePrediction(kundli: Kundli): MarriagePrediction {
   relationshipAdvice.push("Match horoscopes (Kundli Milan) with emphasis on Nadi and Bhakoot kootas before finalizing marriage.");
   relationshipAdvice.push("Marriage after age 25 brings greater emotional maturity and financial stability.");
 
-  // --- Spouse Age Difference (+ / - Age Gap) Calculation ---
-  let ageWeight = 0;
+  // --- Comprehensive Multi-Factor Spouse Age Difference Analysis ---
+  const chalit = getChalitAnalysis(kundli);
+  const kp = getKpAnalysis(kundli);
+  const lalKitab = getLalKitabAnalysis(kundli);
+  const jaimini = getJaiminiKarakas(kundli);
+
+  const nativeGender = options?.gender || kundli.birthDetails?.gender;
+  const lord7Rashi = kundli.planets[lord7]?.rashiName || "";
+
+  // Navamsha (D9) 7th House & Occupants
+  const d9 = kundli.vargas?.D9;
+  const d9AscendantRashi = d9?.ascendant?.rashi || 1;
+  const d9House7Rashi = ((d9AscendantRashi + 6 - 1) % 12) + 1;
+  const d9House7RashiName = rashiNames[d9House7Rashi - 1] || "";
+  const d9PlanetsIn7: string[] = [];
+  if (d9?.planets) {
+    for (const [pName, pData] of Object.entries(d9.planets)) {
+      if (pData.rashi === d9House7Rashi) {
+        d9PlanetsIn7.push(pName);
+      }
+    }
+  }
+
+  let ageScore = 0;
   const ageReasons: string[] = [];
+  let isUnconventional = false;
 
+  // 1. Planets in 7th House (D1)
   if (planetsIn7.includes("Saturn")) {
-    ageWeight += 3;
-    ageReasons.push("Saturn in 7th House: Strong classical indicator of a mature spouse or notable age difference (+2 to +5 years).");
-  }
-  if (saturnHouse === 5 && house7?.number === 7) {
-    ageWeight += 1.5;
-    ageReasons.push("Saturn aspecting 7th House: Imparts seriousness, emotional stability, and mature demeanor to spouse.");
-  }
-  if (lord7 === "Saturn") {
-    ageWeight += 2;
-    ageReasons.push("7th Lord is Saturn: Partner tends to be older or carries higher professional and emotional maturity.");
-  }
-
-  if (planetsIn7.includes("Mercury")) {
-    ageWeight -= 2.5;
-    ageReasons.push("Mercury in 7th House: Mercury (Kumar) indicates a younger partner with youthful, lively demeanor.");
-  }
-  if (lord7 === "Mercury") {
-    ageWeight -= 2;
-    ageReasons.push("7th Lord is Mercury: High likelihood of spouse being 2 to 4 years younger.");
-  }
-
-  if (planetsIn7.includes("Venus")) {
-    ageWeight -= 1;
-    ageReasons.push("Venus in 7th House: Indicates peer age or slightly younger spouse (within 1 to 2 years).");
-  }
-  if (planetsIn7.includes("Moon")) {
-    ageWeight -= 1;
-    ageReasons.push("Moon in 7th House: Emotional peer age or 1 to 2 years younger.");
-  }
-  if (planetsIn7.includes("Jupiter")) {
-    ageWeight += 1;
-    ageReasons.push("Jupiter in 7th House: Well-balanced maturity, dignified wisdom, and traditional gap.");
+    ageScore += 3.5;
+    ageReasons.push("Saturn in 7th House: Primary classical marker for an older, serious, or emotionally seasoned partner.");
   }
   if (planetsIn7.includes("Rahu")) {
-    ageReasons.push("Rahu in 7th House: Unconventional age difference (can create wider gap outside standard norms).");
+    isUnconventional = true;
+    ageScore += 1.5;
+    ageReasons.push("Rahu in 7th House: Triggers unconventional age dynamics (spurs significant age difference defying standard norms).");
+  }
+  if (planetsIn7.includes("Mercury")) {
+    ageScore -= 3.0;
+    ageReasons.push("Mercury (Kumar graha) in 7th House: Classical indication of a younger partner with youthful demeanor and witty intellect.");
+  }
+  if (planetsIn7.includes("Venus")) {
+    ageScore -= 1.0;
+    ageReasons.push("Venus in 7th House: Indicates close peer age or slightly younger partner with charming, refined personality.");
+  }
+  if (planetsIn7.includes("Moon")) {
+    ageScore -= 1.2;
+    ageReasons.push("Moon in 7th House: Emotional peer age or younger partner with gentle disposition.");
+  }
+  if (planetsIn7.includes("Jupiter")) {
+    ageScore += 1.2;
+    ageReasons.push("Jupiter in 7th House: Imparts dignified wisdom, nobility, and traditional maturity.");
+  }
+  if (planetsIn7.includes("Sun")) {
+    ageScore += 1.2;
+    ageReasons.push("Sun in 7th House: Denotes an authoritative, independent partner carrying natural seniority.");
+  }
+  if (planetsIn7.includes("Mars")) {
+    ageReasons.push("Mars in 7th House: Dynamic, fiery partner of close peer age.");
   }
 
+  // 2. Graha Drishti (Planetary Aspects on 7th House)
+  if (saturnHouse === 1 || saturnHouse === 5 || saturnHouse === 10) {
+    ageScore += 2.0;
+    ageReasons.push(`Saturn casts its special aspect onto 7th House (from House ${saturnHouse}): Adds emotional gravity, patience, and seniority.`);
+  }
+  if (jupiterHouse === 1 || jupiterHouse === 3 || jupiterHouse === 11) {
+    ageScore += 0.8;
+    ageReasons.push(`Jupiter's aspect on 7th House (from House ${jupiterHouse}): Bestows mature judgment and respectable conduct.`);
+  }
+  if (mercuryHouse === 1) {
+    ageScore -= 1.5;
+    ageReasons.push("Mercury in Lagna directly aspects 7th House: Infuses youthful vitality into the partner's demeanor.");
+  }
+  if (rahuHouse === 1 || rahuHouse === 3 || rahuHouse === 11) {
+    isUnconventional = true;
+    ageReasons.push("Rahu's aspect onto 7th House: Enhances possibility of non-traditional age pairings.");
+  }
+
+  // 3. 7th Lord Placement & Lordship
+  if (lord7 === "Saturn") {
+    ageScore += 2.5;
+    ageReasons.push("7th Lord is Saturn: Partner naturally embodies higher seniority, steady life experience, or greater age.");
+  } else if (lord7 === "Mercury") {
+    ageScore -= 2.2;
+    ageReasons.push("7th Lord is Mercury: Strong alignment towards a younger partner or youthful, lively mindset.");
+  } else if (lord7 === "Jupiter" || lord7 === "Sun") {
+    ageScore += 1.0;
+  } else if (lord7 === "Venus" || lord7 === "Moon") {
+    ageScore -= 1.0;
+  }
+
+  if (["Capricorn", "Aquarius"].includes(lord7Rashi)) {
+    ageScore += 1.5;
+    ageReasons.push(`7th Lord placed in Saturnian sign (${lord7Rashi}): Enhances partner's maturity and career establishment.`);
+  } else if (["Gemini", "Virgo"].includes(lord7Rashi)) {
+    ageScore -= 1.5;
+    ageReasons.push(`7th Lord placed in Mercurial sign (${lord7Rashi}): Reinforces partner's youthful appearance and mindset.`);
+  }
+
+  // 4. Navamsha (D9) Confirmation
+  if (d9PlanetsIn7.includes("Saturn") || ["Capricorn", "Aquarius"].includes(d9House7RashiName)) {
+    ageScore += 1.5;
+    ageReasons.push(`Navamsha (D9) 7th house carries Saturnian influence (${d9House7RashiName}${d9PlanetsIn7.length ? `, with ${d9PlanetsIn7.join(", ")}` : ""}): Confirms elder or mature spouse.`);
+  }
+  if (d9PlanetsIn7.includes("Mercury") || ["Gemini", "Virgo"].includes(d9House7RashiName)) {
+    ageScore -= 1.5;
+    ageReasons.push(`Navamsha (D9) 7th house carries Mercurial influence (${d9House7RashiName}${d9PlanetsIn7.length ? `, with ${d9PlanetsIn7.join(", ")}` : ""}): Confirms youthful spouse.`);
+  }
+
+  // 5. Jaimini Darakaraka (DK)
+  const dkPlanet = jaimini.darakaraka.planet;
+  if (dkPlanet === "Saturn") {
+    ageScore += 1.5;
+    ageReasons.push("Jaimini Darakaraka is Saturn: Partner is emotionally seasoned, prudent, and commands seniority.");
+  } else if (dkPlanet === "Mercury") {
+    ageScore -= 1.5;
+    ageReasons.push("Jaimini Darakaraka is Mercury: Partner is lively, playful, and has a younger persona.");
+  }
+
+  // 6. Dynamic Evaluation (Relative Age, Estimated Gap, Maturity)
   let relativeAge: MarriagePrediction["spouseAgeDifference"]["relativeAge"] = "Similar Age (Peer)";
-  let estimatedDifferenceYears = "-1 to -3 years younger";
-  let minGapYears = 1;
-  let maxGapYears = 3;
+  let estimatedDifferenceYears = "Similar age / Peer (within 0 to 2 years)";
+  let minGapYears = 0;
+  let maxGapYears = 2;
   let partnerIsOlder = false;
 
-  if (planetsIn7.includes("Saturn") || (lord7 === "Saturn" && planetsIn7.includes("Rahu"))) {
-    relativeAge = "Older";
-    partnerIsOlder = true;
-    minGapYears = 1;
-    maxGapYears = 4;
-    estimatedDifferenceYears = "+1 to +4 years older (or notable age gap / career seniority)";
-  } else if (planetsIn7.includes("Mercury") || lord7 === "Mercury") {
-    relativeAge = "Younger";
-    partnerIsOlder = false;
-    minGapYears = 2;
-    maxGapYears = 4;
-    estimatedDifferenceYears = "-2 to -4 years younger (youthful persona)";
-  } else if (ageWeight > 1) {
-    relativeAge = "Similar Age (Peer)";
-    partnerIsOlder = false;
-    minGapYears = 0;
-    maxGapYears = 2;
-    estimatedDifferenceYears = "Similar age (0 to -2 years younger / peer age with high mental maturity & wisdom)";
+  let maturityLevel: MarriagePrediction["spouseAgeDifference"]["maturityLevel"] = "Balanced / Peer-Level";
+  if (ageScore >= 2.0) maturityLevel = "High / Senior Demeanor";
+  else if (ageScore <= -2.0) maturityLevel = "Youthful / Energetic";
+
+  if (nativeGender === "female") {
+    if (ageScore >= 3.0) {
+      relativeAge = "Older";
+      partnerIsOlder = true;
+      minGapYears = 4;
+      maxGapYears = 8;
+      estimatedDifferenceYears = "+4 to +8 years older (notable seniority & maturity)";
+    } else if (ageScore >= 0.5) {
+      relativeAge = "Older";
+      partnerIsOlder = true;
+      minGapYears = 1;
+      maxGapYears = 4;
+      estimatedDifferenceYears = "+1 to +4 years older (standard traditional alignment)";
+    } else if (ageScore >= -1.5) {
+      relativeAge = "Similar Age (Peer)";
+      partnerIsOlder = false;
+      minGapYears = 0;
+      maxGapYears = 2;
+      estimatedDifferenceYears = "Similar age / Peer (within 0 to 1.5 years)";
+    } else {
+      // Younger husband for female native (Unconventional / Modern pattern)
+      relativeAge = "Younger";
+      partnerIsOlder = false;
+      minGapYears = 1;
+      maxGapYears = 4;
+      estimatedDifferenceYears = "1 to 4 years younger (youthful husband / modern dynamic)";
+      isUnconventional = true;
+    }
+  } else if (nativeGender === "male") {
+    if (ageScore >= 3.0) {
+      // Older wife for male native (Unconventional pattern)
+      relativeAge = "Older";
+      partnerIsOlder = true;
+      minGapYears = 1;
+      maxGapYears = 4;
+      estimatedDifferenceYears = "+1 to +4 years older (wife is older or commands career seniority)";
+      isUnconventional = true;
+    } else if (ageScore >= 1.0) {
+      relativeAge = "Similar Age (Peer)";
+      partnerIsOlder = false;
+      minGapYears = 0;
+      maxGapYears = 2;
+      estimatedDifferenceYears = "Similar age / Peer (within 0 to 1.5 years with high mutual maturity)";
+    } else if (ageScore >= -2.0) {
+      relativeAge = "Younger";
+      partnerIsOlder = false;
+      minGapYears = 1;
+      maxGapYears = 3;
+      estimatedDifferenceYears = "1 to 3 years younger";
+    } else {
+      relativeAge = "Younger";
+      partnerIsOlder = false;
+      minGapYears = 3;
+      maxGapYears = 6;
+      estimatedDifferenceYears = "3 to 6 years younger (notably youthful wife)";
+    }
   } else {
-    relativeAge = "Younger";
-    partnerIsOlder = false;
-    minGapYears = 1;
-    maxGapYears = 3;
-    estimatedDifferenceYears = "-1 to -3 years younger";
+    // Unspecified / General perspective
+    if (ageScore >= 2.5) {
+      relativeAge = "Older";
+      partnerIsOlder = true;
+      minGapYears = 2;
+      maxGapYears = 5;
+      estimatedDifferenceYears = "+2 to +5 years older (mature partner with senior demeanor)";
+    } else if (ageScore <= -2.0) {
+      relativeAge = "Younger";
+      partnerIsOlder = false;
+      minGapYears = 2;
+      maxGapYears = 4;
+      estimatedDifferenceYears = "2 to 4 years younger (youthful, energetic partner)";
+    } else {
+      relativeAge = "Similar Age (Peer)";
+      partnerIsOlder = false;
+      minGapYears = 0;
+      maxGapYears = 2;
+      estimatedDifferenceYears = "Similar age / Peer (within 0 to 2 years)";
+    }
   }
 
-  const ageReason = ageReasons.length > 0
-    ? ageReasons.join(" ")
-    : "Influences of 7th house and its rulers indicate standard contemporary age difference.";
+  const genderPerspective = {
+    ifMaleNative:
+      ageScore >= 2.5
+        ? "If Male Native: Strong Saturnian/Rahu influences indicate an older wife (+1 to +4 years) or career seniority, defying standard stereotypes."
+        : ageScore <= -2.0
+        ? "If Male Native: Strong Mercurial influence indicates wife is noticeably younger (3 to 6 years younger)."
+        : "If Male Native: Wife is likely 1 to 3 years younger or close peer age.",
+    ifFemaleNative:
+      ageScore <= -1.5
+        ? "If Female Native: Strong Mercurial/youthful influence indicates husband is younger (1 to 4 years younger) or peer, defying conventional norms."
+        : ageScore >= 2.5
+        ? "If Female Native: Strong Saturnian influence indicates husband is substantially older (+4 to +8 years) with established career authority."
+        : "If Female Native: Husband is likely 1 to 4 years older or close peer age.",
+  };
+
+  const ageReason =
+    ageReasons.length > 0
+      ? ageReasons.join(" ")
+      : "Influences of 7th house and its rulers indicate standard contemporary age parity.";
 
   const spouseAgeDifference: MarriagePrediction["spouseAgeDifference"] = {
     relativeAge,
@@ -427,13 +585,11 @@ export function getMarriagePrediction(kundli: Kundli): MarriagePrediction {
     minGapYears,
     maxGapYears,
     partnerIsOlder,
+    maturityLevel,
+    unconventionalGapLikely: isUnconventional,
     reason: ageReason,
+    genderPerspective,
   };
-
-  const chalit = getChalitAnalysis(kundli);
-  const kp = getKpAnalysis(kundli);
-  const lalKitab = getLalKitabAnalysis(kundli);
-  const jaimini = getJaiminiKarakas(kundli);
 
   // Classical 7th Lord in Houses 1-12 Dictionary (Brihat Parashara & Phaladeepika)
   const seventhLordDictionary: Record<number, string> = {

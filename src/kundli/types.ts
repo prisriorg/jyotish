@@ -26,6 +26,7 @@ export interface KundliConfig {
     lang?: 'en' | 'hi'; // Default: en (future implementation)
     includeChalit?: boolean; // If true, attaches chalit chart to Kundli
     includeKp?: boolean;     // If true, attaches KP chart to Kundli
+    gender?: 'male' | 'female' | 'other'; // Native's gender (optional)
 }
 
 /**
@@ -45,6 +46,7 @@ export interface Kundli {
         lon: number;
         timezone: number; // Offset in minutes
         rawDate?: Date;
+        gender?: 'male' | 'female' | 'other';
         age: {
             years: number;
             months: number;

@@ -308,12 +308,15 @@ console.log('Current Hora Lord:', panchang.currentHora?.lord);
 
 ---
 
-### 8. Transits, Sade Sati & Daily Strengths
+### 8. Vedic Gochar (Transits), Sade Sati & Daily Strengths
 
-Calculate transit-based afflictions and daily personal compatibility tools.
+Perform comprehensive Vedic planetary transit (Gochar) analysis for all 9 grahas, including classical **Vedha (obstruction)** detection, Shastric exemptions, Sade Sati, Dhaiya, Chandrashtama, and life-area impact scoring.
 
 ```typescript
 import { 
+  getKundli,
+  getGocharAnalysis,
+  getPlanetGochar,
   checkSadeSati, 
   checkDhaiya, 
   getChandrashtama, 
@@ -322,25 +325,37 @@ import {
   isDirectionSafe 
 } from '@prisri/jyotish';
 
-// 1. Shani Sade Sati & Dhaiya
-// Pass natal Moon longitude and transiting Saturn longitude
+// 1. Comprehensive Gochar Analysis for a Kundli
+const gochar = getGocharAnalysis(kundli, new Date());
+console.log('Overall Verdict:', gochar.overallVerdict, `(${gochar.overallFavorablePercentage}% Favorable)`);
+console.log('Sade Sati Active:', gochar.specialTransits.sadeSati.status);
+console.log('Guru Gochar:', gochar.specialTransits.guruGochar.blessingSummary);
+console.log('Career Impact:', gochar.lifeAreas.career.rating, '-', gochar.lifeAreas.career.summary);
+console.log('Wealth Impact:', gochar.lifeAreas.wealth.rating, '-', gochar.lifeAreas.wealth.summary);
+
+// Inspect any individual transiting planet
+const jupTransit = gochar.planets.Jupiter;
+console.log(`Jupiter in ${jupTransit.rashiName}: House ${jupTransit.houseFromMoon} from Moon, Status: ${jupTransit.netStatus}, Vedha: ${jupTransit.hasVedha}`);
+
+// Quick single planet lookup
+const saturnTransit = getPlanetGochar('Saturn', kundli);
+console.log('Saturn Transit Status:', saturnTransit?.netStatus, saturnTransit?.prediction);
+
+// 2. Direct Shani Sade Sati & Dhaiya calculations
 const sadeSati = checkSadeSati(120.5, 330.2);
 console.log('Sade Sati Active:', sadeSati.status, 'Phase:', sadeSati.phase); // Phase 1, 2, or 3
 
 const dhaiya = checkDhaiya(120.5, 210.5);
 console.log('Dhaiya Active:', dhaiya.status, 'Type:', dhaiya.type); // 'Fourth' (Kantaka) or 'Eighth' (Ashtama)
 
-// 2. Chandrashtama (Inauspicious 8th Moon transit)
-// Pass natal Moon rashi index (0=Aries...11=Pisces) and current Moon rashi index
+// 3. Chandrashtama (Inauspicious 8th Moon transit)
 const chandra = getChandrashtama(0, 7); // Aries native, Moon in Scorpio
 console.log('Chandrashtama Active:', chandra.isActive);
 
-// 3. Tarabalam (Daily Nakshatra strength from Janma Nakshatra)
-// Pass birth Nakshatra index (0-26) and current Nakshatra index (0-26)
+// 4. Tarabalam & Disha Shoola
 const tara = getTarabalam(0, 1); // Ashwini to Bharani
 console.log(`Tara: ${tara.taraName}, Auspicious: ${tara.isAuspicious} (${tara.description})`);
 
-// 4. Disha Shoola (Direction-based travel restriction)
 const shoola = getDishaShoola(0); // 0 = Sunday
 console.log(`Avoid traveling ${shoola.inauspiciousDirection} on ${shoola.varaName}`);
 console.log('Is traveling North safe on Sunday?', isDirectionSafe('North', 0));

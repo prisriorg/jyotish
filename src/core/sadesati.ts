@@ -2,7 +2,7 @@ function getRashiIndex(longitude: number): number {
     return Math.floor(longitude / 30); // 0–11
 }
 
-type SadeSatiResult = {
+export type SadeSatiResult = {
     status: boolean;
     phase?: 1 | 2 | 3;
     saturnRashi: number;
@@ -36,7 +36,7 @@ export function checkSadeSati(
 }
 
 
-type DhaiyaResult = {
+export type DhaiyaResult = {
     status: boolean;
     type?: 'Fourth' | 'Eighth';
     saturnRashi: number;
