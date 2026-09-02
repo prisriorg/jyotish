@@ -26,6 +26,9 @@ export interface KundliConfig {
     lang?: 'en' | 'hi'; // Default: en (future implementation)
     includeChalit?: boolean; // If true, attaches chalit chart to Kundli
     includeKp?: boolean;     // If true, attaches KP chart to Kundli
+    includeSpecialLagnas?: boolean; // If true, attaches special lagnas (GL, HL, BL, Indu, etc.)
+    includeArudhas?: boolean;       // If true, attaches Jaimini Arudha Padas (AL, UL, etc.)
+    includeReferenceCharts?: boolean; // If true, attaches Chandra & Surya charts
     gender?: 'male' | 'female' | 'other'; // Native's gender (optional)
 }
 
@@ -36,6 +39,63 @@ import { DrishtiResult } from './drishti';
 import { AshtakavargaResult } from '../ashtakavarga';
 export * from './drishti';
 export * from '../ashtakavarga';
+
+export interface SpecialLagna {
+    longitude: number;
+    rashi: number;
+    rashiName: string;
+    degree: number;
+    minute: number;
+    second: number;
+    nakshatra?: string;
+    nakshatraLord?: string;
+    pada?: number;
+}
+
+export interface InduLagnaInfo {
+    rashi: number;
+    rashiName: string;
+    totalKalas: number;
+    ninthLordFromLagna: string;
+    ninthLordFromMoon: string;
+    kalasLagnaNinth: number;
+    kalasMoonNinth: number;
+}
+
+export interface SpecialLagnasResult {
+    ghatikaLagna: SpecialLagna;
+    horaLagna: SpecialLagna;
+    bhavaLagna: SpecialLagna;
+    shreeLagna: SpecialLagna;
+    induLagna: InduLagnaInfo;
+    pranapadaLagna: SpecialLagna;
+}
+
+export interface ArudhaPadaInfo {
+    pada: number;          // 1 to 12
+    code: string;          // "A1", "A2", ..., "A12"
+    name: string;          // "Arudha Lagna (AL)", "Upapada Lagna (UL)", etc.
+    rashi: number;         // 1 to 12
+    rashiName: string;
+    houseNumber: number;   // House from Lagna
+    lord: string;          // House lord
+}
+
+export interface ArudhaPadasResult {
+    a1_al: ArudhaPadaInfo;
+    a2: ArudhaPadaInfo;
+    a3: ArudhaPadaInfo;
+    a4: ArudhaPadaInfo;
+    a5: ArudhaPadaInfo;
+    a6: ArudhaPadaInfo;
+    a7: ArudhaPadaInfo;
+    a8: ArudhaPadaInfo;
+    a9: ArudhaPadaInfo;
+    a10: ArudhaPadaInfo;
+    a11: ArudhaPadaInfo;
+    a12_ul: ArudhaPadaInfo;
+    all: ArudhaPadaInfo[];
+}
 
 export interface Kundli {
     // Basic Details
@@ -87,6 +147,10 @@ export interface Kundli {
     kp?: KpChart;
     drishti?: DrishtiResult;
     ashtakavarga?: AshtakavargaResult;
+    specialLagnas?: SpecialLagnasResult;
+    arudhaPadas?: ArudhaPadasResult;
+    chandraKundli?: VargaChart;
+    suryaKundli?: VargaChart;
 }
 
 export interface VargaChart {

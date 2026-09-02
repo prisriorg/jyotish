@@ -83,6 +83,31 @@ function getChaturthamshaSign(longitude: number): number {
   return (rashi + part * 3) % 12;
 }
 
+// --- D-5 (Panchamsha): Fame, power, spiritual authority, and legacy. ---
+// Odd signs: Aries(0), Aquarius(10), Sagittarius(8), Gemini(2), Libra(6)
+// Even signs: Taurus(1), Cancer(3), Virgo(5), Scorpio(7), Capricorn(9)
+export function getPanchamshaSign(longitude: number): number {
+  const norm = norm360(longitude);
+  const rashi = Math.floor(norm / 30);
+  const degrees = norm % 30;
+  const part = Math.min(4, Math.floor(degrees / 6));
+  const isOdd = rashi % 2 === 0;
+  const oddSigns = [0, 10, 8, 2, 6];
+  const evenSigns = [1, 3, 5, 7, 9];
+  return isOdd ? oddSigns[part] : evenSigns[part];
+}
+
+// --- D-6 (Shashthamsha): Acute health vulnerabilities, debts, and litigation. ---
+// Odd signs: Starts from Aries (0), Even signs: Starts from Libra (6)
+export function getShashthamshaSign(longitude: number): number {
+  const norm = norm360(longitude);
+  const rashi = Math.floor(norm / 30);
+  const degrees = norm % 30;
+  const part = Math.min(5, Math.floor(degrees / 5));
+  const isOdd = rashi % 2 === 0;
+  return isOdd ? (0 + part) % 12 : (6 + part) % 12;
+}
+
 // --- D-7 (Saptamansha): Children, grandchildren, and creative projects. ---
 function getSaptamsaSign(longitude: number): number {
   const norm = norm360(longitude);
@@ -97,6 +122,25 @@ function getSaptamsaSign(longitude: number): number {
     const startSign = (rashi + 6) % 12;
     return (startSign + part) % 12;
   }
+}
+
+// --- D-8 (Ashtamsha): Longevity, occult research, and unexpected transformations. ---
+// Movable: Starts from Aries (0), Fixed: Starts from Sagittarius (8), Dual: Starts from Leo (4)
+export function getAshtamshaSign(longitude: number): number {
+  const norm = norm360(longitude);
+  const rashi = Math.floor(norm / 30);
+  const degrees = norm % 30;
+  const part = Math.min(7, Math.floor(degrees / 3.75));
+
+  let startSign: number;
+  if ([0, 3, 6, 9].includes(rashi)) {
+    startSign = 0; // Movable -> Aries
+  } else if ([1, 4, 7, 10].includes(rashi)) {
+    startSign = 8; // Fixed -> Sagittarius
+  } else {
+    startSign = 4; // Dual -> Leo
+  }
+  return (startSign + part) % 12;
 }
 
 // --- D-9 (Navamsa): Spouse, married life, and ultimate strength of planets. ---
@@ -121,6 +165,17 @@ function getDasamsaSign(longitude: number): number {
     const startSign = (rashi + 8) % 12;
     return (startSign + part) % 12;
   }
+}
+
+// --- D-11 (Rudramsha / Ekadashamsha): Sudden crises, struggles, forces of destruction. ---
+// In BPHS: Counting starts in reverse order from Aries for the sign in question, then advances by the division number.
+export function getRudramshaSign(longitude: number): number {
+  const norm = norm360(longitude);
+  const rashi = Math.floor(norm / 30);
+  const degrees = norm % 30;
+  const part = Math.min(10, Math.floor(degrees / (30 / 11)));
+  const startSign = (12 - rashi) % 12;
+  return (startSign + part) % 12;
 }
 
 // --- D-12 (Dwadashamsha): Parents, ancestors, and lineage. ---
@@ -295,9 +350,13 @@ export function getAllVargas(
     d2: createVargaChart(ascendantLength, planets, getHoraSign),
     d3: createVargaChart(ascendantLength, planets, getDrekkanaSign),
     d4: createVargaChart(ascendantLength, planets, getChaturthamshaSign),
+    d5: createVargaChart(ascendantLength, planets, getPanchamshaSign),
+    d6: createVargaChart(ascendantLength, planets, getShashthamshaSign),
     d7: createVargaChart(ascendantLength, planets, getSaptamsaSign),
+    d8: createVargaChart(ascendantLength, planets, getAshtamshaSign),
     d9: createVargaChart(ascendantLength, planets, getNavamsaSign),
     d10: createVargaChart(ascendantLength, planets, getDasamsaSign),
+    d11: createVargaChart(ascendantLength, planets, getRudramshaSign),
     d12: createVargaChart(ascendantLength, planets, getDwadasamsaSign),
     d16: createVargaChart(ascendantLength, planets, getShodasamsaSign),
     d20: createVargaChart(ascendantLength, planets, getVimsamsaSign),

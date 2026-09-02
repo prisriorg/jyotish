@@ -35,11 +35,33 @@ import {
 
 import { getGrahaDrishti } from "./drishti";
 import { getAshtakavarga } from "../ashtakavarga";
+import {
+  getSpecialLagnas,
+  getGhatikaChart,
+  getHoraLagnaChart,
+  getBhavaLagnaChart,
+  getInduLagnaChart,
+} from "./special-lagnas";
+import {
+  getArudhaPadas,
+  getArudhaLagnaChart,
+  getUpapadaChart,
+} from "./arudhas";
+import {
+  getChandraKundli,
+  getSuryaKundli,
+  createRashiCentricChart,
+} from "./reference-charts";
+
 export { getGrahaDrishti } from "./drishti";
 export { getAshtakavarga } from "../ashtakavarga";
 export * from "./drishti";
 export * from "../ashtakavarga";
 export * from "./kp-types";
+export * from "./special-lagnas";
+export * from "./arudhas";
+export * from "./reference-charts";
+export * from "./vargas";
 
 /**
  * Generates a Janam Kundli (Birth Chart) for a given date and location.
@@ -188,6 +210,19 @@ export function getKundli(
     kundliResult.kp = getKpChart(date, observer, {
       ayanamsa: config.ayanamsa === "kp" ? "kp" : undefined,
     });
+  }
+
+  if (config.includeSpecialLagnas) {
+    kundliResult.specialLagnas = getSpecialLagnas(kundliResult, observer);
+  }
+
+  if (config.includeArudhas) {
+    kundliResult.arudhaPadas = getArudhaPadas(kundliResult);
+  }
+
+  if (config.includeReferenceCharts) {
+    kundliResult.chandraKundli = getChandraKundli(kundliResult);
+    kundliResult.suryaKundli = getSuryaKundli(kundliResult);
   }
 
   return kundliResult;

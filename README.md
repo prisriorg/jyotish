@@ -15,15 +15,18 @@ A high-performance, developer-friendly TypeScript/JavaScript library for **Jyoti
 - [Quick Start](#-quick-start)
 - [Core Modules & Examples](#-core-modules--examples)
   - [1. Janam Kundli (Birth Chart)](#1-janam-kundli-birth-chart)
-  - [2. Graha Drishti (Planetary Aspects)](#2-graha-drishti-planetary-aspects-new-in-v109)
-  - [3. Ashtakavarga System (BAV & SAV)](#3-ashtakavarga-system-bav--sav-new-in-v109)
-  - [4. Bhava Chalit Chart (Sripati / Equal House)](#4-bhava-chalit-chart-sripati--equal-house)
-  - [5. KP Astrology (Krishnamurti Paddhati)](#5-kp-astrology-krishnamurti-paddhati)
-  - [6. Kundli Matching (Ashtakoota Milan & Mangal Dosha)](#6-kundli-matching-ashtakoota-guna-milan)
-  - [7. Complete Panchangam & Muhurta](#7-complete-panchangam--muhurta)
-  - [8. Transits, Sade Sati & Daily Strengths](#8-transits-sade-sati--daily-strengths)
-  - [9. Festivals & Ekadashis](#9-festivals--ekadashis)
-  - [10. Life Predictions & Guidance (Career, Wealth, Marriage, Remedies)](#10-life-predictions--guidance-career-wealth-marriage-remedies)
+  - [2. Special Lagnas & Special Charts (Ghatika, Hora, Indu, etc.)](#2-special-lagnas--special-charts-ghatika-hora-indu-etc)
+  - [3. Reference Charts (Chandra & Surya Kundli)](#3-reference-charts-chandra--surya-kundli)
+  - [4. Jaimini Arudha Padas & Charts (AL, UL, A1-A12)](#4-jaimini-arudha-padas--charts-al-ul-a1-a12)
+  - [5. Graha Drishti (Planetary Aspects)](#5-graha-drishti-planetary-aspects)
+  - [6. Ashtakavarga System (BAV & SAV)](#6-ashtakavarga-system-bav--sav)
+  - [7. Bhava Chalit Chart (Sripati / Equal House)](#7-bhava-chalit-chart-sripati--equal-house)
+  - [8. KP Astrology (Krishnamurti Paddhati)](#8-kp-astrology-krishnamurti-paddhati)
+  - [9. Kundli Matching (Ashtakoota Milan & Mangal Dosha)](#9-kundli-matching-ashtakoota-guna-milan)
+  - [10. Complete Panchangam & Muhurta](#10-complete-panchangam--muhurta)
+  - [11. Transits, Sade Sati & Daily Strengths](#11-transits-sade-sati--daily-strengths)
+  - [12. Festivals & Ekadashis](#12-festivals--ekadashis)
+  - [13. Life Predictions & Guidance (Career, Wealth, Marriage, Remedies)](#13-life-predictions--guidance-career-wealth-marriage-remedies)
 - [Configuration Options](#-configuration-options)
 - [TypeScript Types Reference](#-typescript-types-reference)
 - [License](#-license)
@@ -34,7 +37,10 @@ A high-performance, developer-friendly TypeScript/JavaScript library for **Jyoti
 
 - **Accurate Astronomical Engine**: Sidereal calculations with multiple Ayanamsas (`Lahiri`, `KP`, `Raman`).
 - **Janam Kundli (Horoscope)**: Lagna, 9 Vedic planets + Outer planets, Dignities (Exalted, Debilitated, Combust, Retrograde, Vargottama), Houses.
-- **Divisional Charts (Vargas)**: Accurate classical algorithms for D1 through D60 (D1, D2, D3, D4, D7, D9 Navamsha, D10 Dashamsha, D12, D16, D20, D24, D27, D30, D40, D45, D60).
+- **Divisional Charts (Vargas)**: Accurate classical algorithms for 20 divisional charts from D1 to D60 (D1, D2 Hora, D3, D4, D5 Panchamsha, D6 Shashthamsha, D7, D8 Ashtamsha, D9 Navamsha, D10 Dashamsha, D11 Rudramsha, D12, D16, D20, D24, D27, D30, D40, D45, D60).
+- **Special Lagnas & Charts**: Classical BPHS calculations for Ghatika Lagna (GL - Power & Politics), Hora Lagna (HL - Wealth), Bhava Lagna (BL - Vitality), Shree Lagna (SL - Prosperity), Indu Lagna (IL - Dhana Yoga), and Pranapada Lagna (PP - Rectification) with full charts.
+- **Reference Charts**: Chandra Kundli (Moon Chart) and Surya Kundli (Sun Chart) with rotated house perspectives.
+- **Jaimini Arudha Padas**: Comprehensive calculation of all 12 Arudhas (A1 through A12) with Parashari 1st/7th house exceptions, Arudha Lagna (AL) chart, and Upapada Lagna (UL) chart.
 - **Vimshottari Dasha Engine**: Full 120-year tree spanning Mahadasha, Antardasha, and Pratyantardasha with precise birth balance.
 - **Graha Drishti (Aspects)**: Complete Parashari planetary aspects (7th full aspect, Mars 4th/8th, Jupiter 5th/9th, Saturn 3rd/10th, Rahu/Ketu, mutual aspects, house aspects).
 - **Ashtakavarga Engine**: 7-planet Bhinnashtakavarga (BAV), Sarvashtakavarga (SAV) per rashi and house, house strength evaluation, and Kakshya analysis.
@@ -128,7 +134,112 @@ currentMaha.antars?.forEach(antar => {
 
 ---
 
-### 2. Graha Drishti (Planetary Aspects) *(New in v1.0.9)*
+### 2. Special Lagnas & Special Charts (Ghatika, Hora, Indu, etc.)
+
+Calculates all classical special lagnas according to Maharishi Parashara's *Brihat Parashara Hora Shastra (BPHS)* along with full charts where each special lagna is treated as House 1:
+
+- **Ghatika Lagna (GL)**: Traverses 1 sign per 24 minutes (1 Ghati) from Sun's longitude. Key indicator for executive authority, bureaucracy, political power, and high fame.
+- **Hora Lagna (HL)**: Traverses 1 sign per 60 minutes (2.5 Ghatis) from Sun's longitude. Premier lagna for financial riches, wealth preservation, and liquid cash.
+- **Bhava Lagna (BL)**: Traverses 1 sign per 120 minutes (5 Ghatis). Represents physical foundation, health, and vitality.
+- **Shree Lagna (SL)**: Calculated from Moon's nakshatra traversal projected to Lagna. Represents divine fortune, Lakshmi's grace, and marital wealth.
+- **Indu Lagna (IL)**: Sum of rays (Kalas) of 9th lords from Lagna and Moon mod 12, counted from Moon. Classic test for Dhana Yoga (wealth potential).
+- **Pranapada Lagna (PP)**: Calculated from elapsed vighatis from sunrise mapped according to Sun's sign modality (Movable/Fixed/Dual). Used for birth-time rectification.
+
+```typescript
+import {
+  getKundli,
+  getSpecialLagnas,
+  getGhatikaChart,
+  getHoraLagnaChart,
+  getInduLagnaChart,
+  getBhavaLagnaChart,
+  Observer
+} from '@prisri/jyotish';
+
+const kundli = getKundli(new Date('1998-05-21T06:30:00+05:30'), new Observer(28.6139, 77.2090, 0), {
+  includeSpecialLagnas: true // Automatically attaches specialLagnas to kundli
+});
+
+// 1. Inspect Special Lagnas
+const sl = kundli.specialLagnas || getSpecialLagnas(kundli);
+console.log(`Ghatika Lagna (GL): ${sl.ghatikaLagna.rashiName} at ${sl.ghatikaLagna.degree}° ${sl.ghatikaLagna.minute}'`);
+console.log(`Hora Lagna (HL):    ${sl.horaLagna.rashiName} at ${sl.horaLagna.degree}° ${sl.horaLagna.minute}'`);
+console.log(`Indu Lagna (IL):    ${sl.induLagna.rashiName} (Total Kalas: ${sl.induLagna.totalKalas})`);
+
+// 2. Generate Special Charts on-demand
+const glChart = getGhatikaChart(kundli);     // Ghatika Chart (Power & Status)
+const hlChart = getHoraLagnaChart(kundli);   // Hora Lagna Chart (Wealth)
+const induChart = getInduLagnaChart(kundli); // Indu Lagna Chart (Dhana Yoga)
+
+console.log('Ghatika Chart Ascendant:', glChart.ascendant.rashiName);
+console.log('Planets in Ghatika House 1:', glChart.houses[0].planets);
+```
+
+---
+
+### 3. Reference Charts (Chandra & Surya Kundli)
+
+In classical Vedic astrology, viewing planetary placements from the Moon (Chandra Kundli) and Sun (Surya Kundli) is mandatory alongside the Janam Kundli:
+
+- **Chandra Kundli (Moon Chart)**: Moon's natal sign becomes House 1. Crucial for assessing psychological perspective, mental peace, and is the primary reference chart for **Transit (Gochar)** predictions.
+- **Surya Kundli (Sun Chart)**: Sun's natal sign becomes House 1. Crucial for assessing soul vitality, executive authority, father, and government relations.
+
+```typescript
+import { getKundli, getChandraKundli, getSuryaKundli, Observer } from '@prisri/jyotish';
+
+const kundli = getKundli(new Date(), new Observer(28.6139, 77.2090, 0), {
+  includeReferenceCharts: true // Attaches chandraKundli & suryaKundli to kundli
+});
+
+// Access directly or generate on demand
+const moonChart = kundli.chandraKundli || getChandraKundli(kundli);
+const sunChart = kundli.suryaKundli || getSuryaKundli(kundli);
+
+console.log('Chandra Kundli Lagna:', moonChart.ascendant.rashiName);
+console.log('Chandra Kundli House 10 Planets (Career from Moon):', moonChart.houses[9].planets);
+
+console.log('Surya Kundli Lagna:', sunChart.ascendant.rashiName);
+```
+
+---
+
+### 4. Jaimini Arudha Padas & Charts (AL, UL, A1-A12)
+
+Computes all 12 Arudha Padas (A1 to A12) based on the distance of house lords from their respective houses, incorporating standard **Parashari & Jaimini exception rules** (shifting by 10 houses if a pada falls in the 1st or 7th from the house):
+
+- **A1 / Arudha Lagna (AL)**: External worldly image, social status, and societal perception.
+- **A7 / Dara Pada**: Public partnerships, business relations, and romantic appeal.
+- **A12 / Upapada Lagna (UL)**: Spouse's lineage, marital longevity, and domestic harmony.
+- **A2 to A11**: Dhana Pada (A2), Bhratri Pada (A3), Matri Pada (A4), Putra Pada (A5), Shatru Pada (A6), Mrityu Pada (A8), Bhagya Pada (A9), Rajya/Karma Pada (A10), Labha Pada (A11).
+
+```typescript
+import {
+  getKundli,
+  getArudhaPadas,
+  getArudhaLagnaChart,
+  getUpapadaChart,
+  Observer
+} from '@prisri/jyotish';
+
+const kundli = getKundli(new Date(), new Observer(28.6139, 77.2090, 0), {
+  includeArudhas: true // Automatically attaches arudhaPadas to kundli
+});
+
+// 1. Inspect Arudha Padas
+const padas = kundli.arudhaPadas || getArudhaPadas(kundli);
+console.log(`Arudha Lagna (AL / A1):   ${padas.a1_al.rashiName} (House ${padas.a1_al.houseNumber})`);
+console.log(`Upapada Lagna (UL / A12): ${padas.a12_ul.rashiName} (House ${padas.a12_ul.houseNumber})`);
+console.log(`Rajya Pada (A10):         ${padas.a10.rashiName}`);
+
+// 2. Generate Arudha Charts
+const alChart = getArudhaLagnaChart(kundli); // Chart with AL as House 1
+const ulChart = getUpapadaChart(kundli);     // Chart with UL as House 1
+console.log('Arudha Lagna Chart House 1:', alChart.ascendant.rashiName);
+```
+
+---
+
+### 5. Graha Drishti (Planetary Aspects) *(New in v1.0.9)*
 
 Automatically computed and available on `kundli.drishti`, or callable standalone via `getGrahaDrishti(kundli)`. Calculates classical Parashari aspects (Full 7th aspect, Mars 4th/8th, Jupiter 5th/9th, Saturn 3rd/10th, Rahu/Ketu 5th/9th).
 
@@ -156,7 +267,7 @@ drishti.mutualAspects.forEach(m => {
 
 ---
 
-### 3. Ashtakavarga System (BAV & SAV) *(New in v1.0.9)*
+### 6. Ashtakavarga System (BAV & SAV) *(New in v1.0.9)*
 
 Includes Bhinnashtakavarga (BAV) for all 7 planets calculated from 8 reference points, Sarvashtakavarga (SAV) totals per rashi and house, house strength ratings, and Kakshya calculations.
 
@@ -186,7 +297,7 @@ console.log('Jupiter Bindus in 1st House:', jupiterBAV.byHouse[0]);
 
 ---
 
-### 4. Bhava Chalit Chart (Sripati / Equal House)
+### 7. Bhava Chalit Chart (Sripati / Equal House)
 
 Calculates the actual house placement of planets, Bhava Madhyas (mid-points), Sandhis (junctions), and detects house shifts relative to the D1 chart.
 
@@ -212,7 +323,7 @@ console.log({
 
 ---
 
-### 5. KP Astrology (Krishnamurti Paddhati)
+### 8. KP Astrology (Krishnamurti Paddhati)
 
 Full KP calculation suite with **Placidus House Cusps**, **4-fold Rulers** (Sign, Star, Sub, Sub-sub lords), **4-Level KP Significators (A, B, C, D)**, and **Ruling Planets (RP)**.
 
@@ -244,7 +355,7 @@ console.log('House 10 Significators:', kp.significators?.houses[10]);
 
 ---
 
-### 6. Kundli Matching (Ashtakoota Guna Milan)
+### 9. Kundli Matching (Ashtakoota Guna Milan)
 
 Calculates the traditional 36-point Guna Milan along with Mangal Dosha detection and cancellations for both charts.
 
@@ -274,7 +385,7 @@ console.log('Girl Mangal Dosha:', girlDosha.hasDosha, girlDosha.description);
 
 ---
 
-### 7. Complete Panchangam & Muhurta
+### 10. Complete Panchangam & Muhurta
 
 Provides instant or day-long Vedic calendar metrics: Tithi, Nakshatra, Yoga, Karana, Vara, Sunrise/Sunset, Choghadiya, Hora, and inauspicious/auspicious Muhurtas.
 
@@ -308,7 +419,7 @@ console.log('Current Hora Lord:', panchang.currentHora?.lord);
 
 ---
 
-### 8. Vedic Gochar (Transits), Sade Sati & Daily Strengths
+### 11. Vedic Gochar (Transits), Sade Sati & Daily Strengths
 
 Perform comprehensive Vedic planetary transit (Gochar) analysis for all 9 grahas, including classical **Vedha (obstruction)** detection, Shastric exemptions, Sade Sati, Dhaiya, Chandrashtama, and life-area impact scoring.
 
@@ -363,7 +474,7 @@ console.log('Is traveling North safe on Sunday?', isDirectionSafe('North', 0));
 
 ---
 
-### 9. Festivals & Ekadashis
+### 12. Festivals & Ekadashis
 
 Retrieve accurate Hindu festivals, Vratas, and Ekadashi dates calculated per Udaya Tithi.
 
@@ -386,7 +497,7 @@ console.log('Ekadashi:', ekadashi); // e.g. "Prabodhini / Devutthana Ekadashi"
 
 ---
 
-### 10. Multi-System Life Predictions & Guidance (Parashari, Jaimini, Chalit, KP & Lal Kitab)
+### 13. Multi-System Life Predictions & Guidance (Parashari, Jaimini, Chalit, KP & Lal Kitab)
 
 A unified Vedic prediction suite synthesizing **Classical Parashari (D1/D9/D10)**, **Jaimini Chara Karakas**, **Sripati Bhava Chalit**, **KP Astrology (Cusp Sub-Lords)**, and **Lal Kitab Teva & Totke** for pinpoint accuracy on any chart:
 
@@ -458,6 +569,22 @@ console.log(report.formattedMarkdown); // Full multi-system formatted Markdown r
 
 ## ⚙️ Configuration Options
 
+### Kundli Generation Options (`KundliConfig`)
+
+Pass options into `getKundli(date, observer, options)` to control calculations and automated chart generation:
+
+```typescript
+const kundli = getKundli(birthDate, observer, {
+  ayanamsa: 'lahiri',              // 'lahiri' (default) | 'kp' | 'raman'
+  houseSystem: 'whole_sign',       // 'whole_sign' (default) | 'sripati' | 'equal_house' | 'placidus'
+  includeSpecialLagnas: true,     // Attach Ghatika, Hora, Bhava, Shree, Indu, Pranapada
+  includeArudhas: true,           // Attach Jaimini Arudha Padas (A1 to A12)
+  includeReferenceCharts: true,   // Attach Chandra Kundli (Moon Chart) & Surya Kundli (Sun Chart)
+  includeChalit: true,            // Attach Sripati Bhava Chalit Chart
+  includeKp: true                 // Attach KP Cusps, Rulers & Significators
+});
+```
+
 ### Ayanamsa Systems
 
 Supported in `getKundli()`, `getKpChart()`, and `getAyanamsa()`:
@@ -486,6 +613,11 @@ import type {
   PlanetaryPosition,
   Bhava,
   VargaChart,
+  SpecialLagna,
+  SpecialLagnasResult,
+  InduLagnaInfo,
+  ArudhaPadaInfo,
+  ArudhaPadasResult,
   VimshottariDasha,
   ChalitChart,
   KpChart,
