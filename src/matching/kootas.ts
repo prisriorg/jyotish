@@ -7,38 +7,42 @@ import {
     RASHI_LORDS
 } from "./constants";
 import { KootaResult } from "./types";
+import { Language } from "../i18n/types";
+import { kootaNamesI18n, varnaI18n, vashyaI18n, ganaI18n, nadiI18n, yoniI18n } from "../i18n/dictionaries/matching";
+import { getLocalizedPlanet } from "../i18n/index";
 
 // --- 1. Varna (1 Point) ---
-export function calculateVarna(boyRashi: number, girlRashi: number): KootaResult {
+export function calculateVarna(boyRashi: number, girlRashi: number, lang: Language = 'en'): KootaResult {
     const bVarna = RASHI_VARNA[boyRashi];
     const gVarna = RASHI_VARNA[girlRashi];
 
-    // Rule: Boy Varna >= Girl Varna => 1. Else 0.
-    // Brahmin(0) > Kshatriya(1) > Vaishya(2) > Shudra(3).
-    // Note: Lower index is Higher Rank.
     let score = 0;
     if (bVarna <= gVarna) {
         score = 1;
     }
 
+    const bName = VARNA_ORDER[bVarna];
+    const gName = VARNA_ORDER[gVarna];
+    const locB = varnaI18n[lang]?.[bName] || bName;
+    const locG = varnaI18n[lang]?.[gName] || gName;
+    const meta = kootaNamesI18n[lang]?.Varna || { name: "Varna", area: "Work/Ego" };
+
     return {
-        name: "Varna",
+        name: meta.name,
         score,
         maxScore: 1,
-        boy: VARNA_ORDER[bVarna],
-        girl: VARNA_ORDER[gVarna],
-        description: `Boy:${VARNA_ORDER[bVarna]} - Girl:${VARNA_ORDER[gVarna]}`,
-        area: "Work/Ego"
+        boy: locB,
+        girl: locG,
+        description: lang === 'hi' ? `वर: ${locB} - कन्या: ${locG}` : `Boy:${bName} - Girl:${gName}`,
+        area: meta.area
     };
 }
 
 // --- 2. Vashya (2 Points) ---
-export function calculateVashya(boyRashi: number, girlRashi: number): KootaResult {
+export function calculateVashya(boyRashi: number, girlRashi: number, lang: Language = 'en'): KootaResult {
     const bType = RASHI_VASHYA[boyRashi];
     const gType = RASHI_VASHYA[girlRashi];
 
-    // Lookup Table [Boy][Girl]
-    // Indices: 0:Chat, 1:Man, 2:Jal, 3:Van, 4:Keet
     const table = [
         [2, 1, 1, 0.5, 1], // Chatushpad
         [1, 2, 0.5, 0, 1], // Manav
@@ -48,31 +52,32 @@ export function calculateVashya(boyRashi: number, girlRashi: number): KootaResul
     ];
 
     const score = table[bType][gType];
+    const bName = VASHYA_TYPES[bType];
+    const gName = VASHYA_TYPES[gType];
+    const locB = vashyaI18n[lang]?.[bName] || bName;
+    const locG = vashyaI18n[lang]?.[gName] || gName;
+    const meta = kootaNamesI18n[lang]?.Vashya || { name: "Vashya", area: "Dominance/Control" };
 
     return {
-        name: "Vashya",
+        name: meta.name,
         score,
         maxScore: 2,
-        boy: VASHYA_TYPES[bType],
-        girl: VASHYA_TYPES[gType],
-        description: `Boy:${VASHYA_TYPES[bType]} - Girl:${VASHYA_TYPES[gType]}`,
-        area: "Dominance/Control"
+        boy: locB,
+        girl: locG,
+        description: lang === 'hi' ? `वर: ${locB} - कन्या: ${locG}` : `Boy:${bName} - Girl:${gName}`,
+        area: meta.area
     };
 }
 
 // --- 3. Tara (3 Points) ---
-export function calculateTara(boyNak: number, girlNak: number): KootaResult {
-    // Count from Girl to Boy
+export function calculateTara(boyNak: number, girlNak: number, lang: Language = 'en'): KootaResult {
     let countGB = (boyNak - girlNak);
     if (countGB < 0) countGB += 27;
-    countGB += 1; // Inclusive count
+    countGB += 1;
 
-    // Remainder by 9
     const remGB = countGB % 9;
-    // Good: 1, 2, 4, 6, 8, 9(0). Bad: 3, 5, 7.
     const isGoodGB = [1, 2, 4, 6, 8, 0].includes(remGB);
 
-    // Count from Boy to Girl
     let countBG = (girlNak - boyNak);
     if (countBG < 0) countBG += 27;
     countBG += 1;
@@ -84,32 +89,45 @@ export function calculateTara(boyNak: number, girlNak: number): KootaResult {
     else if (isGoodGB || isGoodBG) score = 1.5;
     else score = 0;
 
+    const meta = kootaNamesI18n[lang]?.Tara || { name: "Tara", area: "Destiny/Luck" };
+    const goodTxt = lang === 'hi' ? 'शुभ' : 'Good';
+    const badTxt = lang === 'hi' ? 'अशुभ' : 'Bad';
+
     return {
-        name: "Tara",
+        name: meta.name,
         score,
         maxScore: 3,
-        boy: isGoodGB ? 'Good' : 'Bad',
-        girl: isGoodBG ? 'Good' : 'Bad',
-        description: `G-B Count:${countGB} (${isGoodGB ? 'Good' : 'Bad'}) / B-G Count:${countBG} (${isGoodBG ? 'Good' : 'Bad'})`,
-        area: "Destiny/Luck"
+        boy: isGoodGB ? goodTxt : badTxt,
+        girl: isGoodBG ? goodTxt : badTxt,
+        description: lang === 'hi'
+            ? `कन्या-वर गणना:${countGB} (${isGoodGB ? 'शुभ' : 'अशुभ'}) / वर-कन्या गणना:${countBG} (${isGoodBG ? 'शुभ' : 'अशुभ'})`
+            : `G-B Count:${countGB} (${isGoodGB ? 'Good' : 'Bad'}) / B-G Count:${countBG} (${isGoodBG ? 'Good' : 'Bad'})`,
+        area: meta.area
     };
 }
 
 // --- 4. Yoni (4 Points) ---
-export function calculateYoni(boyNak: number, girlNak: number): KootaResult {
+export function calculateYoni(boyNak: number, girlNak: number, lang: Language = 'en'): KootaResult {
     const bYoni = NAKSHATRA_YONI[boyNak];
     const gYoni = NAKSHATRA_YONI[girlNak];
+    const bName = YONI_NAMES[bYoni];
+    const gName = YONI_NAMES[gYoni];
+    const locB = yoniI18n[lang]?.[bName] || bName;
+    const locG = yoniI18n[lang]?.[gName] || gName;
+    const meta = kootaNamesI18n[lang]?.Yoni || { name: "Yoni", area: "Sexual Compatibility" };
 
     if (bYoni === gYoni) {
         return {
-            name: "Yoni", score: 4, maxScore: 4,
-            boy: YONI_NAMES[bYoni],
-            girl: YONI_NAMES[gYoni],
-            description: "Same Yoni (Perfect)", area: "Sexual Compatibility"
+            name: meta.name,
+            score: 4,
+            maxScore: 4,
+            boy: locB,
+            girl: locG,
+            description: lang === 'hi' ? "समान योनि (सर्वोत्तम सामंजस्य)" : "Same Yoni (Perfect)",
+            area: meta.area
         };
     }
 
-    // Great Enemies (0 Points)
     const greatEnemies = [[0, 8], [1, 13], [2, 11], [3, 12], [4, 10], [5, 6], [7, 9]];
     let isGreatEnemy = false;
     greatEnemies.forEach(pair => {
@@ -118,15 +136,15 @@ export function calculateYoni(boyNak: number, girlNak: number): KootaResult {
         }
     });
     if (isGreatEnemy) return {
-        name: "Yoni", score: 0, maxScore: 4,
-        boy: YONI_NAMES[bYoni],
-        girl: YONI_NAMES[gYoni],
-        description: `Boy:${YONI_NAMES[bYoni]} - Girl:${YONI_NAMES[gYoni]} (Great Enemies)`, area: "Sexual Compatibility"
+        name: meta.name,
+        score: 0,
+        maxScore: 4,
+        boy: locB,
+        girl: locG,
+        description: lang === 'hi' ? `वर: ${locB} - कन्या: ${locG} (परम शत्रु योनि)` : `Boy:${bName} - Girl:${gName} (Great Enemies)`,
+        area: meta.area
     };
 
-    // Enemy Pairs (1 Point)
-    // Updated based on verification: 
-    // Buffalo(8) - Tiger(9) is Enemy (1 Point) in AstroSage logic.
     const enemies = [[8, 9], [1, 9], [0, 10]];
     let isEnemy = false;
     enemies.forEach(pair => {
@@ -135,28 +153,33 @@ export function calculateYoni(boyNak: number, girlNak: number): KootaResult {
         }
     });
     if (isEnemy) return {
-        name: "Yoni", score: 1, maxScore: 4,
-        boy: YONI_NAMES[bYoni],
-        girl: YONI_NAMES[gYoni],
-        description: `Boy:${YONI_NAMES[bYoni]} - Girl:${YONI_NAMES[gYoni]} (Enemies)`, area: "Sexual Compatibility"
+        name: meta.name,
+        score: 1,
+        maxScore: 4,
+        boy: locB,
+        girl: locG,
+        description: lang === 'hi' ? `वर: ${locB} - कन्या: ${locG} (शत्रु योनि)` : `Boy:${bName} - Girl:${gName} (Enemies)`,
+        area: meta.area
     };
 
-    // Default to 2 (Neutral)
     return {
-        name: "Yoni",
+        name: meta.name,
         score: 2,
         maxScore: 4,
-        boy: YONI_NAMES[bYoni],
-        girl: YONI_NAMES[gYoni],
-        description: `Boy:${YONI_NAMES[bYoni]} - Girl:${YONI_NAMES[gYoni]} (Neutral)`,
-        area: "Sexual Compatibility"
+        boy: locB,
+        girl: locG,
+        description: lang === 'hi' ? `वर: ${locB} - कन्या: ${locG} (सम / सामान्य)` : `Boy:${bName} - Girl:${gName} (Neutral)`,
+        area: meta.area
     };
 }
 
 // --- 5. Graha Maitri (5 Points) ---
-export function calculateGrahaMaitri(boyRashi: number, girlRashi: number): KootaResult {
+export function calculateGrahaMaitri(boyRashi: number, girlRashi: number, lang: Language = 'en'): KootaResult {
     const bLord = RASHI_LORDS[boyRashi];
     const gLord = RASHI_LORDS[girlRashi];
+    const locB = getLocalizedPlanet(bLord, lang);
+    const locG = getLocalizedPlanet(gLord, lang);
+    const meta = kootaNamesI18n[lang]?.["Graha Maitri"] || { name: "Graha Maitri", area: "Mental Compatibility" };
 
     const friends: Record<string, string[]> = {
         "Sun": ["Moon", "Mars", "Jupiter"],
@@ -182,7 +205,7 @@ export function calculateGrahaMaitri(boyRashi: number, girlRashi: number): Koota
         if (planet === other) return 1;
         if (friends[planet].includes(other)) return 1;
         if (enemies[planet].includes(other)) return -1;
-        return 0; // Neutral
+        return 0;
     };
 
     const bToG = getRel(bLord, gLord);
@@ -196,7 +219,7 @@ export function calculateGrahaMaitri(boyRashi: number, girlRashi: number): Koota
     else if ((bToG === 0 && gToB === -1) || (bToG === -1 && gToB === 0)) score = 0.5;
     else score = 0;
 
-    const relMap: Record<number, string> = {
+    const relMapEn: Record<number, string> = {
         5: "Best Friends",
         4: "Friends",
         3: "Neutral",
@@ -205,36 +228,49 @@ export function calculateGrahaMaitri(boyRashi: number, girlRashi: number): Koota
         0: "Bitter Enemies"
     };
 
+    const relMapHi: Record<number, string> = {
+        5: "परम मित्र",
+        4: "मित्र",
+        3: "सम / तटस्थ",
+        1: "शत्रु",
+        0.5: "अधम शत्रु",
+        0: "कट्टर शत्रु"
+    };
+
+    const relTxt = lang === 'hi' ? relMapHi[score] : relMapEn[score];
+
     return {
-        name: "Graha Maitri",
+        name: meta.name,
         score,
         maxScore: 5,
-        boy: bLord,
-        girl: gLord,
-        description: `Boy:${bLord} - Girl:${gLord} (${relMap[score] || ''})`,
-        area: "Mental Compatibility"
+        boy: locB,
+        girl: locG,
+        description: lang === 'hi' ? `वर: ${locB} - कन्या: ${locG} (${relTxt})` : `Boy:${bLord} - Girl:${gLord} (${relTxt || ''})`,
+        area: meta.area
     };
 }
 
 // --- 6. Gana (6 Points) ---
-export function calculateGana(boyNak: number, girlNak: number): KootaResult {
+export function calculateGana(boyNak: number, girlNak: number, lang: Language = 'en'): KootaResult {
     const bGana = NAKSHATRA_GANA[boyNak];
     const gGana = NAKSHATRA_GANA[girlNak];
+    const bName = GANA_NAMES[bGana];
+    const gName = GANA_NAMES[gGana];
+    const locB = ganaI18n[lang]?.[bName] || bName;
+    const locG = ganaI18n[lang]?.[gName] || gName;
+    const meta = kootaNamesI18n[lang]?.Gana || { name: "Gana", area: "Temperament" };
 
     if (bGana === gGana) {
         return {
-            name: "Gana", score: 6, maxScore: 6,
-            boy: GANA_NAMES[bGana],
-            girl: GANA_NAMES[gGana],
-            description: "Same Gana", area: "Temperament"
+            name: meta.name,
+            score: 6,
+            maxScore: 6,
+            boy: locB,
+            girl: locG,
+            description: lang === 'hi' ? "समान गण (उत्तम सामंजस्य)" : "Same Gana",
+            area: meta.area
         };
     }
-
-    // Strict Matrix based on Verification (AstroSage gave 0 for Deva-Rakshasa)
-    // Deva(0), Manushya(1), Rakshasa(2)
-    // D-M=6, D-R=0 (Strict)
-    // M-D=5, M-R=0
-    // R-D=0 (Strict), R-M=0
 
     const matrix = [
         [6, 6, 0], // Deva vs [D, M, R]
@@ -245,108 +281,90 @@ export function calculateGana(boyNak: number, girlNak: number): KootaResult {
     const score = matrix[bGana][gGana];
 
     return {
-        name: "Gana",
+        name: meta.name,
         score,
         maxScore: 6,
-        boy: GANA_NAMES[bGana],
-        girl: GANA_NAMES[gGana],
-        description: `Boy:${GANA_NAMES[bGana]} - Girl:${GANA_NAMES[gGana]}`,
-        area: "Temperament"
+        boy: locB,
+        girl: locG,
+        description: lang === 'hi' ? `वर: ${locB} - कन्या: ${locG}` : `Boy:${bName} - Girl:${gName}`,
+        area: meta.area
     };
 }
 
 // --- 7. Bhakoot (7 Points) ---
-export function calculateBhakoot(boyRashi: number, girlRashi: number): KootaResult {
+export function calculateBhakoot(boyRashi: number, girlRashi: number, lang: Language = 'en'): KootaResult {
     let diff = (girlRashi - boyRashi);
     if (diff < 0) diff += 12;
-    const pos = diff + 1; // 1-based (e.g. 1 means Same sign)
+    const pos = diff + 1;
 
-    // Bad Pairs: 2-12 (Dwirdwadash), 5-9 (Navpancham), 6-8 (Shadashtak)
-    // 2-12 positions: 2 and 12
-    // 5-9 positions: 5 and 9
-    // 6-8 positions: 6 and 8
     const isBad = [2, 12, 5, 9, 6, 8].includes(pos);
 
     let score = 7;
     let relName = `${pos}-axis`;
-    if ([2, 12].includes(pos)) relName = "Dwirdwadash (2-12)";
-    if ([6, 8].includes(pos)) relName = "Shadashtak (6-8)";
-    if ([5, 9].includes(pos)) relName = "Navpancham (5-9)";
+    if ([2, 12].includes(pos)) relName = lang === 'hi' ? "द्विर्द्वादश (2-12)" : "Dwirdwadash (2-12)";
+    if ([6, 8].includes(pos)) relName = lang === 'hi' ? "षडाष्टक (6-8)" : "Shadashtak (6-8)";
+    if ([5, 9].includes(pos)) relName = lang === 'hi' ? "नवपंचम (5-9)" : "Navpancham (5-9)";
 
-    let description = `Position: ${relName}`;
+    let description = lang === 'hi' ? `स्थिति: ${relName}` : `Position: ${relName}`;
+    const bLord = RASHI_LORDS[boyRashi];
+    const gLord = RASHI_LORDS[girlRashi];
+    const locB = getLocalizedPlanet(bLord, lang);
+    const locG = getLocalizedPlanet(gLord, lang);
+    const meta = kootaNamesI18n[lang]?.Bhakoot || { name: "Bhakoot", area: "Love/Happiness" };
 
     if (isBad) {
-        // Check Exceptions: Same Lord (Kuja-Kuja, Shukra-Shukra etc) or Friendly Lords
-        const bLord = RASHI_LORDS[boyRashi];
-        const gLord = RASHI_LORDS[girlRashi];
-
-        // Exception 1: Same Lord
         if (bLord === gLord) {
-            // E.g. Aries-Scorpio (1-8 relation, but both Mars)
-            // E.g. Taurus-Libra (2-7 relation? No 2-7 is 6-8 distance. 1:Taurus(2), 2:Gemini(3)... 8:Sagittarius(9)? No.
-            // Aries(1) - Scorpio(8) -> Distance is 8. (1,2,3,4,5,6,7,8). Relation is 6-8.
-            // Both Mars. Exception applies.
             score = 7;
-            description += ` (Exception: Same Lord ${bLord})`;
+            description += lang === 'hi' ? ` (परिहार: समान राशि स्वामी ${locB})` : ` (Exception: Same Lord ${bLord})`;
         } else {
-            // Check Graha Maitri (simple Friend check)
-            // If Lords are mutual friends, Bhakoot dosha is reduced/cancelled in some traditions.
-            // However, strict Ashtakoot gives 0. 
-            // We will stick to Same Lord exception which is universally accepted.
-            // Some texts accept Friendly lords for 6-8/2-12.
-
-            // For now, strict 0 unless Same Lord.
             score = 0;
-            description += " (Bhakoot Dosha)";
+            description += lang === 'hi' ? " (भकूट दोष)" : " (Bhakoot Dosha)";
         }
     }
 
     return {
-        name: "Bhakoot",
+        name: meta.name,
         score,
         maxScore: 7,
-        boy: RASHI_LORDS[boyRashi],
-        girl: RASHI_LORDS[girlRashi],
+        boy: locB,
+        girl: locG,
         description,
-        area: "Love/Happiness"
+        area: meta.area
     };
 }
 
 // --- 8. Nadi (8 Points) ---
-export function calculateNadi(boyNak: number, girlNak: number, boyRashi?: number, girlRashi?: number): KootaResult {
+export function calculateNadi(boyNak: number, girlNak: number, boyRashi?: number, girlRashi?: number, lang: Language = 'en'): KootaResult {
     const bNadi = NAKSHATRA_NADI[boyNak];
     const gNadi = NAKSHATRA_NADI[girlNak];
+    const bName = NADI_NAMES[bNadi];
+    const gName = NADI_NAMES[gNadi];
+    const locB = nadiI18n[lang]?.[bName] || bName;
+    const locG = nadiI18n[lang]?.[gName] || gName;
+    const meta = kootaNamesI18n[lang]?.Nadi || { name: "Nadi", area: "Health/Genes" };
 
     let score = 8;
-    let description = `Boy:${NADI_NAMES[bNadi]} - Girl:${NADI_NAMES[gNadi]}`;
+    let description = lang === 'hi' ? `वर: ${locB} - कन्या: ${locG}` : `Boy:${bName} - Girl:${gName}`;
 
     if (bNadi === gNadi) {
         score = 0;
-        description += " (Nadi Dosha)";
+        description += lang === 'hi' ? " (नाड़ी दोष)" : " (Nadi Dosha)";
 
-        // Exceptions
-        // 1. Same Rashi, Different Nakshatra (e.g. Krittika vs Rohini in Taurus)
         if (boyRashi !== undefined && girlRashi !== undefined) {
             if (boyRashi === girlRashi && boyNak !== girlNak) {
                 score = 8;
-                description += " (Exception: Same Rashi, Diff Nakshatra)";
+                description += lang === 'hi' ? " (दोष परिहार: समान राशि, भिन्न नक्षत्र)" : " (Exception: Same Rashi, Diff Nakshatra)";
             }
         }
-
-        // 2. Different Rashi, Same Nakshatra (Not possible usually? Nakshatra spans max 2 rashis. 
-        // If same Nakshatra, same Pada? No.)
-        // Same Nakshatra is technically bad irrespective unless Charan is different.
-        // We really need Charan (Pada) for full exceptions. 
-        // Since we don't have Charan here easily without re-calc, we'll implement the Rashi-based exception first.
     }
 
     return {
-        name: "Nadi",
+        name: meta.name,
         score,
         maxScore: 8,
         description,
-        boy: NADI_NAMES[bNadi],
-        girl: NADI_NAMES[gNadi],
-        area: "Health/Genes"
+        boy: locB,
+        girl: locG,
+        area: meta.area
     };
 }

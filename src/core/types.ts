@@ -108,10 +108,11 @@ export interface MuhurtaTime {
 }
 
 import { ChoghadiyaResult, GowriResult } from './muhurta/types';
-
+import { Language } from '../i18n/types';
 
 export interface PanchangamOptions {
     timezoneOffset?: number; // Timezone Offset in MINUTES (e.g. -480 for UTC-8, 330 for IST)
+    lang?: Language;
 }
 
 export interface Panchangam {

@@ -6,6 +6,9 @@
  */
 
 import { nakshatraNames } from './constants';
+import { Language } from '../i18n/types';
+import { getLocalizedNakshatra } from '../i18n/index';
+import { tarabalamI18n } from '../i18n/dictionaries/panchang';
 
 export interface TarabalamInfo {
     birthNakshatra: number;       // Birth Nakshatra index (0-26)
@@ -18,7 +21,6 @@ export interface TarabalamInfo {
     description: string;          // Brief description of the Tara's effect
 }
 
-// Tara names and their nature (1-9)
 const TARA_INFO: Record<number, { name: string; isAuspicious: boolean; description: string }> = {
     1: { name: 'Janma', isAuspicious: false, description: 'Birth star - may cause physical discomfort' },
     2: { name: 'Sampat', isAuspicious: true, description: 'Wealth star - good for financial matters' },
@@ -31,32 +33,15 @@ const TARA_INFO: Record<number, { name: string; isAuspicious: boolean; descripti
     9: { name: 'Parama Mitra', isAuspicious: true, description: 'Great friend star - highly favorable' },
 };
 
-/**
- * Calculate Tarabalam based on birth and current Nakshatra
- * 
- * @param birthNakshatra - Birth Nakshatra index (0-26, where 0 = Ashwini)
- * @param currentNakshatra - Current day's Nakshatra index (0-26)
- * @returns TarabalamInfo object with Tara details and auspiciousness
- * 
- * @example
- * ```typescript
- * // Person born in Ashwini (0), current Nakshatra is Bharani (1)
- * const tara = getTarabalam(0, 1);
- * console.log(tara.taraName); // "Sampat"
- * console.log(tara.isAuspicious); // true
- * ```
- */
 export function getTarabalam(
     birthNakshatra: number,
-    currentNakshatra: number
+    currentNakshatra: number,
+    options?: { lang?: Language }
 ): TarabalamInfo {
-    // Normalize inputs to 0-26 range
+    const lang: Language = options?.lang || 'en';
     const normalizedBirth = ((birthNakshatra % 27) + 27) % 27;
     const normalizedCurrent = ((currentNakshatra % 27) + 27) % 27;
 
-    // Count from birth to current (inclusive)
-    // If current >= birth: count = current - birth + 1
-    // If current < birth: count = (27 - birth) + current + 1
     let count: number;
     if (normalizedCurrent >= normalizedBirth) {
         count = normalizedCurrent - normalizedBirth + 1;
@@ -64,35 +49,27 @@ export function getTarabalam(
         count = (27 - normalizedBirth) + normalizedCurrent + 1;
     }
 
-    // Calculate Tara number (1-9)
-    // Divide count by 9, remainder gives Tara
-    // If remainder is 0, it's the 9th Tara
     const remainder = count % 9;
     const taraNumber = remainder === 0 ? 9 : remainder;
 
-    const taraInfo = TARA_INFO[taraNumber];
+    const taraMeta = tarabalamI18n[lang]?.[taraNumber];
+    const defaultMeta = TARA_INFO[taraNumber];
 
     return {
         birthNakshatra: normalizedBirth,
-        birthNakshatraName: nakshatraNames[normalizedBirth],
+        birthNakshatraName: getLocalizedNakshatra(normalizedBirth, lang),
         currentNakshatra: normalizedCurrent,
-        currentNakshatraName: nakshatraNames[normalizedCurrent],
+        currentNakshatraName: getLocalizedNakshatra(normalizedCurrent, lang),
         taraNumber,
-        taraName: taraInfo.name,
-        isAuspicious: taraInfo.isAuspicious,
-        description: taraInfo.description,
+        taraName: taraMeta?.name || defaultMeta.name,
+        isAuspicious: defaultMeta.isAuspicious,
+        description: taraMeta?.description || defaultMeta.description,
     };
 }
 
-/**
- * Get all auspicious Nakshatras for a given birth Nakshatra
- * 
- * @param birthNakshatra - Birth Nakshatra index (0-26)
- * @returns Array of Nakshatra indices that are auspicious (Taras 2,4,6,8,9)
- */
 export function getAuspiciousNakshatras(birthNakshatra: number): number[] {
     const auspicious: number[] = [];
-    const auspiciousTaras = [2, 4, 6, 8, 9]; // Sampat, Kshema, Sadhana, Mitra, Parama Mitra
+    const auspiciousTaras = [2, 4, 6, 8, 9];
 
     for (let i = 0; i < 27; i++) {
         const tara = getTarabalam(birthNakshatra, i);

@@ -20,6 +20,18 @@ import { getFestivals } from "./festivals";
 import { calculateChoghadiya } from "./muhurta/choghadiya";
 import { calculateGowriPanchangam } from "./muhurta/gowri";
 import { ayanaNames, nakshatraLords, nakshatraNames, tithiNames, varjyamStartGhatis, yogaNames } from "./constants";
+import { Language } from "../i18n/types";
+import {
+    getLocalizedRashi,
+    getLocalizedPlanet,
+    getLocalizedNakshatra,
+    getLocalizedTithi,
+    getLocalizedPaksha,
+    getLocalizedKarana,
+    getLocalizedYoga,
+    getLocalizedVaara,
+    getLocalizedFestivalName
+} from "../i18n/index";
 
 /**
  * Validates inputs for getPanchangam / getPanchangamDetails.
@@ -228,18 +240,20 @@ export function getPanchangam(date: Date, observer: Observer, options?: Panchang
     amritKalam.sort(sortByStart);
     varjyam.sort(sortByStart);
 
+    const lang: Language = options?.lang || 'en';
+
     return {
         tithi: tithi + 1,
-        tithiName: tithiNames[tithi],
-        nakshatra: getNakshatra(moonLon) + 1,
-        nakshatraName: nakshatraNames[getNakshatra(moonLon)],
-        nakshatraLord: nakshatraLords[nakshatraNames[getNakshatra(moonLon)]],
-        yoga: getYoga(sunLon, moonLon),
-        yogaName: yogaNames[getYoga(sunLon, moonLon)],
-        karana: getKarana(sunLon, moonLon),
+        tithiName: getLocalizedTithi(tithi, lang),
+        nakshatra: currentNakIndex + 1,
+        nakshatraName: getLocalizedNakshatra(currentNakIndex, lang),
+        nakshatraLord: getLocalizedPlanet(nakshatraLords[nakshatraNames[currentNakIndex]] || "", lang),
+        yoga: getYoga(sunLon, moonLon) + 1,
+        yogaName: getLocalizedYoga(getYoga(sunLon, moonLon), lang),
+        karana: lang === 'hi' ? getLocalizedKarana(Math.floor((moonLon - sunLon + 360) % 360 / 6), lang) : getKarana(sunLon, moonLon),
 
-        vara:vara+1,
-        varaName: "" ,
+        vara: vara + 1,
+        varaName: getLocalizedVaara(vara, lang),
         ayanamsa: ayanamsa,
         ayanamsaName: ayanaNames[ayanamsa],
         sunrise,
@@ -272,9 +286,6 @@ export function getPanchangam(date: Date, observer: Observer, options?: Panchang
         specialYogas: getSpecialYoga(vara, currentNakIndex),
 
         // Phase 6: Dasha System
-        // We calculate Dasha based on the Moon position at the given 'date'.
-        // This signifies: "If a child were born at this time, what is the Dasha?"
-        // Or "What is the ruling Dasha for the day?"
         // vimshottariDasha: calculateVimshottariDasha(moonLon, anchorDate),
 
         // Phase 7: Festivals (v3.0.0 API with Udaya Tithi)
@@ -292,7 +303,10 @@ export function getPanchangam(date: Date, observer: Observer, options?: Panchang
             includeSolarFestivals: true,
             includeMultiDaySpans: true,
             calendarType: 'amanta'
-        }),
+        }).map(f => ({
+            ...f,
+            name: getLocalizedFestivalName(f.name, lang)
+        })),
 
         // Phase 8: Advanced Muhurta (v2.1)
         choghadiya: (sunrise && sunset && nextSunrise)
@@ -313,15 +327,25 @@ export function getPanchangam(date: Date, observer: Observer, options?: Panchang
         currentHora,
         // Phase 3: Planetary Details
         nakshatraPada,
-        moonRashi,
-        sunRashi,
-        sunNakshatra,
+        moonRashi: {
+            index: moonRashi.index,
+            name: getLocalizedRashi(moonRashi.index, lang)
+        },
+        sunRashi: {
+            index: sunRashi.index,
+            name: getLocalizedRashi(sunRashi.index, lang)
+        },
+        sunNakshatra: {
+            index: sunNakshatra.index,
+            name: getLocalizedNakshatra(sunNakshatra.index, lang),
+            pada: sunNakshatra.pada
+        },
         udayaLagna,
         // Phase 2: Calendar Units
         masa,
-        paksha,
+        paksha: getLocalizedPaksha(paksha, lang),
         ritu,
-        ayana:ayana+1,
+        ayana: ayana + 1,
         ayanaName: ayanaNames[ayana],
         samvat
     };

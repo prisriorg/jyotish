@@ -4,14 +4,9 @@ import {
     calculateVarna, calculateVashya, calculateTara, calculateYoni,
     calculateGrahaMaitri, calculateGana, calculateBhakoot, calculateNadi
 } from "./kootas";
-import { nakshatraNames } from "../core/constants";
+import { Language } from "../i18n/types";
+import { matchingVerdictsI18n } from "../i18n/dictionaries/matching";
 
-/**
- * Checks for Mangal Dosha (Mars defect).
- * Rule: Mars in 1, 4, 7, 8, 12 from Lagna.
- * South India also checks from Moon and Venus, but North usually stresses Lagna.
- * We will return boolean based on Lagna.
- */
 /**
  * Checks for Mangal Dosha (Mars defect) with exceptions.
  * Logic:
@@ -19,7 +14,9 @@ import { nakshatraNames } from "../core/constants";
  * 2. Standard Houses: 1, 4, 7, 8, 12. (Some traditions include 2).
  * 3. Exceptions: Mars in Own Sign (Aries, Scorpio), Exalted (Capricorn), or specific house/sign combos.
  */
-export function checkMangalDosha(kundli: Kundli): DoshaResult {
+export function checkMangalDosha(kundli: Kundli, options?: { lang?: Language }): DoshaResult {
+    const lang: Language = options?.lang || 'en';
+
     // Helper to get house position from a reference point (1-based)
     const getPos = (planetLon: number, refLon: number) => {
         let diff = Math.floor(planetLon / 30) - Math.floor(refLon / 30);
@@ -37,43 +34,42 @@ export function checkMangalDosha(kundli: Kundli): DoshaResult {
     const posMoon = getPos(marsLon, moonLon);
     const posVenus = getPos(marsLon, venusLon);
 
-    // Standard Dosha Houses (North India usually 1, 4, 7, 8, 12; South often adds 2)
-    // We will track 1, 2, 4, 7, 8, 12 but treat Lagna matches as primary.
     const doshaHouses = [1, 2, 4, 7, 8, 12];
 
     const isLagnaDosha = doshaHouses.includes(posLagna);
     const isMoonDosha = doshaHouses.includes(posMoon);
     const isVenusDosha = doshaHouses.includes(posVenus);
 
-    // If no dosha in any reference, return early
     if (!isLagnaDosha && !isMoonDosha && !isVenusDosha) {
-        return { hasDosha: false, isHigh: false, description: "No Mangal Dosha" };
+        return {
+            hasDosha: false,
+            isHigh: false,
+            description: lang === 'hi' ? "मांगलिक दोष नहीं है" : "No Mangal Dosha"
+        };
     }
 
-    // Check Exceptions (Cancellation)
-    // 1. Mars in Own Signs (Aries=0, Scorpio=7)
-    // 2. Mars Exalted (Capricorn=9)
-    // 3. Specific cancellations can be added here (e.g. Mars in Leo in 8th)
     const marsRashi = Math.floor(marsLon / 30);
     const isOwnOrExalted = [0, 7, 9].includes(marsRashi);
 
     let descParts = [];
-    if (isLagnaDosha) descParts.push(`Lagna(H${posLagna})`);
-    if (isMoonDosha) descParts.push(`Moon(H${posMoon})`);
-    if (isVenusDosha) descParts.push(`Venus(H${posVenus})`);
+    if (isLagnaDosha) descParts.push(lang === 'hi' ? `लग्न से (भाव ${posLagna})` : `Lagna(H${posLagna})`);
+    if (isMoonDosha) descParts.push(lang === 'hi' ? `चन्द्र से (भाव ${posMoon})` : `Moon(H${posMoon})`);
+    if (isVenusDosha) descParts.push(lang === 'hi' ? `शुक्र से (भाव ${posVenus})` : `Venus(H${posVenus})`);
 
-    const descriptionBase = `Present in: ${descParts.join(', ')}`;
+    const descriptionBase = lang === 'hi'
+        ? `उपस्थिति: ${descParts.join(', ')}`
+        : `Present in: ${descParts.join(', ')}`;
 
     if (isOwnOrExalted) {
         return {
             hasDosha: false,
             isHigh: false,
-            description: `Cancelled: ${descriptionBase} - Mars is Own/Exalted`
+            description: lang === 'hi'
+                ? `दोष परिहार (निरस्त): ${descriptionBase} - मंगल स्वराशि अथवा उच्च राशि में है`
+                : `Cancelled: ${descriptionBase} - Mars is Own/Exalted`
         };
     }
 
-    // High severity if present from Lagna.
-    // Moderate/Low if only from Moon/Venus.
     const isHigh = isLagnaDosha;
 
     return {
@@ -86,7 +82,9 @@ export function checkMangalDosha(kundli: Kundli): DoshaResult {
 /**
  * Calculates the complete Ashtakoot Guna Milan score.
  */
-export function matchKundli(boy: Kundli, girl: Kundli): MatchResult {
+export function matchKundli(boy: Kundli, girl: Kundli, options?: { lang?: Language }): MatchResult {
+    const lang: Language = options?.lang || 'en';
+
     // 1. Get Nakshatra and Rashi indices
     const getNakIndex = (lon: number) => Math.floor(lon / (360 / 27));
     const getRashiIndex = (lon: number) => Math.floor(lon / 30);
@@ -102,45 +100,42 @@ export function matchKundli(boy: Kundli, girl: Kundli): MatchResult {
 
     // 2. Calculate Kootas
     const kootas: KootaResult[] = [
-        calculateVarna(bRashi, gRashi),
-        calculateVashya(bRashi, gRashi),
-        calculateTara(bNak, gNak),
-        calculateYoni(bNak, gNak),
-        calculateGrahaMaitri(bRashi, gRashi),
-        calculateGana(bNak, gNak),
-        calculateBhakoot(bRashi, gRashi),
-        calculateNadi(bNak, gNak, bRashi, gRashi) // Updated signature
+        calculateVarna(bRashi, gRashi, lang),
+        calculateVashya(bRashi, gRashi, lang),
+        calculateTara(bNak, gNak, lang),
+        calculateYoni(bNak, gNak, lang),
+        calculateGrahaMaitri(bRashi, gRashi, lang),
+        calculateGana(bNak, gNak, lang),
+        calculateBhakoot(bRashi, gRashi, lang),
+        calculateNadi(bNak, gNak, bRashi, gRashi, lang)
     ];
 
     const totalScore = kootas.reduce((sum, k) => sum + k.score, 0);
 
     // 3. Dosha Check
-    const boyDosha = checkMangalDosha(boy);
-    const girlDosha = checkMangalDosha(girl);
+    const boyDosha = checkMangalDosha(boy, { lang });
+    const girlDosha = checkMangalDosha(girl, { lang });
 
     // 4. Verdict
-    let verdict = "Not Recommended";
-    // Standard rule: > 18 is passable.
-    // Mangal Dosha check:
-    // If one has Dosha (uncancelled) and other doesn't -> distinct mismatch.
-    // If both have Dosha -> Match (cancellation).
-    // If neither -> Match.
+    let rawVerdict = "Not Recommended";
 
     if (totalScore >= 18) {
         if (boyDosha.hasDosha && girlDosha.hasDosha) {
-            verdict = "Good (Both Manglik)";
+            rawVerdict = "Good (Both Manglik)";
         } else if (!boyDosha.hasDosha && !girlDosha.hasDosha) {
-            verdict = "Good to Proceed";
+            rawVerdict = "Good to Proceed";
         } else {
-            // One is Manglik, one is not
-            verdict = "Mismatch (Manglik Mismatch)";
-            // Check subjective severity?
-            // If total score is high (>25), some astrologers proceed with remedies.
-            if (totalScore > 25) verdict += " - Consult Astrologer (High Score)";
+            if (totalScore > 25) {
+                rawVerdict = "Mismatch (Manglik Mismatch) - Consult Astrologer (High Score)";
+            } else {
+                rawVerdict = "Mismatch (Manglik Mismatch)";
+            }
         }
     } else {
-        verdict = "Low Score (<18)";
+        rawVerdict = "Low Score (<18)";
     }
+
+    const verdict = matchingVerdictsI18n[lang]?.[rawVerdict] || rawVerdict;
 
     return {
         ashtakoot: {

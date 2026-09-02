@@ -24,3 +24,4 @@ export * from './core/sadesati';
 export * from './ashtakavarga/index';
 export * from './predictions/index';
 export * from './transit/index';
+export * from './i18n/index';

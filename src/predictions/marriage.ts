@@ -6,10 +6,15 @@ import { MarriagePrediction } from "./types";
 import { getChalitAnalysis, getKpAnalysis, getLalKitabAnalysis } from "./multisystem";
 import { getJaiminiKarakas } from "./jaimini";
 
+import { Language } from "../i18n/types";
+import { marriageI18n } from "../i18n/dictionaries/predictions";
+import { getLocalizedPlanet, getLocalizedRashi } from "../i18n/index";
+
 export function getMarriagePrediction(
   kundli: Kundli,
-  options?: { gender?: "male" | "female" | "other" }
+  options?: { gender?: "male" | "female" | "other"; lang?: Language }
 ): MarriagePrediction {
+  const lang: Language = options?.lang || 'en';
   const houses = kundli.houses || [];
   const planets = kundli.planets || {};
   const house7 = houses.find((h) => h.number === 7) || houses[6];
@@ -78,7 +83,7 @@ export function getMarriagePrediction(
   const sortedYears = Array.from(potentialYears).sort((a, b) => a - b).slice(0, 4);
 
   // Favorable age range
-  const favorableAgeRange = "26 to 29 years";
+  const favorableAgeRange = lang === 'hi' ? "26 से 29 वर्ष" : "26 to 29 years";
 
   // Partner characteristics based on 7th sign and occupants
   const signDescriptions: Record<string, { nature: string; traits: string[]; direction: string }> = {
@@ -144,14 +149,79 @@ export function getMarriagePrediction(
     },
   };
 
+  const signDescriptionsHi: Record<string, { nature: string; traits: string[]; direction: string }> = {
+    Aries: {
+      nature: "ऊर्जावान, साहसी, आत्मविश्वासी और स्पष्टवादी जीवनसाथी।",
+      traits: ["उच्च पहल क्षमता", "स्वतंत्र विचार", "उत्साही"],
+      direction: "पूर्व दिशा या गतिशील शहरी परिवेश",
+    },
+    Taurus: {
+      nature: "स्थिर, सौम्य, कलाप्रिय, वित्तीय सुरक्षा और घरेलू सुख को महत्व देने वाला।",
+      traits: ["निष्ठावान", "कलात्मक रुचि", "व्यावहारिक"],
+      direction: "दक्षिण दिशा या संपन्न पारिवारिक पृष्ठभूमि",
+    },
+    Gemini: {
+      nature: "बुद्धिमान, जिज्ञासु, विनोदप्रिय और संवाद में अत्यंत कुशल।",
+      traits: ["अनुकूलनशील", "अध्ययन व चर्चा प्रिय", "युवा ऊर्जा"],
+      direction: "पश्चिम दिशा या तकनीकी/व्यापारिक पृष्ठभूमि",
+    },
+    Cancer: {
+      nature: "संवेदनशील, अत्यंत स्नेही, पारिवारिक मूल्यों का आदर करने वाला और सहयोगी।",
+      traits: ["सहज ज्ञानी", "सुरक्षात्मक", "पोषण करने वाला"],
+      direction: "उत्तर दिशा या जल स्रोत के निकट पैतृक संबंध",
+    },
+    Leo: {
+      nature: "स्वाभिमानी, प्रभावशाली, आत्मविश्वास से परिपूर्ण और स्वाभाविक नेतृत्व क्षमता युक्त।",
+      traits: ["आत्म-सम्मान", "उदार", "सुदृढ़ व्यावसायिक महत्वाकांक्षा"],
+      direction: "पूर्व दिशा या प्रतिष्ठित/सम्मानित परिवार",
+    },
+    Virgo: {
+      nature: "व्यावहारिक, व्यवस्थित, विश्लेषणात्मक और कर्तव्यनिष्ठ।",
+      traits: ["व्यवस्थित कार्यशैली", "विश्वसनीय", "स्वास्थ्य के प्रति सजग"],
+      direction: "दक्षिण दिशा या शैक्षणिक/प्रशासनिक पृष्ठभूमि",
+    },
+    Libra: {
+      nature: "आकर्षक, संतुलित, सामाजिक रूप से प्रतिष्ठित और सामंजस्य स्थापित करने वाला।",
+      traits: ["कूटनीतिक", "न्यायप्रिय", "सुसंस्कृत व सुरुचिपूर्ण"],
+      direction: "पश्चिम दिशा या रचनात्मक/व्यापारिक क्षेत्र",
+    },
+    Scorpio: {
+      nature: "गहन, निष्ठावान, भावनात्मक रूप से दृढ़ और गंभीर स्वभाव वाला।",
+      traits: ["भावनात्मक रूप से गंभीर", "दृढ़निश्चयी", "सहनशील"],
+      direction: "उत्तर दिशा या शोध/रूपांतरणकारी पृष्ठभूमि",
+    },
+    Sagittarius: {
+      nature: "आशावादी, सिद्धांतवादी, दार्शनिक और खुले विचारों वाला।",
+      traits: ["सत्यनिष्ठ", "प्रेरणादायक", "भ्रमणप्रिय"],
+      direction: "पूर्व दिशा या शैक्षणिक/आध्यात्मिक पृष्ठभूमि",
+    },
+    Capricorn: {
+      nature: "अनुशासित, परिश्रमी, व्यावहारिक और करियर के प्रति अत्यंत गंभीर।",
+      traits: ["धैर्यवान", "करियर-केंद्रित", "अडिग"],
+      direction: "दक्षिण दिशा या स्थापित उद्योग पृष्ठभूमि",
+    },
+    Aquarius: {
+      nature: "प्रगतिशील, आधुनिक विचारों वाला, स्वतंत्र सोच और मानवीय दृष्टिकोण रखने वाला।",
+      traits: ["दूरदर्शी", "समानतावादी", "तकनीक प्रेमी"],
+      direction: "पश्चिम दिशा या आधुनिक नवाचार पृष्ठभूमि",
+    },
+    Pisces: {
+      nature: "सहानुभूतिपूर्ण, शांत, आध्यात्मिक और रचनात्मक कल्पनाशीलता से परिपूर्ण।",
+      traits: ["दयालु", "कल्पनाशील", "ईश्वर-भक्त"],
+      direction: "उत्तर दिशा या शांत व प्राकृतिक परिवेश",
+    },
+  };
+
   const rashi7Name = rashiNames[rashi7Idx] || "Leo";
-  const partnerInfo = signDescriptions[rashi7Name] || signDescriptions.Leo;
+  const partnerInfo = lang === 'hi'
+    ? { ...(signDescriptionsHi[rashi7Name] || signDescriptionsHi.Leo), traits: [...(signDescriptionsHi[rashi7Name] || signDescriptionsHi.Leo).traits] }
+    : { ...(signDescriptions[rashi7Name] || signDescriptions.Leo), traits: [...(signDescriptions[rashi7Name] || signDescriptions.Leo).traits] };
 
   if (planetsIn7.includes("Jupiter")) {
-    partnerInfo.traits.push("Wise, ethically upright, and culturally knowledgeable");
+    partnerInfo.traits.push(lang === 'hi' ? "विवेकशील, नैतिक व सुसंस्कृत" : "Wise, ethically upright, and culturally knowledgeable");
   }
   if (planetsIn7.includes("Venus")) {
-    partnerInfo.traits.push("Visually appealing, sophisticated taste, and charming");
+    partnerInfo.traits.push(lang === 'hi' ? "आकर्षक, सुरुचिपूर्ण व सौम्य स्वभाव" : "Visually appealing, sophisticated taste, and charming");
   }
 
   // Mangal Dosha
@@ -305,16 +375,18 @@ export function getMarriagePrediction(
   arrangedScore = Math.max(15, Math.min(95, arrangedScore));
   intercasteProbability = Math.max(10, Math.min(95, intercasteProbability));
 
-  let recommendation: MarriagePrediction["marriageType"]["recommendation"] = "Love-cum-Arranged (Self-Choice with Family Approval)";
+  let rawRecommendation: 'Love Marriage' | 'Arranged Marriage' | 'Love-cum-Arranged (Self-Choice with Family Approval)' = "Love-cum-Arranged (Self-Choice with Family Approval)";
   if (loveScore >= 58 && arrangedScore >= 52) {
-    recommendation = "Love-cum-Arranged (Self-Choice with Family Approval)";
+    rawRecommendation = "Love-cum-Arranged (Self-Choice with Family Approval)";
   } else if (loveScore >= 60 && loveScore > arrangedScore + 6) {
-    recommendation = "Love Marriage";
+    rawRecommendation = "Love Marriage";
   } else if (arrangedScore >= 60 && arrangedScore > loveScore + 6) {
-    recommendation = "Arranged Marriage";
+    rawRecommendation = "Arranged Marriage";
   } else {
-    recommendation = "Love-cum-Arranged (Self-Choice with Family Approval)";
+    rawRecommendation = "Love-cum-Arranged (Self-Choice with Family Approval)";
   }
+
+  const recommendation = marriageI18n.marriageType[lang]?.[rawRecommendation] || rawRecommendation;
 
   const isIntercasteLikely = intercasteProbability >= 50;
 
@@ -329,31 +401,45 @@ export function getMarriagePrediction(
 
   // Relationship advice & harmony rating
   const sav7 = kundli.ashtakavarga?.sav?.byHouse[6] ?? 28;
-  let maritalHarmonyRating: MarriagePrediction["maritalHarmonyRating"] = "Good";
+  let rawHarmony: 'Very Good' | 'Good' | 'Average' | 'Needs Caution' = "Good";
   const relationshipAdvice: string[] = [];
 
   if (sav7 < 24) {
-    maritalHarmonyRating = "Needs Caution";
-    relationshipAdvice.push("7th house has low Ashtakavarga bindus: Maintain clear, transparent communication and avoid unrealistic expectations.");
-    relationshipAdvice.push("Avoid merging 100% of commercial/business operations with in-laws or spouse; keep financial roles clearly defined.");
+    rawHarmony = "Needs Caution";
+    relationshipAdvice.push(lang === 'hi'
+      ? "सप्तम भाव में अष्टकवर्ग के कम बिंदु: स्पष्ट और पारदर्शी संवाद बनाए रखें तथा अवास्तविक अपेक्षाओं से बचें।"
+      : "7th house has low Ashtakavarga bindus: Maintain clear, transparent communication and avoid unrealistic expectations.");
+    relationshipAdvice.push(lang === 'hi'
+      ? "ससुराल पक्ष अथवा जीवनसाथी के साथ व्यावसायिक लेन-देन में भूमिकाएं पूरी तरह लिखित व स्पष्ट रखें।"
+      : "Avoid merging 100% of commercial/business operations with in-laws or spouse; keep financial roles clearly defined.");
   } else if (sav7 >= 28) {
-    maritalHarmonyRating = "Very Good";
-    relationshipAdvice.push("Favorable Ashtakavarga support in 7th house fosters lasting mutual respect and teamwork.");
+    rawHarmony = "Very Good";
+    relationshipAdvice.push(lang === 'hi'
+      ? "सप्तम भाव में उत्तम अष्टकवर्ग बल: परस्पर सम्मान और मजबूत साझेदारी का आधार बनता है।"
+      : "Favorable Ashtakavarga support in 7th house fosters lasting mutual respect and teamwork.");
   } else {
-    maritalHarmonyRating = "Good";
+    rawHarmony = "Good";
   }
+
+  const maritalHarmonyRating = marriageI18n.harmonyRating[lang]?.[rawHarmony] || rawHarmony;
 
   if (isIntercasteLikely) {
-    relationshipAdvice.push("Open communication between both families will smoothly bridge any cultural or community differences.");
+    relationshipAdvice.push(lang === 'hi'
+      ? "दोनों परिवारों के मध्य खुला व संवेदनशील संवाद सांस्कृतिक या सामुदायिक भिन्नताओं को सहजता से दूर करेगा।"
+      : "Open communication between both families will smoothly bridge any cultural or community differences.");
   }
-  relationshipAdvice.push("Match horoscopes (Kundli Milan) with emphasis on Nadi and Bhakoot kootas before finalizing marriage.");
-  relationshipAdvice.push("Marriage after age 25 brings greater emotional maturity and financial stability.");
+  relationshipAdvice.push(lang === 'hi'
+    ? "विवाह तय करने से पूर्व नाड़ी और भकूट कूटों के विशेष ध्यान सहित कुंडली मिलान अवश्य करें।"
+    : "Match horoscopes (Kundli Milan) with emphasis on Nadi and Bhakoot kootas before finalizing marriage.");
+  relationshipAdvice.push(lang === 'hi'
+    ? "25 वर्ष की आयु के बाद विवाह दांपत्य में अधिक भावनात्मक परिपक्वता और आर्थिक स्थिरता लाता है।"
+    : "Marriage after age 25 brings greater emotional maturity and financial stability.");
 
   // --- Comprehensive Multi-Factor Spouse Age Difference Analysis ---
-  const chalit = getChalitAnalysis(kundli);
-  const kp = getKpAnalysis(kundli);
-  const lalKitab = getLalKitabAnalysis(kundli);
-  const jaimini = getJaiminiKarakas(kundli);
+  const chalit = getChalitAnalysis(kundli, { lang });
+  const kp = getKpAnalysis(kundli, { lang });
+  const lalKitab = getLalKitabAnalysis(kundli, { lang });
+  const jaimini = getJaiminiKarakas(kundli, { lang });
 
   const nativeGender = options?.gender || kundli.birthDetails?.gender;
   const lord7Rashi = kundli.planets[lord7]?.rashiName || "";
@@ -579,41 +665,41 @@ export function getMarriagePrediction(
       ? ageReasons.join(" ")
       : "Influences of 7th house and its rulers indicate standard contemporary age parity.";
 
+  const relAgeDict: any = marriageI18n.spouseAgeDifference.relativeAge[lang] || marriageI18n.spouseAgeDifference.relativeAge.en;
+  const localizedRelativeAge = relAgeDict?.[relativeAge] || relativeAge;
+  const matDict: any = marriageI18n.spouseAgeDifference.maturity[lang] || marriageI18n.spouseAgeDifference.maturity.en;
+  const localizedMaturity = matDict?.[maturityLevel] || maturityLevel;
+
   const spouseAgeDifference: MarriagePrediction["spouseAgeDifference"] = {
-    relativeAge,
+    relativeAge: localizedRelativeAge,
     estimatedDifferenceYears,
     minGapYears,
     maxGapYears,
     partnerIsOlder,
-    maturityLevel,
+    maturityLevel: localizedMaturity,
     unconventionalGapLikely: isUnconventional,
     reason: ageReason,
     genderPerspective,
   };
 
-  // Classical 7th Lord in Houses 1-12 Dictionary (Brihat Parashara & Phaladeepika)
-  const seventhLordDictionary: Record<number, string> = {
-    1: `7th Lord (${lord7}) in 1st House: Creates deeply devoted and affectionate marital bonding. Partner becomes central to the native's life, decisions, and public status.`,
-    2: `7th Lord (${lord7}) in 2nd House: Partner brings monetary prosperity, financial intelligence, sweet speech, and traditional family harmony into the household.`,
-    3: `7th Lord (${lord7}) in 3rd House: Spouse is dynamic, skilled in digital communications, creative arts, or tech, acting as an energetic partner in ventures.`,
-    4: `7th Lord (${lord7}) in 4th House: Union brings great domestic peace, comfortable home, luxury conveyances, and strong bonds with extended family.`,
-    5: `7th Lord (${lord7}) in 5th House: Romantic affinity and intellectual chemistry. Partner is highly educated, artistic, affectionate, and shares mutual devotion.`,
-    6: `7th Lord (${lord7}) in 6th House: Partner is likely in professional service, healthcare, or legal administration. Requires patience and conscious conflict resolution.`,
-    7: `7th Lord (${lord7}) in 7th House: Swa-Kshetra partnership. Blessed matrimonial dignity, exceptional physical/mental compatibility, and mutual social prestige.`,
-    8: `7th Lord (${lord7}) in 8th House: Deep, transformative emotional bond. Partner brings unexpected financial resources, research intellect, and metaphysical depth.`,
-    9: `7th Lord (${lord7}) in 9th House: Divine blessing. Spouse is virtuous, ethical, wise, and brings luck, global travel, and spiritual elevation after marriage.`,
-    10: `7th Lord (${lord7}) in 10th House: Ambitious and accomplished partner who commands professional respect and elevates the native's societal influence.`,
-    11: `7th Lord (${lord7}) in 11th House: Highly prosperous union. Partner brings lucrative alliances, expansive friend circles, and assists in fulfilling lifelong ambitions.`,
-    12: `7th Lord (${lord7}) in 12th House: Cross-cultural or distant origins. Partner is spiritually inclined, fond of travel, or linked to overseas/multinational environments.`,
-  };
-  const seventhLordPlacementResult = seventhLordDictionary[lord7House] || seventhLordDictionary[7];
+  // 7th Lord in Houses 1-12 Dictionary
+  const localizedLord7 = getLocalizedPlanet(lord7, lang);
+  const sDict: any = marriageI18n.seventhLordDictionary[lang] || marriageI18n.seventhLordDictionary.en;
+  const seventhLordPlacementResult = (sDict[lord7House] || sDict.default)(localizedLord7, lord7House);
 
   // Jaimini Darakaraka (Spouse Indicator)
-  const darakarakaInsight = `Jaimini Darakaraka (DK) is ${jaimini.darakaraka.planet} (at ${jaimini.darakaraka.formattedDegree} in ${jaimini.darakaraka.rashiName}, House ${jaimini.darakaraka.house}): ${jaimini.darakaraka.signification}`;
+  const localizedDKPlanet = getLocalizedPlanet(jaimini.darakaraka.planet, lang);
+  const darakarakaInsight = lang === 'hi'
+    ? `जैमिनी दाराकारक (DK): ${localizedDKPlanet} (अंश ${jaimini.darakaraka.formattedDegree}, भाव ${jaimini.darakaraka.house}): ${jaimini.darakaraka.signification}`
+    : `Jaimini Darakaraka (DK) is ${jaimini.darakaraka.planet} (at ${jaimini.darakaraka.formattedDegree} in ${jaimini.darakaraka.rashiName}, House ${jaimini.darakaraka.house}): ${jaimini.darakaraka.signification}`;
 
-  const chalitInsight = `Chalit Bhava 7 is occupied by ${chalit.actualHouseOccupants[7]?.length ? chalit.actualHouseOccupants[7].join(", ") : "its natural lord"}, providing exact cuspal partnership foundation.`;
+  const chalitInsight = lang === 'hi'
+    ? `चलित चक्र में भाव 7 में ${chalit.actualHouseOccupants[7]?.length ? chalit.actualHouseOccupants[7].map(p => getLocalizedPlanet(p, lang)).join(", ") : "इसका नैसर्गिक स्वामी"} स्थित है, जो वैवाहिक भाव की ठोस आधारशिला रखता है।`
+    : `Chalit Bhava 7 is occupied by ${chalit.actualHouseOccupants[7]?.length ? chalit.actualHouseOccupants[7].join(", ") : "its natural lord"}, providing exact cuspal partnership foundation.`;
   const kpInsight = `${kp.marriageCusp7.marriagePromise} ${kp.marriageCusp7.typeIndication}`;
-  const lalKitabInsight = `Lal Kitab: Teva is ${lalKitab.tevaType}. 7th house dynamic reflects high mutual integrity.`;
+  const lalKitabInsight = lang === 'hi'
+    ? `लाल किताब: टेवा ${lalKitab.tevaType} है। सप्तम भाव की स्थिति दांपत्य में पारस्परिक निष्ठा दर्शाती है।`
+    : `Lal Kitab: Teva is ${lalKitab.tevaType}. 7th house dynamic reflects high mutual integrity.`;
 
   return {
     maritalHarmonyRating,
@@ -622,7 +708,7 @@ export function getMarriagePrediction(
     currentDashaFavorableForMarriage: currentDashaFavorable,
     dashaSupportExplanation,
     partnerCharacteristics: {
-      nature: `${partnerInfo.nature}. Jaimini DK (${jaimini.darakaraka.planet}) emphasizes: ${jaimini.darakaraka.signification}`,
+      nature: `${partnerInfo.nature} ${lang === 'hi' ? `जैमिनी दाराकारक (${localizedDKPlanet}) प्रभाव:` : `Jaimini DK (${jaimini.darakaraka.planet}) emphasizes:`} ${jaimini.darakaraka.signification}`,
       dominantTraits: partnerInfo.traits,
       directionOrBackground: partnerInfo.direction,
     },

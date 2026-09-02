@@ -6,16 +6,19 @@
  */
 
 import { dayNames } from './constants';
+import { Language } from '../i18n/types';
+import { getLocalizedVaara } from '../i18n/index';
+import { shoolaI18n } from '../i18n/dictionaries/panchang';
 
 export interface DishaShoola {
     vara: number;                    // Day of week (0=Sunday, 6=Saturday)
     varaName: string;                // Name of the day
     inauspiciousDirection: string;   // Direction to avoid for travel
     safeDirections: string[];        // Safe directions for travel
+    remedy?: string;
+    description?: string;
 }
 
-// Mapping of weekday to inauspicious direction
-// Based on traditional Vedic texts
 const SHOOLA_DIRECTIONS: Record<number, string> = {
     0: 'West',    // Sunday
     1: 'East',    // Monday
@@ -28,42 +31,31 @@ const SHOOLA_DIRECTIONS: Record<number, string> = {
 
 const ALL_DIRECTIONS = ['East', 'West', 'North', 'South'];
 
-/**
- * Get Disha Shoola information for a given weekday
- * 
- * @param vara - Day of week index (0 = Sunday, 6 = Saturday)
- * @returns DishaShoola object with inauspicious and safe directions
- * 
- * @example
- * ```typescript
- * const shoola = getDishaShoola(0); // Sunday
- * console.log(shoola.inauspiciousDirection); // "West"
- * console.log(shoola.safeDirections); // ["East", "North", "South"]
- * ```
- */
-export function getDishaShoola(vara: number): DishaShoola {
-    // Normalize vara to 0-6 range
+export function getDishaShoola(vara: number, options?: { lang?: Language }): DishaShoola {
+    const lang: Language = options?.lang || 'en';
     const normalizedVara = ((vara % 7) + 7) % 7;
 
-    const inauspiciousDirection = SHOOLA_DIRECTIONS[normalizedVara];
-    const safeDirections = ALL_DIRECTIONS.filter(d => d !== inauspiciousDirection);
+    const rawInauspicious = SHOOLA_DIRECTIONS[normalizedVara];
+    const rawSafe = ALL_DIRECTIONS.filter(d => d !== rawInauspicious);
+
+    const shoolaMeta = shoolaI18n[lang]?.[rawInauspicious];
+
+    const dirMap: Record<string, string> = lang === 'hi'
+        ? { East: "पूर्व", West: "पश्चिम", North: "उत्तर", South: "दक्षिण" }
+        : { East: "East", West: "West", North: "North", South: "South" };
 
     return {
         vara: normalizedVara,
-        varaName: dayNames[normalizedVara],
-        inauspiciousDirection,
-        safeDirections,
+        varaName: getLocalizedVaara(normalizedVara, lang),
+        inauspiciousDirection: dirMap[rawInauspicious] || rawInauspicious,
+        safeDirections: rawSafe.map(d => dirMap[d] || d),
+        remedy: shoolaMeta?.remedy,
+        description: shoolaMeta?.description,
     };
 }
 
-/**
- * Check if a specific direction is safe for travel on a given day
- * 
- * @param vara - Day of week index (0 = Sunday, 6 = Saturday)
- * @param direction - Direction to check ('East', 'West', 'North', 'South')
- * @returns true if direction is safe, false if it's the Shoola direction
- */
 export function isDirectionSafe(vara: number, direction: string): boolean {
-    const shoola = getDishaShoola(vara);
-    return direction.toLowerCase() !== shoola.inauspiciousDirection.toLowerCase();
+    const normalizedVara = ((vara % 7) + 7) % 7;
+    const inauspiciousDirection = SHOOLA_DIRECTIONS[normalizedVara];
+    return direction.toLowerCase() !== inauspiciousDirection.toLowerCase();
 }

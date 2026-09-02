@@ -1,5 +1,11 @@
+import { Language } from '../i18n/types';
+
+export interface PredictionOptions {
+  lang?: Language;
+}
+
 export interface CareerPrediction {
-  recommendation: 'Business & Independent Enterprise' | 'Employment / Job' | 'Hybrid / Consulting & Freelance';
+  recommendation: 'Business & Independent Enterprise' | 'Employment / Job' | 'Hybrid / Consulting & Freelance' | (string & {});
   jobScore: number;       // 0 - 100
   businessScore: number;  // 0 - 100
   dominantTraits: string[];
@@ -11,7 +17,7 @@ export interface CareerPrediction {
     planetsIn10th: string[];
     savBindus: number;
   };
-  leadershipCapacity: 'Executive / High Authority' | 'Mid-to-Senior Leadership' | 'Individual Contributor / Specialist';
+  leadershipCapacity: 'Executive / High Authority' | 'Mid-to-Senior Leadership' | 'Individual Contributor / Specialist' | (string & {});
   strategicAdvice: string[];
   tenthLordPlacementResult?: string;
   amatyakarakaInsight?: string;
@@ -22,9 +28,9 @@ export interface CareerPrediction {
 }
 
 export interface WealthPrediction {
-  wealthRating: 'Exceptional' | 'High' | 'Moderate' | 'Fluctuating';
+  wealthRating: 'Exceptional' | 'High' | 'Moderate' | 'Fluctuating' | (string & {});
   incomePotential: number; // 0 - 100 scale
-  savingCapacity: 'Strong' | 'Average' | 'Challenging';
+  savingCapacity: 'Strong' | 'Average' | 'Challenging' | (string & {});
   savMetrics: {
     incomeHouse11Bindus: number;
     expenditureHouse12Bindus: number;
@@ -34,7 +40,7 @@ export interface WealthPrediction {
   dhanaYogas: {
     name: string;
     description: string;
-    strength: 'Powerful' | 'Moderate';
+    strength: 'Powerful' | 'Moderate' | (string & {});
   }[];
   vipreetRajYogas?: string[];
   secondLordPlacementResult?: string;
@@ -47,7 +53,7 @@ export interface WealthPrediction {
 }
 
 export interface MarriagePrediction {
-  maritalHarmonyRating: 'Very Good' | 'Good' | 'Average' | 'Needs Caution';
+  maritalHarmonyRating: 'Very Good' | 'Good' | 'Average' | 'Needs Caution' | (string & {});
   favorableAgeRange: string;
   predictedTimingYears: number[];
   currentDashaFavorableForMarriage: boolean;
@@ -58,7 +64,7 @@ export interface MarriagePrediction {
     directionOrBackground: string;
   };
   marriageType: {
-    recommendation: 'Love Marriage' | 'Arranged Marriage' | 'Love-cum-Arranged (Self-Choice with Family Approval)';
+    recommendation: 'Love Marriage' | 'Arranged Marriage' | 'Love-cum-Arranged (Self-Choice with Family Approval)' | (string & {});
     loveScore: number;     // 0 - 100
     arrangedScore: number; // 0 - 100
     isIntercasteLikely: boolean;
@@ -71,13 +77,13 @@ export interface MarriagePrediction {
     description: string;
   };
   spouseAgeDifference: {
-    relativeAge: 'Younger' | 'Older' | 'Similar Age (Peer)';
+    relativeAge: 'Younger' | 'Older' | 'Similar Age (Peer)' | (string & {});
     estimatedDifferenceYears: string;
     minGapYears: number;
     maxGapYears: number;
     partnerIsOlder: boolean;
     reason: string;
-    maturityLevel: 'High / Senior Demeanor' | 'Balanced / Peer-Level' | 'Youthful / Energetic';
+    maturityLevel: 'High / Senior Demeanor' | 'Balanced / Peer-Level' | 'Youthful / Energetic' | (string & {});
     unconventionalGapLikely?: boolean;
     genderPerspective?: {
       ifMaleNative: string;
@@ -96,7 +102,7 @@ export interface RemedyItem {
   area: string;
   house?: number;
   reason: string;
-  remedyType: 'Practical / Behavioral' | 'Mantra' | 'Lifestyle' | 'Charity / Donation';
+  remedyType: 'Practical / Behavioral' | 'Mantra' | 'Lifestyle' | 'Charity / Donation' | (string & {});
   title: string;
   instructions: string;
 }
@@ -132,7 +138,7 @@ export interface ChalitAnalysis {
     planet: string;
     d1House: number;
     chalitBhava: number;
-    shiftDirection: 'Forward (+1)' | 'Backward (-1)';
+    shiftDirection: 'Forward (+1)' | 'Backward (-1)' | (string & {});
     impact: string;
   }[];
   actualHouseOccupants: Record<number, string[]>;
@@ -164,7 +170,7 @@ export interface KpAnalysis {
 }
 
 export interface LalKitabAnalysis {
-  tevaType: 'Dharmi Teva (Blessed / Auspicious)' | 'Aam Teva (Standard)' | 'Paapi Teva (Challenging)';
+  tevaType: 'Dharmi Teva (Blessed / Auspicious)' | 'Aam Teva (Standard)' | 'Paapi Teva (Challenging)' | (string & {});
   kismatKaGrah: {
     planet: string;
     house: number;
