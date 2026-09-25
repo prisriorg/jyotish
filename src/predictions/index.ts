@@ -5,6 +5,7 @@ import { getMarriagePrediction } from "./marriage";
 import { getRemedies } from "./remedies";
 import { getChalitAnalysis, getKpAnalysis, getLalKitabAnalysis } from "./multisystem";
 import { getJaiminiKarakas } from "./jaimini";
+import { getGemstoneRecommendation } from "./gemstones";
 import { ComprehensiveReport, PredictionOptions } from "./types";
 import { Language } from "../i18n/types";
 import { getLocalizedPlanet, getLocalizedRashi } from "../i18n/index";
@@ -17,6 +18,7 @@ export * from "./marriage";
 export * from "./remedies";
 export * from "./multisystem";
 export * from "./jaimini";
+export * from "./gemstones";
 
 /**
  * Generates a comprehensive Vedic life prediction report combining Career,
@@ -38,6 +40,7 @@ export function getComprehensiveReport(kundli: Kundli, options?: PredictionOptio
   const kpAnalysis = getKpAnalysis(kundli, { lang });
   const lalKitabAnalysis = getLalKitabAnalysis(kundli, { lang });
   const jaiminiKarakas = getJaiminiKarakas(kundli, { lang });
+  const gemstones = getGemstoneRecommendation(kundli, { lang });
 
   const lagnaRashiIdx = kundli.ascendant ? kundli.ascendant.rashi - 1 : 10;
   const moonRashiIdx = kundli.planets?.Moon ? (kundli.planets.Moon.rashi ? kundli.planets.Moon.rashi - 1 : rashiNames.indexOf(kundli.planets.Moon.rashiName || "")) : 0;
@@ -217,6 +220,27 @@ export function getComprehensiveReport(kundli: Kundli, options?: PredictionOptio
       });
     }
 
+    // Gemstone Recommendation Section
+    md += `\n## 💎 9. वैदिक रत्न परामर्श (बहु-चक्र आधारित)\n\n`;
+    const primaryRec = gemstones.recommendedStones.map(s => s.gemstoneHindiName).join(", ");
+    const prohibitedStr = gemstones.prohibitedStones.slice(0, 3).map(s => s.gemstoneHindiName).join(", ");
+    md += `- **अत्यधिक शुभ व धारण योग्य:** ${primaryRec || "कोई विशिष्ट नहीं"}\n`;
+    md += `- **पूर्णतः वर्जित (भूलकर भी न पहनें):** ❌ ${prohibitedStr || "कोई नहीं"}\n\n`;
+    if (gemstones.recommendedStones.length > 0) {
+      md += `### मुख्य अनुशंसित रत्न:\n`;
+      gemstones.recommendedStones.forEach((s) => {
+        md += `- **${s.gemstoneHindiName} (${getLocalizedPlanet(s.planet, lang)}):** ${s.specifications?.weightRatti || ""} | धातु: ${s.specifications?.metal || ""} | उंगली: ${s.specifications?.finger || ""} | मंत्र: \`${s.specifications?.beejMantra || ""}\`\n`;
+      });
+      md += `\n`;
+    }
+    if (gemstones.clashingCombinationsWarning.length > 0) {
+      md += `### विरोधी रत्न निषेध चेतावनी:\n`;
+      gemstones.clashingCombinationsWarning.forEach((w) => {
+        md += `- ${w}\n`;
+      });
+      md += `\n`;
+    }
+
   } else {
     // English report
     md = `# 🌟 Grand Multi-System Vedic Horoscope & Life Guidance Report\n\n`;
@@ -392,6 +416,27 @@ export function getComprehensiveReport(kundli: Kundli, options?: PredictionOptio
         md += `- 🔹 ${hab}\n`;
       });
     }
+
+    // Gemstone Recommendation Section
+    md += `\n## 💎 9. Vedic Gemstone Recommendations (Multi-Chart Synthesis)\n\n`;
+    const primaryRecEn = gemstones.recommendedStones.map(s => s.gemstoneName).join(", ");
+    const prohibitedStrEn = gemstones.prohibitedStones.slice(0, 3).map(s => s.gemstoneName).join(", ");
+    md += `- **Auspicious & Safe to Wear:** ${primaryRecEn || "None primary"}\n`;
+    md += `- **Strictly Prohibited ('Never Wear'):** ❌ ${prohibitedStrEn || "None"}\n\n`;
+    if (gemstones.recommendedStones.length > 0) {
+      md += `### Primary Recommended Gemstones:\n`;
+      gemstones.recommendedStones.forEach((s) => {
+        md += `- **${s.gemstoneName} (${s.planet}):** ${s.specifications?.weightRatti || ""} (${s.specifications?.weightCarat || ""}) | Metal: ${s.specifications?.metal || ""} | Finger: ${s.specifications?.finger || ""} | Mantra: \`${s.specifications?.beejMantra || ""}\`\n`;
+      });
+      md += `\n`;
+    }
+    if (gemstones.clashingCombinationsWarning.length > 0) {
+      md += `### Anti-Conflict Warning:\n`;
+      gemstones.clashingCombinationsWarning.forEach((w) => {
+        md += `- ${w}\n`;
+      });
+      md += `\n`;
+    }
   }
 
   return {
@@ -404,6 +449,7 @@ export function getComprehensiveReport(kundli: Kundli, options?: PredictionOptio
     kpAnalysis,
     lalKitabAnalysis,
     jaiminiKarakas,
+    gemstones,
     formattedMarkdown: md.trim(),
   };
 }

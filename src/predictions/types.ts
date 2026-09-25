@@ -217,6 +217,64 @@ export interface JaiminiKarakas {
   darakaraka: KarakaInfo;
 }
 
+export type GemstoneSuitability = 'recommended' | 'conditional' | 'prohibited';
+
+export type GemstoneCategory =
+  | 'life_stone'         // 1st Lord (Lagnesh)
+  | 'lucky_stone'        // 9th Lord (Bhagyesh)
+  | 'knowledge_stone'    // 5th Lord (Panchamesh)
+  | 'career_stone'       // 10th Lord (Karmesh / Yoga Karaka)
+  | 'conditional_dasha'  // Mahadasha / Trial specific
+  | 'prohibited';        // Dusthana / Maraka / KP 6,8,12
+
+export interface GemstoneSpecification {
+  weightRatti: string;
+  weightCarat: string;
+  metal: string;
+  finger: string;
+  hand: string;
+  day: string;
+  paksha: string;
+  beejMantra: string;
+  chantCount: number;
+  purificationRitual: string;
+  trialPeriodDays?: number;
+  uparatna: string[];
+}
+
+export interface GemstoneRecommendationItem {
+  planet: string;
+  gemstoneName: string;
+  gemstoneHindiName: string;
+  category: GemstoneCategory;
+  suitability: GemstoneSuitability;
+  score: number; // 0 - 100 overall astrological safety & beneficence score
+  reason: string;
+  detailedAnalysis: {
+    d1LagnaVerdict: string;
+    chalitVerdict: string;
+    kpVerdict: string;
+    navamshaVerdict: string;
+    combustionOrRetrograde?: string;
+  };
+  specifications?: GemstoneSpecification;
+  clashingGemstones: string[];
+}
+
+export interface GemstoneOptions extends PredictionOptions {
+  userWeightKg?: number;
+  currentDashaOnly?: boolean;
+}
+
+export interface GemstoneReport {
+  recommendedStones: GemstoneRecommendationItem[]; // 🟢 Highly beneficial & safe to wear (Life, Lucky, Punya stone)
+  conditionalStones: GemstoneRecommendationItem[];  // 🟡 Conditional / Dasha-specific (Wear with caution)
+  prohibitedStones: GemstoneRecommendationItem[];   // 🔴 Strictly prohibited / Hazardous ('Never Wear')
+  clashingCombinationsWarning: string[];
+  summary: string;
+  formattedMarkdown: string;
+}
+
 export interface ComprehensiveReport {
   summary: string;
   career: CareerPrediction;
@@ -227,6 +285,7 @@ export interface ComprehensiveReport {
   kpAnalysis: KpAnalysis;
   lalKitabAnalysis: LalKitabAnalysis;
   jaiminiKarakas: JaiminiKarakas;
+  gemstones?: GemstoneReport;
   formattedMarkdown: string;
 }
 
