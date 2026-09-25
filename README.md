@@ -27,6 +27,7 @@ A high-performance, developer-friendly TypeScript/JavaScript library for **Jyoti
   - [11. Transits, Sade Sati & Daily Strengths](#11-transits-sade-sati--daily-strengths)
   - [12. Festivals & Ekadashis](#12-festivals--ekadashis)
   - [13. Life Predictions & Guidance (Career, Wealth, Marriage, Remedies)](#13-life-predictions--guidance-career-wealth-marriage-remedies)
+  - [14. Advanced Vedic Gemstone Recommendation Engine (Multi-Chart, Dasha Timelines & Life Impacts)](#14-advanced-vedic-gemstone-recommendation-engine-multi-chart-dasha-timelines--life-impacts)
 - [Configuration Options](#-configuration-options)
 - [TypeScript Types Reference](#-typescript-types-reference)
 - [License](#-license)
@@ -49,6 +50,7 @@ A high-performance, developer-friendly TypeScript/JavaScript library for **Jyoti
 - **Kundli Matching (Milan)**: Full 36 Guna Ashtakoota Milan (Varna, Vashya, Tara, Yoni, Graha Maitri, Gana, Bhakoot, Nadi) + Mangal Dosha detection & cancellations.
 - **Comprehensive Panchangam**: Tithi, Nakshatra, Yoga, Karana, Vara, Sunrise/Sunset, Rahu Kalam, Yamaganda, Gulika, Abhijit Muhurta, Brahma Muhurta, Choghadiya, Hora, Gowri Panchangam.
 - **Muhurta & Transit Indicators**: Sade Sati (with phases), Dhaiya, Chandrashtama, Tarabalam, Disha Shoola.
+- **Advanced Multi-Chart Gemstone Engine**: Classical cross-verification across D1 (Lagnesh, Yogakaraka, Trikona vs Trishadaya/Dusthana/Maraka), Bhava Chalit shifts, KP sub-lords, Navamsha (D9), Bhrigu Nandi Nadi (BNN) clashes, Moolatrikona, and Ashtakavarga BAV points. Includes exact Dasha wearing timelines (कब से कब तक), removal protocols, life domain impacts (Wealth, Career, Marriage, Health, Education), and explicit damage warnings (क्या खराब होगा और क्यों) for prohibited/conditional stones.
 
 ---
 
@@ -567,6 +569,98 @@ console.log(report.formattedMarkdown); // Full multi-system formatted Markdown r
 
 ---
 
+### 14. Advanced Vedic Gemstone Recommendation Engine (Multi-Chart, Dasha Timelines & Life Impacts)
+
+A classical, multi-chart gemstone engine built on rigorous Vedic Shastra and empirical research that moves far beyond basic "Lagna friend" logic:
+
+- **Multi-Chart Cross-Verification**: Evaluates **Rashi (D1)** (Lagnesh, Yogakaraka, Trikona vs Dusthana/Trishadaya/Maraka/Badhaka), **Sripati Bhava Chalit** (detects actual house shifts), **KP Astrology** (Cusp Sub-Lord & 6-8-12 significations), **Navamsha (D9)** (Vargottama, internal exaltation/debilitation), and **Ashtakavarga BAV points** (≥ 5 points = fertile, < 4 = barren).
+- **Dignity & Cancellation Rules**:
+  - *Neecha (Debilitation)*: Prohibits wearing debilitated stones directly; detects *Neecha Bhanga Raja Yoga (NBRY)* and prescribes the cancellation dispositor or Lagnesh instead.
+  - *Uchcha (Exaltation)*: Flags hyper-activation and warns against wearing exalted dusthana/maraka/trishadaya lords.
+- **Combustion (Asth) & Retrogression (Vakri)**:
+  - Differentiates solar friends (Mars/Jupiter) from solar enemies (Saturn/Venus combust = severe heat/conflict).
+  - Flags high Cheshta Bala for Vakri planets and enforces a mandatory **21-day trial**.
+- **Bhrigu Nandi Nadi (BNN) Conjunctions & Trines**:
+  - Identifies planetary clashes in 1-5-9 trines: *Guru-Chandal Dosha* (Jupiter-Rahu), *Shani-Mangal Conflict* (Saturn-Mars fire/ice clash), *Surya-Shani Enmity* (Sun-Saturn), *Chandra Grahan Yoga* (Moon-Rahu/Ketu), and *Shukra-Ketu Detachment*.
+- **📅 Exact Dasha Wearing Windows (कब से कब तक)**:
+  - Scans active and upcoming Vimshottari Mahadashas and Antardashas to calculate exact wearing start & end dates (`DD/MM/YYYY`).
+  - Provides a mandatory **Removal Protocol (`removalInstructions`)** to safely take off the stone upon dasha completion to prevent adverse planetary energy reversals.
+- **✨ 5 Core Life Dimension Impacts**:
+  - Predicts granular outcomes across: 💰 **Wealth & Finance**, 💼 **Career & Business**, 💍 **Marriage & Relationships**, 🩺 **Health & Longevity**, and 📚 **Education & Intellect**.
+- **🚫 What Will Be Damaged & Why (`whatWillHarm` & `whyItHarms`)**:
+  - For prohibited and conditional stones, explicitly details which areas will be harmed (debts, divorce, chronic illness, sudden losses) and the exact astrological cause.
+- **🌟 What Will Flourish & Why (`whatWillFlourish` & `whyItFlourishes`)**:
+  - For recommended stones, details specific blessings (promotion, prosperity, immunity, intellect) and astrological foundations.
+- **Wearing Specifications & Safety Warnings**:
+  - Calculates body-weight-adjusted dosage (Ratti / Carat), auspicious day, Shukla Paksha timing, metal, finger, Beej Mantra (108 chants), cleansing rituals, affordable substitutes (Uparatna), and strict **Clashing Gemstones warnings** (e.g. Ruby + Blue Sapphire, Pearl + Hessonite).
+
+```typescript
+import { getKundli, getGemstoneRecommendation, Observer } from '@prisri/jyotish';
+
+const kundli = getKundli(new Date('1990-10-24T14:30:00+05:30'), new Observer(28.6139, 77.2090, 0), {
+  includeChalit: true,
+  includeKp: true
+});
+
+// Run Deep Gemstone Recommendation Engine (Hindi or English)
+const gems = getGemstoneRecommendation(kundli, {
+  lang: 'hi',          // 'hi' (हिंदी) | 'en' (English)
+  userWeightKg: 70     // Auto-computes optimal astrological Ratti & Carat weight
+});
+
+// 1. Recommended Stones (🟢 Highly Benefic & Safe for Lifetime Wear)
+gems.recommendedStones.forEach(s => {
+  console.log(`\n💎 ${s.gemstoneHindiName} (${s.planet}) - Score: ${s.score}/100`);
+  console.log(`   भूमिका: ${s.category} | कारण: ${s.reason}`);
+  console.log(`   वजन: ${s.specifications?.weightRatti} | धातु: ${s.specifications?.metal} | उंगली: ${s.specifications?.finger}`);
+  console.log(`   बीज मंत्र: ${s.specifications?.beejMantra}`);
+  
+  // 5 Life Area Impacts
+  s.lifeAreaImpacts?.forEach(area => {
+    console.log(`   - ${area.areaNameHi}: [${area.impact.toUpperCase()}] ${area.effectHi}`);
+  });
+  
+  // Flourishing Highlights
+  if (s.beneficHighlights) {
+    console.log(`   🌟 मुख्य शुभ फल: ${s.beneficHighlights.whatWillFlourishHi}`);
+    console.log(`   🔍 फल प्राप्ति का कारण: ${s.beneficHighlights.whyItFlourishesHi}`);
+  }
+});
+
+// 2. Conditional Stones (🟡 Dasha-Specific with Exact Wearing Window)
+gems.conditionalStones.forEach(s => {
+  console.log(`\n🟡 सशर्त रत्न: ${s.gemstoneHindiName} (${s.planet})`);
+  if (s.timing) {
+    console.log(`   📅 संबंधित दशा: ${s.timing.applicableDashaHi} (${s.timing.isActiveNow ? 'वर्तमान में सक्रिय' : 'आगामी'})`);
+    console.log(`   अवधि (कब से कब तक): ${s.timing.startDate} से ${s.timing.endDate}`);
+    console.log(`   पहनने की सीमा: ${s.timing.wearingWindowHi}`);
+    console.log(`   ⚠️ उतारने का नियम: ${s.timing.removalInstructionsHi}`);
+  }
+  if (s.adverseAlert) {
+    console.log(`   ⚠️ असावधानी पर नुकसान: ${s.adverseAlert.whatWillHarmHi}`);
+    console.log(`   🔍 कारण: ${s.adverseAlert.whyItHarmsHi}`);
+  }
+});
+
+// 3. Prohibited Stones (🔴 Strictly Forbidden - 'Never Wear')
+gems.prohibitedStones.forEach(s => {
+  console.log(`\n❌ वर्जित रत्न: ${s.gemstoneHindiName} (${s.planet})`);
+  console.log(`   निषेध का कारण: ${s.reason}`);
+  if (s.adverseAlert) {
+    console.log(`   🚫 क्या खराब होगा: ${s.adverseAlert.whatWillHarmHi}`);
+    console.log(`   🔍 क्यों खराब होगा: ${s.adverseAlert.whyItHarmsHi}`);
+  }
+});
+
+// 4. Clashing Gemstone Conflicts
+console.log('\n⚡ परस्पर विरोधी रत्न:', gems.clashingCombinationsWarning);
+
+// 5. Complete Formatted Markdown Report
+console.log(gems.formattedMarkdown);
+```
+
+---
+
 ## ⚙️ Configuration Options
 
 ### Kundli Generation Options (`KundliConfig`)
@@ -642,7 +736,19 @@ import type {
   WealthPrediction,
   MarriagePrediction,
   RemediesPrediction,
-  ComprehensiveReport
+  ComprehensiveReport,
+  GemstoneReport,
+  GemstoneRecommendationItem,
+  GemstoneCategory,
+  GemstoneSuitability,
+  GemstoneSpecification,
+  GemstoneDashaTiming,
+  LifeAreaCategory,
+  LifeAreaImpactType,
+  GemstoneLifeAreaImpact,
+  GemstoneAdverseAlert,
+  GemstoneBeneficHighlights,
+  GemstoneOptions
 } from '@prisri/jyotish';
 ```
 
@@ -658,3 +764,4 @@ Feel free to open an issue or submit a Pull Request on [GitHub](https://github.c
 ## 📄 License
 
 ISC License © [Priyansh Srivastava](https://github.com/prisriorg)
+

@@ -242,6 +242,48 @@ export interface GemstoneSpecification {
   uparatna: string[];
 }
 
+export interface GemstoneDashaTiming {
+  applicableDasha: string;
+  applicableDashaHi: string;
+  startDate?: string;
+  endDate?: string;
+  isActiveNow: boolean;
+  wearingWindow: string;
+  wearingWindowHi: string;
+  removalInstructions: string;
+  removalInstructionsHi: string;
+}
+
+export type LifeAreaCategory = "wealth" | "career" | "marriage" | "health" | "education";
+export type LifeAreaImpactType = "positive" | "negative" | "mixed" | "neutral";
+
+export interface GemstoneLifeAreaImpact {
+  area: LifeAreaCategory;
+  areaNameEn: string;
+  areaNameHi: string;
+  impact: LifeAreaImpactType;
+  effectEn: string;
+  effectHi: string;
+  astrologicalReasonEn: string;
+  astrologicalReasonHi: string;
+}
+
+export interface GemstoneAdverseAlert {
+  whatWillHarmEn: string;
+  whatWillHarmHi: string;
+  whyItHarmsEn: string;
+  whyItHarmsHi: string;
+  affectedHouses: number[];
+}
+
+export interface GemstoneBeneficHighlights {
+  whatWillFlourishEn: string;
+  whatWillFlourishHi: string;
+  whyItFlourishesEn: string;
+  whyItFlourishesHi: string;
+  benefitedHouses: number[];
+}
+
 export interface GemstoneRecommendationItem {
   planet: string;
   gemstoneName: string;
@@ -256,7 +298,15 @@ export interface GemstoneRecommendationItem {
     kpVerdict: string;
     navamshaVerdict: string;
     combustionOrRetrograde?: string;
+    dignityVerdict?: string;
+    bnnVerdict?: string;
+    moolatrikonaVerdict?: string;
+    ashtakavargaVerdict?: string;
   };
+  timing?: GemstoneDashaTiming;
+  lifeAreaImpacts?: GemstoneLifeAreaImpact[];
+  adverseAlert?: GemstoneAdverseAlert;
+  beneficHighlights?: GemstoneBeneficHighlights;
   specifications?: GemstoneSpecification;
   clashingGemstones: string[];
 }
