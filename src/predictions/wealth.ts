@@ -1,5 +1,6 @@
 import { Kundli } from "../kundli/types";
 import { RASHI_LORDS } from "../matching/constants";
+import { rashiNames } from "../core/constants";
 import { PredictionOptions, WealthPrediction } from "./types";
 import { getChalitAnalysis, getKpAnalysis, getLalKitabAnalysis } from "./multisystem";
 import { Language } from "../i18n/types";
@@ -248,6 +249,108 @@ export function getWealthPrediction(kundli: Kundli, options?: PredictionOptions)
     ? `लाल किताब: टेवा ${lalKitab.tevaType} है। किस्मत का ग्रह ${getLocalizedPlanet(lalKitab.kismatKaGrah.planet, lang)} भाव ${lalKitab.kismatKaGrah.house} में समृद्धि और कोष स्थिरता को सक्रिय करता है।`
     : `Lal Kitab: Teva is ${lalKitab.tevaType}. Kismat Ka Grah ${lalKitab.kismatKaGrah.planet} in House ${lalKitab.kismatKaGrah.house} activates prosperity and treasury stability.`;
 
+  // Indu Lagna (BPHS Special Wealth Ascendant)
+  const INDU_KALAS: Record<string, number> = {
+    Sun: 30, Moon: 16, Mars: 6, Mercury: 8, Jupiter: 10, Venus: 12, Saturn: 1
+  };
+  const lagnaRashiVal = kundli.ascendant ? kundli.ascendant.rashi : 1;
+  const moonRashiVal = kundli.planets?.Moon ? (kundli.planets.Moon.rashi || 1) : 1;
+
+  // 9th lord from Lagna
+  const ninthFromLagnaSign = ((lagnaRashiVal + 7) % 12);
+  const ninthFromLagnaLord = RASHI_LORDS[ninthFromLagnaSign];
+  // 9th lord from Moon
+  const ninthFromMoonSign = ((moonRashiVal + 7) % 12);
+  const ninthFromMoonLord = RASHI_LORDS[ninthFromMoonSign];
+
+  const kala1 = INDU_KALAS[ninthFromLagnaLord] || 8;
+  const kala2 = INDU_KALAS[ninthFromMoonLord] || 8;
+  const totalKalas = kala1 + kala2;
+  let remainder = totalKalas % 12;
+  if (remainder === 0) remainder = 12;
+
+  // Count remainder signs from Moon sign (1-indexed)
+  const induSign0Based = (moonRashiVal - 1 + (remainder - 1)) % 12;
+  const induRashiName = rashiNames[induSign0Based];
+  const induLord = RASHI_LORDS[induSign0Based];
+
+  // Find planets occupying Indu Lagna
+  const induOccupants: string[] = [];
+  for (const [pName, pData] of Object.entries(planets)) {
+    const pr = pData?.rashi ? (pData.rashi - 1) % 12 : -1;
+    if (pr === induSign0Based) induOccupants.push(pName);
+  }
+
+  let wealthMagnitude = lang === 'hi' ? "स्थिर मध्यम समृद्धि" : "Steady Moderate Prosperity";
+  if (induOccupants.some(p => ["Jupiter", "Venus"].includes(p))) {
+    wealthMagnitude = lang === 'hi' ? "करोड़पति योग / विपुल धन संपदा" : "Multi-Millionaire / Immense Fortune Potential";
+    incomePotential = Math.min(99, incomePotential + 10);
+  } else if (induOccupants.some(p => ["Mercury", "Moon"].includes(p))) {
+    wealthMagnitude = lang === 'hi' ? "उच्च धन संपदा एवं निरंतर लाभ" : "High Wealth & Perpetual Financial Inflows";
+    incomePotential = Math.min(99, incomePotential + 6);
+  } else if (induOccupants.length > 0) {
+    wealthMagnitude = lang === 'hi' ? "साहसिक उद्यमों से अर्जित संपत्ति" : "Substantial Wealth through Bold Enterprise";
+  }
+
+  const induLagnaInsight = lang === 'hi'
+    ? `महर्षि पाराशर इंदु लग्न (धन लग्न): इंदु लग्न ${induRashiName} राशि में स्थित है (स्वामी: ${getLocalizedPlanet(induLord, lang)}, किरणें: ${totalKalas})। ${induOccupants.length > 0 ? `इंदु लग्न में ${induOccupants.map(p => getLocalizedPlanet(p, lang)).join(", ")} स्थित हैं।` : "इंदु लग्न शुभ ग्रहों से दृष्टिगत है।"} धन क्षमता: ${wealthMagnitude}।`
+    : `BPHS Indu Lagna (Wealth Ascendant): Falls in ${induRashiName} (Lord: ${induLord}, Rays: ${totalKalas}). ${induOccupants.length > 0 ? `Occupied by ${induOccupants.join(", ")}.` : "Aspected by financial benefics."} Financial Magnitude: ${wealthMagnitude}.`;
+
+  // Arudha Wealth Padas (A2 & A11)
+  let arudhaWealthInsight: string | undefined;
+  const a2Pada = kundli.arudhaPadas?.a2 || kundli.arudhaPadas?.all?.find((p: any) => p.houseNumber === 2);
+  const a11Pada = kundli.arudhaPadas?.a11 || kundli.arudhaPadas?.all?.find((p: any) => p.houseNumber === 11);
+  if (a2Pada || a11Pada) {
+    arudhaWealthInsight = lang === 'hi'
+      ? `धन आरूढ़ विश्लेषण: धन पद (A2) ${a2Pada?.rashiName || ""} में एवं लाभ पद (A11) ${a11Pada?.rashiName || ""} में संस्थित है। यह समाज में संपत्ति की साख और नकदी प्रवाह को सुनिश्चित करता है।`
+      : `Arudha Wealth Analysis: Dhana Pada (A2 - Liquid Assets) in ${a2Pada?.rashiName || ""} and Labha Pada (A11 - Cash Streams) in ${a11Pada?.rashiName || ""} ensure continuous economic credibility.`;
+  }
+
+  // Real Estate & Property Wealth (4th Lord + Mars + Saturn)
+  const house4 = houses.find(h => h.number === 4) || { planets: [] as string[] };
+  const marsHouse = getPlanetHouse("Mars");
+  const saturnHouse = getPlanetHouse("Saturn");
+  let propertyPotential: 'High / Multiple Properties' | 'Moderate / Steady Acquisition' | 'Cautious / Delays Likely' = 'Moderate / Steady Acquisition';
+  let propertyScore = 50;
+  if ([1, 4, 9, 10, 11].includes(marsHouse)) propertyScore += 20;
+  if ([1, 4, 10, 11].includes(saturnHouse)) propertyScore += 15;
+  if (house4.planets.includes("Mars") || house4.planets.includes("Venus")) propertyScore += 15;
+
+  if (propertyScore >= 75) propertyPotential = 'High / Multiple Properties';
+  else if (propertyScore >= 50) propertyPotential = 'Moderate / Steady Acquisition';
+  else propertyPotential = 'Cautious / Delays Likely';
+
+  const propertyDesc = lang === 'hi'
+    ? `भूमि, भवन एवं अचल संपत्ति योग: ${propertyPotential}। ${propertyScore >= 75 ? 'मंगल और चतुर्थ भाव का सशक्त संयोग अनेक अचल संपत्तियों, भूखंड एवं आधुनिक गृह निर्माण का स्पष्ट आशीर्वाद देता है।' : 'दीर्घकालिक ईएमआई अथवा स्व-अर्जित बचत से स्थिर पारिवारिक आवास का निर्माण होगा।'}`
+    : `Real Estate & Property Acquisition Potential: ${propertyPotential}. ${propertyScore >= 75 ? 'Mars and 4th house synergy indicates prosperous multi-property holdings, residential land, and capital appreciation.' : 'Methodical savings and structured financing secure lasting residential real estate stability.'}`;
+
+  // Speculative & Equity Investments (5th Lord + 11th House + Rahu)
+  const house5 = houses.find(h => h.number === 5) || { planets: [] as string[] };
+  const house11Obj = houses.find(h => h.number === 11) || { planets: [] as string[] };
+  const rahuHouse = getPlanetHouse("Rahu");
+  let specScore = 45;
+  if (house11Obj.planets.includes("Rahu") || rahuHouse === 3) specScore += 25; // Rahu in Upachaya thrives in markets
+  if (house5.planets.includes("Mercury") || house5.planets.includes("Jupiter")) specScore += 20;
+  if (bindus11 >= 32) specScore += 15;
+
+  let specPotential: 'Favorable / High Return Potential' | 'Moderate / Long-term Balanced' | 'High Risk / Strictly Avoid Speculation' = 'Moderate / Long-term Balanced';
+  if (specScore >= 75) specPotential = 'Favorable / High Return Potential';
+  else if (specScore >= 50) specPotential = 'Moderate / Long-term Balanced';
+  else specPotential = 'High Risk / Strictly Avoid Speculation';
+
+  const specDesc = lang === 'hi'
+    ? `शेयर बाजार, म्यूचुअल फंड एवं निवेश क्षमता: ${specPotential}। ${specScore >= 75 ? 'पंचम और एकादश भाव का संबंध रणनीतिक स्टॉक मार्केट, इक्विटी निवेश एवं तकनीकी संपत्तियों में अप्रत्याशित लाभ का संकेत देता है।' : 'अति-सट्टेबाजी (Intraday/Crypto) से बचें; दीर्घकालिक इंडेक्स फंड एवं सुरक्षित बॉन्ड्स में निवेश लाभप्रद रहेगा।'}`
+    : `Equity Markets, Mutual Funds & Venture Capital: ${specPotential}. ${specScore >= 75 ? '5th and 11th house synergy rewards calculated strategic equity investments, technological assets, and compounding growth.' : 'Strictly avoid high-leverage day-trading or crypto gambles; prioritize disciplined index funds and sovereign bonds.'}`;
+
+  // Daridra Yogas check
+  const daridraYogas: string[] = [];
+  if ([6, 8, 12].includes(lord2House) && bindus2 < 24) {
+    daridraYogas.push(lang === 'hi' ? "द्वितीयेश का त्रिक भाव में होना: संचित धन के अनावश्यक क्षय से बचें, नियमित बजट बनाएं।" : "2nd Lord in Dusthana with low SAV: Requires strict budgeting to avoid sudden liquidity drain.");
+  }
+  if ([6, 8, 12].includes(lord11House) && bindus11 < 24) {
+    daridraYogas.push(lang === 'hi' ? "एकादशेश का त्रिक भाव में होना: आय स्रोतों में नियमितता हेतु कई वैकल्पिक आय धाराएं विकसित करें।" : "11th Lord in Dusthana: Advised to build diversified income streams to guard against dry spells.");
+  }
+
   return {
     wealthRating,
     incomePotential,
@@ -267,5 +370,22 @@ export function getWealthPrediction(kundli: Kundli, options?: PredictionOptions)
     chalitInsight,
     kpInsight,
     lalKitabInsight,
+    induLagnaInsight,
+    induLagnaDetails: {
+      rashi: induRashiName,
+      rashiLord: induLord,
+      occupants: induOccupants,
+      wealthMagnitude,
+    },
+    arudhaWealthInsight,
+    propertyAndRealEstate: {
+      potential: propertyPotential,
+      description: propertyDesc,
+    },
+    speculativeAndInvestment: {
+      potential: specPotential,
+      description: specDesc,
+    },
+    daridraYogas: daridraYogas.length > 0 ? daridraYogas : undefined,
   };
 }

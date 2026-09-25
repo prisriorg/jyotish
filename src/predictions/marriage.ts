@@ -701,6 +701,48 @@ export function getMarriagePrediction(
     ? `लाल किताब: टेवा ${lalKitab.tevaType} है। सप्तम भाव की स्थिति दांपत्य में पारस्परिक निष्ठा दर्शाती है।`
     : `Lal Kitab: Teva is ${lalKitab.tevaType}. 7th house dynamic reflects high mutual integrity.`;
 
+  // Upapada Lagna (UL - A12) & 2nd from UL (Jaimini Marital Sustenance)
+  let upapadaLagnaInsight: string | undefined;
+  const ulPada = kundli.arudhaPadas?.a12_ul || kundli.arudhaPadas?.all?.find((p: any) => p.houseNumber === 12);
+  if (ulPada) {
+    const ulRashiIdx = (ulPada.rashi - 1 + 12) % 12;
+    const secondFromUlRashiIdx = (ulRashiIdx + 1) % 12;
+    const secondFromUlRashiName = rashiNames[secondFromUlRashiIdx];
+    upapadaLagnaInsight = lang === 'hi'
+      ? `जैमिनी उपपद लग्न (UL - वैवाहिक स्थायित्व): उपपद लग्न ${ulPada.rashiName} में एवं द्वितीय भाव ${secondFromUlRashiName} में स्थित है। महर्षि जैमिनी के नियमानुसार उपपद से द्वितीय भाव दांपत्य के चिरस्थायित्व एवं पारिवारिक संतुलन की रक्षा करता है।`
+      : `Jaimini Upapada Lagna (UL - Marriage Sustenance): UL is located in ${ulPada.rashiName} with 2nd from UL falling in ${secondFromUlRashiName}. According to Sage Jaimini, the 2nd house from Upapada is the ultimate anchor of marital longevity and mutual endurance.`;
+  }
+
+  // Dara Pada (A7) Insight
+  let darapadaInsight: string | undefined;
+  const a7Pada = kundli.arudhaPadas?.a7 || kundli.arudhaPadas?.all?.find((p: any) => p.houseNumber === 7);
+  if (a7Pada) {
+    darapadaInsight = lang === 'hi'
+      ? `दारा पद (A7 - सामाजिक साझेदारी): ${a7Pada.rashiName} में संस्थित होकर जीवनसाथी के साथ बौद्धिक व सामाजिक तालमेल को सहज बनाता है।`
+      : `Dara Pada (A7 - Social Alliances): Placed in ${a7Pada.rashiName}, fostering harmonious intellectual parity and social rapport between partners.`;
+  }
+
+  // Navamsha (D9) Spouse Insight
+  let navamshaSpouseInsight: string | undefined;
+  if (kundli.vargas?.D9) {
+    const d9Asc = kundli.vargas.D9.ascendant;
+    const d9House7 = kundli.vargas.D9.houses?.find((h: any) => h.number === 7);
+    const d9AscName = d9Asc ? rashiNames[(d9Asc.rashi - 1 + 12) % 12] : "";
+    navamshaSpouseInsight = lang === 'hi'
+      ? `नवमांश (D9) चक्र सत्यापन: नवमांश लग्न ${d9AscName} एवं सप्तम भाव दांपत्य जीवन के आंतरिक सद्भाव एवं जीवनसाथी के नैतिक गुणों की पुष्टि करता है।`
+      : `Navamsha (D9) Verification: Navamsha Ascendant in ${d9AscName} affirms the inner spiritual harmony and enduring core values of the life partner.`;
+  }
+
+  // Marital Stability Rating
+  let maritalStabilityRating: 'High Stability & Concord' | 'Balanced with Periodic Adjustments' | 'Challenging / Shastric Remedies Recommended' = 'High Stability & Concord';
+  if (maritalHarmonyRating === 'Very Good' || maritalHarmonyRating === 'Good') {
+    maritalStabilityRating = 'High Stability & Concord';
+  } else if (maritalHarmonyRating === 'Average') {
+    maritalStabilityRating = 'Balanced with Periodic Adjustments';
+  } else {
+    maritalStabilityRating = 'Challenging / Shastric Remedies Recommended';
+  }
+
   return {
     maritalHarmonyRating,
     favorableAgeRange,
@@ -721,5 +763,9 @@ export function getMarriagePrediction(
     chalitInsight,
     kpInsight,
     lalKitabInsight,
+    upapadaLagnaInsight,
+    navamshaSpouseInsight,
+    maritalStabilityRating,
+    darapadaInsight,
   };
 }

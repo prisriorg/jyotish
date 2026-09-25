@@ -220,6 +220,61 @@ export function getCareerPrediction(kundli: Kundli, options?: PredictionOptions)
     ? `लाल किताब: टेवा ${lalKitab.tevaType} है। किस्मत का ग्रह (${getLocalizedPlanet(lalKitab.kismatKaGrah.planet, lang)}) भाव ${lalKitab.kismatKaGrah.house} में करियर विस्तार को गति देता है।`
     : `Lal Kitab: Teva is ${lalKitab.tevaType}. Destiny Awakener (${lalKitab.kismatKaGrah.planet}) in House ${lalKitab.kismatKaGrah.house} powers professional expansion.`;
 
+  // D10 Dashamsha Analysis
+  let d10Insight: string | undefined;
+  if (kundli.vargas?.D10) {
+    const d10Asc = kundli.vargas.D10.ascendant;
+    const d10H10 = kundli.vargas.D10.houses?.find((h: any) => h.number === 10);
+    const d10AscRashi = d10Asc ? rashiNames[(d10Asc.rashi - 1 + 12) % 12] : "";
+    const d10PlanetsIn10 = d10H10?.planets || [];
+    d10Insight = lang === 'hi'
+      ? `दशांश (D10) चक्र विश्लेषण: दशमांश लग्न ${d10AscRashi} है एवं कर्म भाव में ${d10PlanetsIn10.length > 0 ? d10PlanetsIn10.join(", ") : "शुभ दृष्टि"} स्थित है। यह सार्वजनिक क्षेत्र व उद्यम में दीर्घकालिक स्थायित्व की पुष्टि करता है।`
+      : `Dashamsha (D10) Career Confirmation: D10 Ascendant in ${d10AscRashi} with 10th house activated by ${d10PlanetsIn10.length > 0 ? d10PlanetsIn10.join(", ") : "auspicious planetary aspects"}, cementing long-term professional stature.`;
+  }
+
+  // Karakamsha (Navamsha of Atmakaraka)
+  let karakamshaInsight: string | undefined;
+  const akPlanet = jaimini.atmakaraka.planet;
+  const akNavamshaRashi = kundli.vargas?.D9?.planets?.[akPlanet]?.rashi;
+  if (akNavamshaRashi) {
+    const karakamshaName = rashiNames[(akNavamshaRashi - 1 + 12) % 12];
+    karakamshaInsight = lang === 'hi'
+      ? `कारकांश लग्न: आत्मकारक ${getLocalizedPlanet(akPlanet, lang)} नवमांश में ${karakamshaName} राशि में स्थित होकर आत्मा के वास्तविक कार्यक्षेत्र, रचनात्मक स्वाभाविकता एवं उच्च उद्देश्य को उजागर करते हैं।`
+      : `Karakamsha Lagna: Atmakaraka ${akPlanet} sits in ${karakamshaName} in Navamsha (D9), defining your soul's authentic vocation, intuitive craft, and highest karmic contribution.`;
+  }
+
+  // Arudha Pada Analysis (AL & A10)
+  let arudhaInsight: string | undefined;
+  const alPada = kundli.arudhaPadas?.a1_al || kundli.arudhaPadas?.all?.find((p: any) => p.houseNumber === 1);
+  const a10Pada = kundli.arudhaPadas?.a10 || kundli.arudhaPadas?.all?.find((p: any) => p.houseNumber === 10);
+  if (alPada || a10Pada) {
+    arudhaInsight = lang === 'hi'
+      ? `आरूढ़ विश्लेषण: आरूढ़ लग्न (AL - जनधारणा) ${alPada?.rashiName || ""} में एवं राज्य पद (A10 - कार्यक्षेत्र प्रतिष्ठा) ${a10Pada?.rashiName || ""} में स्थित है। यह समाज में आपकी व्यावसायिक छवि को प्रभावशाली बनाता है।`
+      : `Arudha Analysis: Arudha Lagna (AL - Public Persona) in ${alPada?.rashiName || ""} and Rajya Pada (A10 - Executive Status) in ${a10Pada?.rashiName || ""} bestow high peer prestige and career visibility.`;
+  }
+
+  // Government Job / Executive Authority Likelihood
+  let govScore = 35;
+  const sunHouse = getPlanetHouse("Sun");
+  const marsHouse = getPlanetHouse("Mars");
+  const jupHouse = getPlanetHouse("Jupiter");
+
+  if ([1, 10].includes(sunHouse)) govScore += 25;
+  if ([1, 10].includes(marsHouse)) govScore += 18;
+  if ([9, 10].includes(jupHouse)) govScore += 15;
+  if (tenthPlanets.includes("Sun") || tenthPlanets.includes("Mars")) govScore += 15;
+  if ([1, 5, 9].includes(house10.rashi)) govScore += 10; // Fire sign in 10th
+
+  govScore = Math.max(15, Math.min(95, govScore));
+  let govLikelihood: 'High' | 'Moderate' | 'Low' = 'Moderate';
+  if (govScore >= 75) govLikelihood = 'High';
+  else if (govScore >= 50) govLikelihood = 'Moderate';
+  else govLikelihood = 'Low';
+
+  const govDescription = lang === 'hi'
+    ? `सरकारी सेवा / उच्च प्रशासनिक प्राधिकार की संभावना: ${govLikelihood} (${govScore}/100)। ${govScore >= 75 ? 'सूर्य और मंगल का दशम भाव से सशक्त संबंध राजकार्य, सिविल सेवा या पीएसयू में उच्च पद का सशक्त योग बनाता है।' : 'कॉरपोरेट नेतृत्व, बहुराष्ट्रीय उद्यम अथवा स्वतंत्र परामर्श में अधिक त्वरित सफलता मिलेगी।'}`
+    : `Public Sector / Civil Services / Executive Authority Aptitude: ${govLikelihood} (${govScore}/100). ${govScore >= 75 ? 'Sun and Mars synergy with the 10th house creates an illustrious signature for government, civil service, or sovereign public institutions.' : 'Private corporate hierarchies, global tech firms, or independent enterprise offer faster upward mobility.'}`;
+
   return {
     recommendation,
     jobScore,
@@ -241,5 +296,13 @@ export function getCareerPrediction(kundli: Kundli, options?: PredictionOptions)
     chalitInsight,
     kpInsight,
     lalKitabInsight,
+    d10Insight,
+    karakamshaInsight,
+    arudhaInsight,
+    governmentJobLikelihood: {
+      likelihood: govLikelihood,
+      score: govScore,
+      description: govDescription,
+    },
   };
 }

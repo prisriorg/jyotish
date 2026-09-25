@@ -25,6 +25,14 @@ export interface CareerPrediction {
   chalitInsight?: string;
   kpInsight?: string;
   lalKitabInsight?: string;
+  d10Insight?: string;
+  karakamshaInsight?: string;
+  arudhaInsight?: string;
+  governmentJobLikelihood?: {
+    likelihood: 'High' | 'Moderate' | 'Low' | (string & {});
+    score: number; // 0 - 100
+    description: string;
+  };
 }
 
 export interface WealthPrediction {
@@ -50,6 +58,23 @@ export interface WealthPrediction {
   chalitInsight?: string;
   kpInsight?: string;
   lalKitabInsight?: string;
+  induLagnaInsight?: string;
+  induLagnaDetails?: {
+    rashi: string;
+    rashiLord: string;
+    occupants: string[];
+    wealthMagnitude: string;
+  };
+  arudhaWealthInsight?: string;
+  propertyAndRealEstate?: {
+    potential: 'High / Multiple Properties' | 'Moderate / Steady Acquisition' | 'Cautious / Delays Likely' | (string & {});
+    description: string;
+  };
+  speculativeAndInvestment?: {
+    potential: 'Favorable / High Return Potential' | 'Moderate / Long-term Balanced' | 'High Risk / Strictly Avoid Speculation' | (string & {});
+    description: string;
+  };
+  daridraYogas?: string[];
 }
 
 export interface MarriagePrediction {
@@ -96,7 +121,241 @@ export interface MarriagePrediction {
   chalitInsight?: string;
   kpInsight?: string;
   lalKitabInsight?: string;
+  upapadaLagnaInsight?: string;
+  navamshaSpouseInsight?: string;
+  maritalStabilityRating?: 'High Stability & Concord' | 'Balanced with Periodic Adjustments' | 'Challenging / Shastric Remedies Recommended' | (string & {});
+  darapadaInsight?: string;
 }
+
+export interface HealthPrediction {
+  healthScore: number; // 0 - 100
+  healthRating: 'Robust & Vibrant' | 'Good with Minor Sensitivities' | 'Moderate / Routine Care Needed' | 'Vulnerable / Medical Vigilance Advised' | (string & {});
+  vitalityAndImmunity: string;
+  longevityAssessment: {
+    category: 'Deerghayu (Long Life: 75+ yrs)' | 'Madhyayu (Medium Life: 50-75 yrs)' | 'Alpayu (Caution: <50 yrs)' | (string & {});
+    description: string;
+    astrologicalBasis: string;
+  };
+  badhakaSthana: {
+    house: number;
+    lord: string;
+    lagnaType: 'Movable (Chara)' | 'Fixed (Sthira)' | 'Dual (Dwisvabhava)' | (string & {});
+    impact: string;
+  };
+  marakaPlanets: {
+    primaryMarakas: string[];
+    secondaryMarakas: string[];
+    explanation: string;
+  };
+  ayurvedicConstitution: {
+    primaryDosha: 'Vata' | 'Pitta' | 'Kapha' | 'Vata-Pitta' | 'Pitta-Kapha' | 'Vata-Kapha' | 'Tridoshic' | (string & {});
+    explanation: string;
+    dietLifestyleRecommendations: string[];
+  };
+  organVulnerabilities: {
+    organOrSystem: string;
+    rulingPlanetOrHouse: string;
+    severity: 'High' | 'Moderate' | 'Mild';
+    guidance: string;
+  }[];
+  criticalAgeWindows: string[];
+  remediesAndPrecautions: string[];
+}
+
+export interface EducationPrediction {
+  intellectRating: 'Genius / Highly Analytical' | 'Strong Academic Acumen' | 'Practical / Applied Intellect' | 'Creative / Non-Traditional' | (string & {});
+  academicSuccessScore: number; // 0 - 100
+  learningStyle: string;
+  recommendedStreams: {
+    stream: string;
+    suitability: 'Highly Auspicious' | 'Favorable' | 'Secondary';
+    astrologicalReason: string;
+  }[];
+  higherEducationAndResearch: {
+    foreignEducationPotential: boolean;
+    score: number; // 0 - 100
+    description: string;
+  };
+  competitiveExams: {
+    successLikelihood: 'Very High' | 'High' | 'Moderate' | 'Requires Extra Effort' | (string & {});
+    keyStrengths: string[];
+    advice: string;
+  };
+  mercuryJupiterSignificance: {
+    mercuryImpact: string;
+    jupiterImpact: string;
+  };
+  strategicEducationalAdvice: string[];
+}
+
+export interface ProgenyPrediction {
+  progenyBlessingScore: number; // 0 - 100
+  progenyRating: 'Highly Favorable' | 'Favorable with Minor Delay' | 'Challenging / Remedial Support Advised' | 'Needs Deep Astrological Consultation' | (string & {});
+  fifthHouseDetails: {
+    rashi: string;
+    lord: string;
+    lordPlacementHouse: number;
+    planetsIn5th: string[];
+    savBindus: number;
+  };
+  jupiterStrengthVerdict: string;
+  putraDosha: {
+    hasDosha: boolean;
+    type?: string;
+    description: string;
+    remedies: string[];
+  };
+  saptamshaD7Insight?: string;
+  favorableConceptionWindows: string[];
+  childrenTraits: string[];
+  remedies: string[];
+}
+
+export interface YogasAndDoshasReport {
+  summaryVerdict: string;
+  totalYogasDetected: number;
+  totalDoshasDetected: number;
+  rajaYogas: {
+    name: string;
+    planets: string[];
+    description: string;
+    strength: 'Very Strong' | 'Strong' | 'Moderate';
+  }[];
+  dhanaYogas: {
+    name: string;
+    planets: string[];
+    description: string;
+    strength: 'Very Strong' | 'Strong' | 'Moderate';
+  }[];
+  mahapurushaYogas: {
+    name: string;
+    planet: string;
+    description: string;
+  }[];
+  specialAuspiciousYogas: {
+    name: string;
+    description: string;
+  }[];
+  vipreetRajYogas: {
+    name: string;
+    type: 'Harsha' | 'Sarala' | 'Vimala';
+    description: string;
+  }[];
+  inauspiciousDoshas: {
+    name: string;
+    hasDosha: boolean;
+    isCancelled?: boolean;
+    cancellationReason?: string;
+    severity: 'High' | 'Moderate' | 'Mild' | 'None';
+    description: string;
+    remedy: string;
+  }[];
+  kaalSarpDosha: {
+    hasDosha: boolean;
+    type?: string;
+    isFull: boolean;
+    isCancelled: boolean;
+    cancellationReason?: string;
+    description: string;
+    remedy: string;
+  };
+  kemadrumaYoga: {
+    hasYoga: boolean;
+    isCancelled: boolean;
+    cancellationReason?: string;
+    description: string;
+    remedy?: string;
+  };
+}
+
+export interface DashaTimelinePrediction {
+  currentMahadasha: {
+    planet: string;
+    startDate: string;
+    endDate: string;
+    nature: string;
+    lordOfHouses: number[];
+    placementHouse: number;
+    prediction: string;
+  };
+  currentAntardasha: {
+    planet: string;
+    startDate: string;
+    endDate: string;
+    prediction: string;
+  };
+  currentPratyantardasha?: {
+    planet: string;
+    startDate: string;
+    endDate: string;
+  };
+  currentPeriodThemes: {
+    career: string;
+    wealth: string;
+    relationships: string;
+    health: string;
+  };
+  upcomingMajorPeriods: {
+    planet: string;
+    periodSpan: string;
+    keyForecast: string;
+  }[];
+  criticalMilestoneAges: {
+    age: number;
+    astrologicalCycle: string;
+    significance: string;
+  }[];
+}
+
+export interface TransitPredictions {
+  saturnTransit: {
+    currentSign: string;
+    houseFromMoon: number;
+    isSadeSati: boolean;
+    sadeSatiPhase?: '1st Phase (Rising - 12th from Moon)' | '2nd Phase (Peak / Janma - 1st from Moon)' | '3rd Phase (Setting - 2nd from Moon)' | (string & {});
+    isKantakaShani: boolean;
+    isAshtamaShani: boolean;
+    prediction: string;
+    remedy?: string;
+  };
+  jupiterTransit: {
+    currentSign: string;
+    houseFromMoon: number;
+    hasGuruBalam: boolean;
+    blessings: string;
+    prediction: string;
+  };
+  rahuKetuTransit: {
+    rahuSign: string;
+    ketuSign: string;
+    rahuHouseFromMoon: number;
+    ketuHouseFromMoon: number;
+    prediction: string;
+  };
+  overallTransitScore: number; // 0 - 100
+  summary: string;
+}
+
+export interface ComprehensiveReport {
+  summary: string;
+  career: CareerPrediction;
+  wealth: WealthPrediction;
+  marriage: MarriagePrediction;
+  health: HealthPrediction;
+  education: EducationPrediction;
+  progeny: ProgenyPrediction;
+  yogas: YogasAndDoshasReport;
+  dashaTimeline: DashaTimelinePrediction;
+  transits: TransitPredictions;
+  remedies: RemediesPrediction;
+  chalitAnalysis: ChalitAnalysis;
+  kpAnalysis: KpAnalysis;
+  lalKitabAnalysis: LalKitabAnalysis;
+  jaiminiKarakas: JaiminiKarakas;
+  gemstones?: GemstoneReport;
+  formattedMarkdown: string;
+}
+
 
 export interface RemedyItem {
   area: string;
@@ -322,20 +581,6 @@ export interface GemstoneReport {
   prohibitedStones: GemstoneRecommendationItem[];   // 🔴 Strictly prohibited / Hazardous ('Never Wear')
   clashingCombinationsWarning: string[];
   summary: string;
-  formattedMarkdown: string;
-}
-
-export interface ComprehensiveReport {
-  summary: string;
-  career: CareerPrediction;
-  wealth: WealthPrediction;
-  marriage: MarriagePrediction;
-  remedies: RemediesPrediction;
-  chalitAnalysis: ChalitAnalysis;
-  kpAnalysis: KpAnalysis;
-  lalKitabAnalysis: LalKitabAnalysis;
-  jaiminiKarakas: JaiminiKarakas;
-  gemstones?: GemstoneReport;
   formattedMarkdown: string;
 }
 
