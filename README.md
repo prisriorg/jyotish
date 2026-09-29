@@ -1,8 +1,11 @@
 # @prisri/jyotish
 
 [![npm version](https://img.shields.io/npm/v/@prisri/jyotish.svg)](https://www.npmjs.com/package/@prisri/jyotish)
+[![npm downloads](https://img.shields.io/npm/dm/@prisri/jyotish.svg)](https://www.npmjs.com/package/@prisri/jyotish)
+[![CI](https://github.com/prisriorg/jyotish/actions/workflows/ci.yml/badge.svg)](https://github.com/prisriorg/jyotish/actions/workflows/ci.yml)
 [![License: ISC](https://img.shields.io/badge/License-ISC-blue.svg)](https://opensource.org/licenses/ISC)
 [![TypeScript](https://img.shields.io/badge/TypeScript-Ready-blue.svg)](https://www.typescriptlang.org/)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/prisriorg/jyotish/blob/main/CONTRIBUTING.md)
 
 A high-performance, developer-friendly TypeScript/JavaScript library for **Jyotish (Vedic Astrology)** and **Panchangam** calculations, powered by high-precision ephemeris algorithms via `astronomy-engine`.
 
