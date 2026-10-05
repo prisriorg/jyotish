@@ -1,3 +1,4 @@
+import { predictionDate, validatePredictionChart } from "./validation";
 import { Kundli } from "../kundli/types";
 import { RASHI_LORDS } from "../matching/constants";
 import { rashiNames } from "../core/constants";
@@ -6,6 +7,7 @@ import { Language } from "../i18n/types";
 import { getLocalizedPlanet } from "../i18n/index";
 
 export function getDashaTimelinePrediction(kundli: Kundli, options?: PredictionOptions): DashaTimelinePrediction {
+  validatePredictionChart(kundli);
   const lang: Language = options?.lang || 'en';
   const houses = kundli.houses || [];
   const planets = kundli.planets || {};
@@ -35,60 +37,23 @@ export function getDashaTimelinePrediction(kundli: Kundli, options?: PredictionO
   }
 
   // 1. Current Active Dasha details
-  const dashaObj = kundli.dasha as any;
-  const now = new Date();
-
-  let mdPlanet = "Jupiter";
-  let mdStart = "2020-01-01";
-  let mdEnd = "2036-01-01";
-  let adPlanet = "Saturn";
-  let adStart = "2024-01-01";
-  let adEnd = "2026-06-01";
-  let pdPlanet: string | undefined = "Mercury";
-
-  if (dashaObj?.currentMahadasha) {
-    const curMd = dashaObj.currentMahadasha;
-    mdPlanet = curMd.planet || "Jupiter";
-    mdStart = curMd.startTime ? new Date(curMd.startTime).toISOString().split('T')[0] : (curMd.startDate ? new Date(curMd.startDate).toISOString().split('T')[0] : "Active");
-    mdEnd = curMd.endTime ? new Date(curMd.endTime).toISOString().split('T')[0] : (curMd.endDate ? new Date(curMd.endDate).toISOString().split('T')[0] : "Active");
-
-    if (dashaObj.currentAntar) {
-      const curAd = dashaObj.currentAntar;
-      adPlanet = curAd.planet || "Saturn";
-      adStart = curAd.startTime ? new Date(curAd.startTime).toISOString().split('T')[0] : (curAd.startDate ? new Date(curAd.startDate).toISOString().split('T')[0] : "Active");
-      adEnd = curAd.endTime ? new Date(curAd.endTime).toISOString().split('T')[0] : (curAd.endDate ? new Date(curAd.endDate).toISOString().split('T')[0] : "Active");
-    }
-
-    if (dashaObj.currentPratyantar) {
-      pdPlanet = dashaObj.currentPratyantar.planet;
-    }
-  } else if (kundli.dasha?.mahadashas && kundli.dasha.mahadashas.length > 0) {
-    // Find active mahadasha from timeline
-    for (const md of kundli.dasha.mahadashas) {
-      const s = md.startTime ? new Date(md.startTime).getTime() : 0;
-      const e = md.endTime ? new Date(md.endTime).getTime() : 0;
-      const cur = now.getTime();
-      if (cur >= s && cur <= e) {
-        mdPlanet = md.planet;
-        mdStart = md.startTime ? new Date(md.startTime).toISOString().split('T')[0] : "Active";
-        mdEnd = md.endTime ? new Date(md.endTime).toISOString().split('T')[0] : "Active";
-        const antars = md.antars || (md as any).antardashas;
-        if (antars) {
-          for (const ad of antars) {
-            const as = ad.startTime ? new Date(ad.startTime).getTime() : 0;
-            const ae = ad.endTime ? new Date(ad.endTime).getTime() : 0;
-            if (cur >= as && cur <= ae) {
-              adPlanet = ad.planet;
-              adStart = ad.startTime ? new Date(ad.startTime).toISOString().split('T')[0] : "Active";
-              adEnd = ad.endTime ? new Date(ad.endTime).toISOString().split('T')[0] : "Active";
-              break;
-            }
-          }
-        }
-        break;
-      }
-    }
+  const now = predictionDate(options);
+  const active = (period: { startTime: Date; endTime: Date }) =>
+    now.getTime() >= new Date(period.startTime).getTime() &&
+    now.getTime() < new Date(period.endTime).getTime();
+  const md = kundli.dasha?.mahadashas?.find(active);
+  const ad = md?.antars?.find(active);
+  if (!md || !ad) {
+    throw new Error('No active mahadasha/antardasha available for the prediction date.');
   }
+  const pd = ad.pratyantars?.find(active);
+  const mdPlanet = md.planet;
+  const adPlanet = ad.planet;
+  const pdPlanet = pd?.planet;
+  const mdStart = new Date(md.startTime).toISOString().split('T')[0];
+  const mdEnd = new Date(md.endTime).toISOString().split('T')[0];
+  const adStart = new Date(ad.startTime).toISOString().split('T')[0];
+  const adEnd = new Date(ad.endTime).toISOString().split('T')[0];
 
   const mdHouse = getPlanetHouse(mdPlanet);
   const adHouse = getPlanetHouse(adPlanet);
@@ -144,7 +109,7 @@ export function getDashaTimelinePrediction(kundli: Kundli, options?: PredictionO
     },
     {
       planet: "आगामी प्रमुख चक्र",
-      periodSpan: `वर्ष ${new Date().getFullYear() + 1} - ${new Date().getFullYear() + 3}`,
+      periodSpan: `वर्ष ${now.getUTCFullYear() + 1} - ${now.getUTCFullYear() + 3}`,
       keyForecast: "आगामी अंतर्दशाएं संपत्ति विस्तार, पारिवारिक मांगलिक कार्य एवं कार्यक्षेत्र में नई ऊंचाइयों की ओर अग्रसर करेंगी।"
     }
   ] : [
@@ -155,7 +120,7 @@ export function getDashaTimelinePrediction(kundli: Kundli, options?: PredictionO
     },
     {
       planet: "Next Major Sub-Cycle",
-      periodSpan: `Years ${new Date().getFullYear() + 1} - ${new Date().getFullYear() + 3}`,
+      periodSpan: `Years ${now.getUTCFullYear() + 1} - ${now.getUTCFullYear() + 3}`,
       keyForecast: "Transition into subsequent antardasha triggers asset acquisition, celebratory family milestones, and executive empowerment."
     }
   ];

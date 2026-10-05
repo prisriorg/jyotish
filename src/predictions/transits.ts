@@ -1,3 +1,4 @@
+import { predictionDate, validatePredictionChart } from "./validation";
 import { Kundli } from "../kundli/types";
 import { rashiNames } from "../core/constants";
 import { TransitPredictions, PredictionOptions } from "./types";
@@ -6,8 +7,9 @@ import { Language } from "../i18n/types";
 import { getLocalizedPlanet, getLocalizedRashi } from "../i18n/index";
 
 export function getTransitPredictions(kundli: Kundli, options?: PredictionOptions): TransitPredictions {
+  validatePredictionChart(kundli);
   const lang: Language = options?.lang || 'en';
-  const now = new Date();
+  const now = predictionDate(options);
 
   // Natal Moon Rashi (1-12)
   const moonRashi = kundli.planets?.Moon ? (kundli.planets.Moon.rashi || 1) : 1;

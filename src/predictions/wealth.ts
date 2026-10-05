@@ -1,3 +1,4 @@
+import { predictionDate, validatePredictionChart } from "./validation";
 import { Kundli } from "../kundli/types";
 import { RASHI_LORDS } from "../matching/constants";
 import { rashiNames } from "../core/constants";
@@ -8,6 +9,7 @@ import { wealthI18n } from "../i18n/dictionaries/predictions";
 import { getLocalizedPlanet } from "../i18n/index";
 
 export function getWealthPrediction(kundli: Kundli, options?: PredictionOptions): WealthPrediction {
+  validatePredictionChart(kundli);
   const lang: Language = options?.lang || 'en';
   const houses = kundli.houses || [];
   const planets = kundli.planets || {};

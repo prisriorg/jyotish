@@ -1,10 +1,12 @@
+import { predictionDate, validatePredictionChart } from "./validation";
 import { Kundli } from "../kundli/types";
 import { RASHI_LORDS } from "../matching/constants";
 import { rashiNames } from "../core/constants";
 import { checkMangalDosha } from "../matching/index";
-import { MarriagePrediction } from "./types";
+import { MarriagePrediction, PredictionOptions } from "./types";
 import { getChalitAnalysis, getKpAnalysis, getLalKitabAnalysis } from "./multisystem";
 import { getJaiminiKarakas } from "./jaimini";
+import { getArudhaPadas } from "../kundli/arudhas";
 
 import { Language } from "../i18n/types";
 import { marriageI18n } from "../i18n/dictionaries/predictions";
@@ -12,18 +14,13 @@ import { getLocalizedPlanet, getLocalizedRashi } from "../i18n/index";
 
 export function getMarriagePrediction(
   kundli: Kundli,
-  options?: { gender?: "male" | "female" | "other"; lang?: Language }
+  options?: PredictionOptions & { gender?: "male" | "female" | "other" }
 ): MarriagePrediction {
+  validatePredictionChart(kundli);
   const lang: Language = options?.lang || 'en';
   const houses = kundli.houses || [];
   const planets = kundli.planets || {};
   const house7 = houses.find((h) => h.number === 7) || houses[6];
-  const birthYear = kundli.birthDetails?.rawDate
-    ? kundli.birthDetails.rawDate.getFullYear()
-    : new Date().getFullYear() - 22;
-
-  const currentYear = new Date().getFullYear();
-
   // 7th lord & planets
   const rashi7Idx = ((house7?.rashi || 7) - 1 + 12) % 12;
   const lord7 = RASHI_LORDS[rashi7Idx];
@@ -35,8 +32,42 @@ export function getMarriagePrediction(
   const lord2 = RASHI_LORDS[((house2?.rashi || 2) - 1 + 12) % 12];
   const lord11 = RASHI_LORDS[((house11?.rashi || 11) - 1 + 12) % 12];
 
+  const getPlanetHouse = (pName: string): number => {
+    for (const h of houses) {
+      if (h.planets && h.planets.includes(pName)) return h.number;
+    }
+    return 1;
+  };
+
+  // Navamsha (D9) 7th House & Occupants
+  const d9 = kundli.vargas?.D9;
+  const d9AscendantRashi = d9?.ascendant?.rashi || 1;
+  const d9House7Rashi = ((d9AscendantRashi + 6 - 1) % 12) + 1;
+  const d9House7RashiName = rashiNames[d9House7Rashi - 1] || "";
+  const d9House7Lord = RASHI_LORDS[d9House7Rashi - 1];
+
+  // Jaimini Karakas
+  const jaimini = getJaiminiKarakas(kundli, { lang });
+  const dkPlanet = jaimini.darakaraka.planet;
+
+  // Jaimini Arudha Padas (Upapada Lagna & Dara Pada)
+  let padas = kundli.arudhaPadas;
+  if (!padas) {
+    try {
+      padas = getArudhaPadas(kundli);
+    } catch {
+      // fallback if arudhas cannot be calculated
+    }
+  }
+  const ulPada = padas?.a12_ul || padas?.all?.find((p: any) => p.houseNumber === 12);
+  const a7Pada = padas?.a7 || padas?.all?.find((p: any) => p.houseNumber === 7);
+  const ulLord = ulPada ? RASHI_LORDS[(ulPada.rashi - 1 + 12) % 12] : "";
+
   // Marriage significators (Lords of 7th, 2nd, 11th, natural karakas Venus & Jupiter, or planets in 7th)
   const significators = new Set<string>([lord7, lord2, lord11, "Venus", "Jupiter", ...planetsIn7]);
+  if (d9House7Lord) significators.add(d9House7Lord);
+  if (dkPlanet) significators.add(dkPlanet);
+  if (ulLord) significators.add(ulLord);
 
   // Analyze Dasha tree for potential timing years
   const potentialYears = new Set<number>();
@@ -44,46 +75,62 @@ export function getMarriagePrediction(
   let dashaSupportExplanation = "";
 
   const dashaTree = kundli.dasha?.mahadashas || [];
-  const now = new Date();
+  const now = predictionDate(options);
 
+  const horizonEnd = new Date(now.getTime());
+  horizonEnd.setUTCFullYear(horizonEnd.getUTCFullYear() + 10);
   for (const maha of dashaTree) {
-    if (maha.antars) {
-      for (const antar of maha.antars) {
-        const startYear = antar.startTime.getFullYear();
-        const endYear = antar.endTime.getFullYear();
-        const ageAtStart = startYear - birthYear;
+    for (const antar of maha.antars || []) {
+      const start = Math.max(new Date(maha.startTime).getTime(), new Date(antar.startTime).getTime());
+      const end = Math.min(new Date(maha.endTime).getTime(), new Date(antar.endTime).getTime());
+      if (!Number.isFinite(start) || !Number.isFinite(end) || start >= end) continue;
+      if (!significators.has(antar.planet) && !significators.has(maha.planet)) continue;
+      if (now.getTime() >= start && now.getTime() < end) {
+        currentDashaFavorable = true;
+        const localizedMaha = getLocalizedPlanet(maha.planet, lang);
+        const localizedAntar = getLocalizedPlanet(antar.planet, lang);
+        let connectionReason = "";
+        if (maha.planet === lord7 || antar.planet === lord7) connectionReason = lang === 'hi' ? "सप्तमेश (विवाह भाव स्वामी)" : "7th house lord";
+        else if (maha.planet === "Venus" || antar.planet === "Venus") connectionReason = lang === 'hi' ? "नैसर्गिक विवाह कारक शुक्र" : "natural marriage karaka Venus";
+        else if (maha.planet === "Jupiter" || antar.planet === "Jupiter") connectionReason = lang === 'hi' ? "देवगुरु बृहस्पति" : "auspicious Jupiter";
+        else if (maha.planet === dkPlanet || antar.planet === dkPlanet) connectionReason = lang === 'hi' ? "जैमिनी दाराकारक" : "Jaimini Darakaraka";
+        else connectionReason = lang === 'hi' ? "विवाह संबंध कारक" : "marriage significator";
 
-        // Realistic marriage window: age 23 to 35
-        if (ageAtStart >= 23 && ageAtStart <= 35) {
-          if (significators.has(antar.planet) || significators.has(maha.planet)) {
-            for (let y = startYear; y <= endYear; y++) {
-              if (y >= currentYear) {
-                potentialYears.add(y);
-              }
-            }
-          }
-        }
-
-        // Check if currently running antar is favorable
-        if (now >= antar.startTime && now <= antar.endTime) {
-          if (significators.has(antar.planet) || significators.has(maha.planet)) {
-            currentDashaFavorable = true;
-            dashaSupportExplanation = `Currently running ${maha.planet} Mahadasha with ${antar.planet} Antardasha carries strong relationship activation.`;
-          }
-        }
+        dashaSupportExplanation = lang === 'hi'
+          ? `${localizedMaha}/${localizedAntar} की सक्रिय अवधि ${connectionReason} से प्रत्यक्ष संबंध रखती है, जो संबंध व विवाह हेतु शास्त्रीय रूप से अनुकूल समय है।`
+          : `Current ${maha.planet}/${antar.planet} period actively activates ${connectionReason}, creating a classically promising window for marriage.`;
+      }
+      const windowStart = Math.max(start, now.getTime());
+      const windowEnd = Math.min(end, horizonEnd.getTime());
+      if (windowStart >= windowEnd) continue;
+      for (let year = new Date(windowStart).getUTCFullYear(); year <= new Date(windowEnd - 1).getUTCFullYear(); year++) {
+        potentialYears.add(year);
       }
     }
   }
-
+  const sortedYears = Array.from(potentialYears).sort((a, b) => a - b).slice(0, 4);
   if (!dashaSupportExplanation) {
-    dashaSupportExplanation = `Upcoming dasha sub-periods involving 7th lord (${lord7}) or benefic influences will trigger marriage readiness.`;
+    dashaSupportExplanation = lang === 'hi'
+      ? 'वर्तमान अवधि में विवाह कारक ग्रहों का प्रत्यक्ष संयोग नहीं है। आगामी दशा-अंतर्दशा अवधि में विवाह के प्रबल योग निर्मित होंगे।'
+      : 'Current dasha period lacks direct marriage significator alignment; primary matrimonial window activates in upcoming sub-periods.';
   }
 
-  // Sort predicted timing years and limit to top 3-4 distinct years
-  const sortedYears = Array.from(potentialYears).sort((a, b) => a - b).slice(0, 4);
-
-  // Favorable age range
-  const favorableAgeRange = lang === 'hi' ? "26 से 29 वर्ष" : "26 to 29 years";
+  let favorableAgeRange = lang === 'hi' ? 'निर्धारित नहीं' : 'Not established';
+  if (sortedYears.length > 0) {
+    const rawBirthDate = kundli.birthDetails?.rawDate || kundli.birthDetails?.date;
+    if (rawBirthDate) {
+      const birthYear = new Date(rawBirthDate).getUTCFullYear();
+      if (Number.isFinite(birthYear)) {
+        const minYear = sortedYears[0];
+        const maxYear = sortedYears[sortedYears.length - 1];
+        const minAge = Math.max(18, minYear - birthYear);
+        const maxAge = Math.max(minAge + 2, maxYear - birthYear + 1);
+        favorableAgeRange = lang === 'hi' ? `${minAge} - ${maxAge} वर्ष` : `${minAge} - ${maxAge} years`;
+      }
+    } else {
+      favorableAgeRange = lang === 'hi' ? '25 - 30 वर्ष' : '25 - 30 years';
+    }
+  }
 
   // Partner characteristics based on 7th sign and occupants
   const signDescriptions: Record<string, { nature: string; traits: string[]; direction: string }> = {
@@ -224,21 +271,66 @@ export function getMarriagePrediction(
     partnerInfo.traits.push(lang === 'hi' ? "आकर्षक, सुरुचिपूर्ण व सौम्य स्वभाव" : "Visually appealing, sophisticated taste, and charming");
   }
 
-  // Mangal Dosha
-  const dosha = checkMangalDosha(kundli);
+  // Mangal Dosha with Authentic Classical Shastric Exceptions
+  const dosha = checkMangalDosha(kundli, { lang });
+  let hasDosha = dosha.hasDosha;
+  let isCancelled = dosha.description.toLowerCase().includes("cancelled") || dosha.description.includes("निरस्त") || dosha.description.includes("परिहार");
+  let mangalDescription = dosha.description;
+
+  const marsData = planets.Mars;
+  const marsRashi = marsData?.rashi || 1;
+  const marsH = getPlanetHouse("Mars");
+
+  const cancellations: string[] = [];
+  if ([1, 8, 10].includes(marsRashi)) {
+    cancellations.push(lang === 'hi' ? "मंगल स्वराशि (मेष/वृश्चिक) या उच्च राशि (मकर) में है।" : "Mars is in Own sign (Aries/Scorpio) or Exalted (Capricorn).");
+  }
+  if (marsRashi === 4) {
+    cancellations.push(lang === 'hi' ? "कर्क में नीचस्थ मंगल का क्रूर प्रभाव शांत हो जाता है।" : "Mars in Cancer (debilitated) loses malefic heat.");
+  }
+  if ([5, 11].includes(marsRashi)) {
+    cancellations.push(lang === 'hi' ? "मंगल सिंह अथवा कुंभ राशि में होने से शास्त्रीय परिहार होता है।" : "Mars in Leo or Aquarius cancels classical Kuja Dosha.");
+  }
+  const jupRashi = planets.Jupiter?.rashi || 1;
+  const diffFromJup = ((marsRashi - jupRashi + 12) % 12) + 1;
+  if ([1, 5, 7, 9].includes(diffFromJup)) {
+    cancellations.push(lang === 'hi' ? "देवगुरु बृहस्पति की दृष्टि/युति से दोष परिहार होता है।" : "Jupiter aspects or conjoins Mars, nullifying Kuja Dosha.");
+  }
+  const moonRashi = planets.Moon?.rashi || 1;
+  if (marsRashi === moonRashi) {
+    cancellations.push(lang === 'hi' ? "चंद्र-मंगल युति से मांगलिक प्रभाव शुभता में बदलता है।" : "Moon-Mars conjunction forms Chandra-Mangala Yoga, cancelling dosha.");
+  }
+  if (marsH === 2 && [3, 6].includes(marsRashi)) {
+    cancellations.push(lang === 'hi' ? "द्वितीय भाव में बुध की राशि में मंगल दोषमुक्त है।" : "Mars in 2nd house in Mercurial signs is exempt.");
+  }
+  if (marsH === 4 && [1, 8].includes(marsRashi)) {
+    cancellations.push(lang === 'hi' ? "चतुर्थ भाव में स्वराशि का मंगल दोषमुक्त है।" : "Mars in 4th house in its own signs is exempt.");
+  }
+  if (marsH === 7 && [4, 10].includes(marsRashi)) {
+    cancellations.push(lang === 'hi' ? "सप्तम भाव में कर्क या मकर का मंगल दोषमुक्त है।" : "Mars in 7th house in Cancer or Capricorn is exempt.");
+  }
+  if (marsH === 8 && [9, 12].includes(marsRashi)) {
+    cancellations.push(lang === 'hi' ? "अष्टम भाव में गुरु की राशि में मंगल दोषमुक्त है।" : "Mars in 8th house in Jovian signs is exempt.");
+  }
+  if (marsH === 12 && [2, 7].includes(marsRashi)) {
+    cancellations.push(lang === 'hi' ? "द्वादश भाव में शुक्र की राशि में मंगल दोषमुक्त है।" : "Mars in 12th house in Venusian signs is exempt.");
+  }
+
+  if (hasDosha && cancellations.length > 0) {
+    isCancelled = true;
+    hasDosha = false;
+    mangalDescription = lang === 'hi'
+      ? `मांगलिक दोष परिहार (पूर्णतः निरस्त): ${cancellations.join(" ")} अतः वैवाहिक जीवन में मांगलिक भय निराधार है।`
+      : `Mangal Dosha Cancelled (Classical Shastric Exemption): ${cancellations.join(" ")} The native is free from Kuja Dosha afflictions.`;
+  }
+
   const mangalDosha = {
-    hasDosha: dosha.hasDosha,
-    isCancelled: dosha.description.toLowerCase().includes("cancelled"),
-    description: dosha.description,
+    hasDosha,
+    isCancelled,
+    description: mangalDescription,
   };
 
   // --- Love vs Arranged Marriage & Intercaste Analysis ---
-  const getPlanetHouse = (pName: string): number => {
-    for (const h of houses) {
-      if (h.planets && h.planets.includes(pName)) return h.number;
-    }
-    return 1;
-  };
 
   const house1 = houses.find((h) => h.number === 1) || houses[0];
   const house5 = houses.find((h) => h.number === 5) || houses[4];
@@ -439,16 +531,10 @@ export function getMarriagePrediction(
   const chalit = getChalitAnalysis(kundli, { lang });
   const kp = getKpAnalysis(kundli, { lang });
   const lalKitab = getLalKitabAnalysis(kundli, { lang });
-  const jaimini = getJaiminiKarakas(kundli, { lang });
 
   const nativeGender = options?.gender || kundli.birthDetails?.gender;
   const lord7Rashi = kundli.planets[lord7]?.rashiName || "";
 
-  // Navamsha (D9) 7th House & Occupants
-  const d9 = kundli.vargas?.D9;
-  const d9AscendantRashi = d9?.ascendant?.rashi || 1;
-  const d9House7Rashi = ((d9AscendantRashi + 6 - 1) % 12) + 1;
-  const d9House7RashiName = rashiNames[d9House7Rashi - 1] || "";
   const d9PlanetsIn7: string[] = [];
   if (d9?.planets) {
     for (const [pName, pData] of Object.entries(d9.planets)) {
@@ -546,7 +632,6 @@ export function getMarriagePrediction(
   }
 
   // 5. Jaimini Darakaraka (DK)
-  const dkPlanet = jaimini.darakaraka.planet;
   if (dkPlanet === "Saturn") {
     ageScore += 1.5;
     ageReasons.push("Jaimini Darakaraka is Saturn: Partner is emotionally seasoned, prudent, and commands seniority.");
@@ -703,7 +788,6 @@ export function getMarriagePrediction(
 
   // Upapada Lagna (UL - A12) & 2nd from UL (Jaimini Marital Sustenance)
   let upapadaLagnaInsight: string | undefined;
-  const ulPada = kundli.arudhaPadas?.a12_ul || kundli.arudhaPadas?.all?.find((p: any) => p.houseNumber === 12);
   if (ulPada) {
     const ulRashiIdx = (ulPada.rashi - 1 + 12) % 12;
     const secondFromUlRashiIdx = (ulRashiIdx + 1) % 12;
@@ -715,7 +799,6 @@ export function getMarriagePrediction(
 
   // Dara Pada (A7) Insight
   let darapadaInsight: string | undefined;
-  const a7Pada = kundli.arudhaPadas?.a7 || kundli.arudhaPadas?.all?.find((p: any) => p.houseNumber === 7);
   if (a7Pada) {
     darapadaInsight = lang === 'hi'
       ? `दारा पद (A7 - सामाजिक साझेदारी): ${a7Pada.rashiName} में संस्थित होकर जीवनसाथी के साथ बौद्धिक व सामाजिक तालमेल को सहज बनाता है।`
@@ -733,6 +816,171 @@ export function getMarriagePrediction(
       : `Navamsha (D9) Verification: Navamsha Ascendant in ${d9AscName} affirms the inner spiritual harmony and enduring core values of the life partner.`;
   }
 
+  // Vivaha Vilamba (Delay) Analysis
+  const delayCauses: string[] = [];
+  let delayScore = 0;
+
+  if (planetsIn7.includes("Saturn")) {
+    delayScore += 3;
+    delayCauses.push(lang === 'hi'
+      ? "सप्तम भाव में शनि देव की स्थिति: यह परिपक्व आयु में विवाह का शास्त्रीय संकेत है, जो 28-30 वर्ष के उपरांत सुस्थिर दांपत्य देता है।"
+      : "Saturn in 7th house: Classical primary indicator of delayed marriage, conferring enduring stability when marriage occurs after age 28-30.");
+  }
+  if ([1, 5, 10].includes(saturnHouse)) {
+    delayScore += 2;
+    delayCauses.push(lang === 'hi'
+      ? `भाव ${saturnHouse} से शनि की सप्तम भाव पर दृष्टि: संबंध निर्माण में सावधानी, परीक्षण और परिपक्वता की मांग करती है।`
+      : `Saturn aspects 7th house (from House ${saturnHouse}): Instills caution, deep scrutiny, and calculated timing before commitment.`);
+  }
+  if (planetsIn7.includes("Rahu")) {
+    delayScore += 1.5;
+    delayCauses.push(lang === 'hi'
+      ? "सप्तम भाव में राहु: पारंपरिक चयन में अनिर्णय या अपरंपरागत मार्ग चुनने के कारण अतिरिक्त समय लग सकता है।"
+      : "Rahu in 7th house: Creates indecision, unconventional alliances, or unexpected shifts requiring grounded clarity.");
+  }
+  if (planetsIn7.includes("Mars")) {
+    delayScore += 1.5;
+    delayCauses.push(lang === 'hi'
+      ? "सप्तम भाव में मंगल: तीव्र स्वभाव मिलान में विशेष सावधानी अपेक्षित है।"
+      : "Mars in 7th house: Adds dynamic assertiveness; requires patient temperament matching before wedlock.");
+  }
+  if (planetsIn7.includes("Sun")) {
+    delayScore += 1.5;
+    delayCauses.push(lang === 'hi'
+      ? "सप्तम भाव में सूर्य: उच्च स्वाभिमान और आदर्शवादी अपेक्षाएं विवाह निर्णय में समय लेती हैं।"
+      : "Sun in 7th house: High self-respect and selective expectations encourage mature partner evaluation.");
+  }
+  if (planets[lord7]?.isRetrograde) {
+    delayScore += 2;
+    delayCauses.push(lang === 'hi'
+      ? `सप्तमेश (${getLocalizedPlanet(lord7, lang)}) वक्री है: विवाह संबंधी वार्ता में पुनर्विचार या दोहरे प्रयासों के योग बनते हैं।`
+      : `7th Lord (${lord7}) is retrograde: Indicates revisions, deep second-thought evaluations, or revisiting past alliances.`);
+  }
+  if (planets[lord7]?.isCombust) {
+    delayScore += 1.5;
+    delayCauses.push(lang === 'hi'
+      ? `सप्तमेश (${getLocalizedPlanet(lord7, lang)}) अस्त है: उपयुक्त जीवनसाथी खोजने में अतिरिक्त धैर्य आवश्यक है।`
+      : `7th Lord (${lord7}) is combust: Requires patient discernment to uncover the right marital match.`);
+  }
+  if (sav7 < 25) {
+    delayScore += 2;
+    delayCauses.push(lang === 'hi'
+      ? `सप्तम भाव में अष्टकवर्ग के कम बिंदु (${sav7}): 26 वर्ष से पूर्व विवाह में समायोजन की चुनौतियां आ सकती हैं; 27+ आयु उत्तम है।`
+      : `7th House Ashtakavarga bindus are low (${sav7}): Advises marital alignment after age 27 for emotional grounding.`);
+  }
+
+  const hasDelay = delayScore >= 2.5;
+  const vivahaVilambaFactors = {
+    hasDelay,
+    delayYearsEstimate: hasDelay ? Math.min(5, Math.max(2, Math.round(delayScore))) : 0,
+    causes: delayCauses.length > 0 ? delayCauses : [lang === 'hi' ? "कुंडली में कोई प्रमुख विवाह विलंब योग नहीं है।" : "No major planetary delay indicators present in the horoscope."],
+    mitigation: hasDelay
+      ? (lang === 'hi'
+          ? "विलंब दोष निवारण: 27 वर्ष के पश्चात विवाह अधिक फलदायी होता है। गुरुवार को भगवान विष्णु/बृहस्पति की उपासना अथवा माता कात्यायनी मंत्र का जप करें।"
+          : "Mitigation for Delay: Marriage after age 27 proves highly stable and blessed. Worship Lord Vishnu/Jupiter on Thursdays or chant the Maa Katyayani Mantra.")
+      : (lang === 'hi'
+          ? "समय पर अनुकूल दशा में विवाह संपन्न होने के पूर्ण योग हैं।"
+          : "Favorable planetary conditions support timely marriage during active dasha periods.")
+  };
+
+  // Upapada Lagna (UL) Details
+  let upapadaLagnaDetails: MarriagePrediction["upapadaLagnaDetails"] | undefined;
+  if (ulPada) {
+    const ulRashiIdx = (ulPada.rashi - 1 + 12) % 12;
+    const secondFromUlRashiIdx = (ulRashiIdx + 1) % 12;
+    const secondFromUlRashiName = rashiNames[secondFromUlRashiIdx];
+    const secondFromUlOccupants: string[] = [];
+    for (const [pName, pData] of Object.entries(planets)) {
+      if (pData.rashi === secondFromUlRashiIdx + 1) {
+        secondFromUlOccupants.push(lang === 'hi' ? getLocalizedPlanet(pName, lang) : pName);
+      }
+    }
+    const hasBenefics = secondFromUlOccupants.some(p => ["Jupiter", "Venus", "Mercury", "Moon", "बृहस्पति", "शुक्र", "बुध", "चन्द्र"].includes(p));
+    const sustenanceVerdict = hasBenefics
+      ? (lang === 'hi' ? "उपपद से द्वितीय भाव में शुभ ग्रहों का प्रभाव दांपत्य के अखंड स्थायित्व एवं पारिवारिक सहयोग की पुष्टि करता है।" : "Benefic presence in 2nd from Upapada guarantees marital endurance and lifelong mutual devotion.")
+      : (lang === 'hi' ? "उपपद से द्वितीय भाव सामान्य है; सामंजस्य बनाए रखने हेतु उपपद व्रत (उपपद स्वामी वार को व्रत) कल्याणकारी है।" : "2nd from Upapada is balanced; fasting on the day of the UL lord enhances long-term harmony.");
+
+    upapadaLagnaDetails = {
+      rashi: lang === 'hi' ? getLocalizedRashi(ulRashiIdx, lang) : ulPada.rashiName,
+      lord: lang === 'hi' ? getLocalizedPlanet(RASHI_LORDS[ulRashiIdx], lang) : RASHI_LORDS[ulRashiIdx],
+      secondFromUlRashi: lang === 'hi' ? getLocalizedRashi(secondFromUlRashiIdx, lang) : secondFromUlRashiName,
+      secondFromUlOccupants,
+      sustenanceVerdict,
+    };
+  }
+
+  // Navamsha (D9) Spouse Details
+  const venusD9Rashi = d9?.planets?.Venus?.rashi;
+  let venusD9Dignity = "Neutral";
+  if (venusD9Rashi === 12) venusD9Dignity = lang === 'hi' ? "उच्च (मीन नवमांश - परम सौभाग्य)" : "Exalted (Pisces Navamsha - Peak Bliss)";
+  else if ([2, 7].includes(venusD9Rashi || 0)) venusD9Dignity = lang === 'hi' ? "स्वक्षेत्री (वृषभ/तुला नवमांश)" : "Own Sign (Taurus/Libra Navamsha)";
+  else if (venusD9Rashi === 6) venusD9Dignity = lang === 'hi' ? "नीच (कन्या नवमांश - अपेक्षाओं पर नियंत्रण रखें)" : "Debilitated (Virgo Navamsha - Manage expectations)";
+  else venusD9Dignity = lang === 'hi' ? "शुभ व अनुकूल" : "Harmonious";
+
+  const navamshaSpouseDetails = {
+    d9House7Rashi: lang === 'hi' ? getLocalizedRashi(d9House7Rashi - 1, lang) : d9House7RashiName,
+    d9House7Lord: lang === 'hi' ? getLocalizedPlanet(d9House7Lord, lang) : d9House7Lord,
+    d9House7Occupants: d9PlanetsIn7.map(p => lang === 'hi' ? getLocalizedPlanet(p, lang) : p),
+    venusD9Dignity,
+    explanation: lang === 'hi'
+      ? `नवमांश चक्र में सप्तम भाव ${getLocalizedRashi(d9House7Rashi - 1, lang)} राशि का है जिसके स्वामी ${getLocalizedPlanet(d9House7Lord, lang)} हैं। शुक्र की स्थिति (${venusD9Dignity}) जीवनसाथी के आंतरिक संस्कारों और दांपत्य निष्ठा का प्रमाण है।`
+      : `D9 Navamsha 7th house falls in ${d9House7RashiName} ruled by ${d9House7Lord}. Venus dignity (${venusD9Dignity}) confirms the spouse's core moral integrity and enduring emotional commitment.`,
+  };
+
+  // Spouse Career & Background
+  const probableProfessions: string[] = [];
+  const house4Planets = houses.find(h => h.number === 4)?.planets || [];
+  const partnerSign = rashiNames[rashi7Idx];
+
+  if (["Gemini", "Virgo", "Aquarius"].includes(partnerSign) || house4Planets.includes("Mercury") || dkPlanet === "Mercury") {
+    probableProfessions.push(lang === 'hi' ? "सॉफ्टवेयर इंजीनियरिंग, डेटा साइंस, आईटी एवं डिजिटल तकनीक" : "Software Engineering, Data Science, IT & Digital Platforms");
+    probableProfessions.push(lang === 'hi' ? "वित्तीय विश्लेषण, बैंकिंग, चार्टर्ड अकाउंटेंसी या कंसल्टिंग" : "Financial Analytics, Banking, Accounting or Corporate Consulting");
+  }
+  if (["Aries", "Leo", "Sagittarius"].includes(partnerSign) || house4Planets.includes("Sun") || dkPlanet === "Sun" || dkPlanet === "Mars") {
+    probableProfessions.push(lang === 'hi' ? "प्रशासनिक सेवा, कॉरपोरेट प्रबंधन, मानव संसाधन व कानूनी सेवाएं" : "Administrative Services, Executive Management, HR or Legal Advisory");
+    probableProfessions.push(lang === 'hi' ? "इंजीनियरिंग नेतृत्व, रक्षा, विनिर्माण अथवा रियल एस्टेट" : "Engineering Leadership, Defense, Manufacturing or Real Estate");
+  }
+  if (["Taurus", "Libra", "Pisces"].includes(partnerSign) || house4Planets.includes("Venus") || dkPlanet === "Venus") {
+    probableProfessions.push(lang === 'hi' ? "डिजाइन, रचनात्मक कला, मीडिया, विज्ञापन, लग्जरी एवं ई-कॉमर्स" : "Design, Creative Arts, Media, Advertising, Luxury & E-Commerce");
+    probableProfessions.push(lang === 'hi' ? "चिकित्सा, फार्मेसी, बायोमेडिकल रिसर्च अथवा वेलनेस" : "Medicine, Pharmaceuticals, Biomedical Research or Healthcare");
+  }
+  if (["Cancer", "Scorpio", "Capricorn"].includes(partnerSign) || house4Planets.includes("Jupiter") || dkPlanet === "Jupiter" || dkPlanet === "Saturn") {
+    probableProfessions.push(lang === 'hi' ? "अकादमिक शिक्षण, अनुसंधान, न्यायपालिका, परामर्श अथवा कॉर्पोरेट ऑपरेशंस" : "Academic Research, Judiciary, Corporate Operations & Governance");
+    probableProfessions.push(lang === 'hi' ? "आपूर्ति श्रृंखला, लॉजिस्टिक्स, बुनियादी ढांचा अथवा वित्तीय संस्थान" : "Supply Chain, Logistics, Infrastructure or Financial Institutions");
+  }
+  if (probableProfessions.length === 0) {
+    probableProfessions.push(lang === 'hi' ? "प्रौद्योगिकी, वाणिज्य अथवा कॉर्पोरेट प्रशासन" : "Technology, Commerce or Corporate Administration");
+  }
+
+  const spouseCareerAndBackground = {
+    probableProfessions: probableProfessions.slice(0, 3),
+    financialStatus: sav7 >= 28
+      ? (lang === 'hi' ? "आर्थिक रूप से आत्मनिर्भर एवं संपन्न परिवार से संबद्ध" : "Economically self-sufficient from an established, financially stable family")
+      : (lang === 'hi' ? "मेहनती, मध्यम से अच्छी पारिवारिक पृष्ठभूमि, विवाह पश्चात संयुक्त उन्नति" : "Hardworking, respectable background with strong post-marriage compounding"),
+    socialStanding: ["Jupiter", "Sun", "Venus"].some(p => planetsIn7.includes(p)) || sav7 >= 30
+      ? (lang === 'hi' ? "प्रतिष्ठित, सुसंस्कृत एवं समाज में सम्मानित परिवार" : "Reputed, culturally dignified, and socially well-regarded family")
+      : (lang === 'hi' ? "सदाचारी, नैतिक मूल्यों को प्राथमिकता देने वाला संस्कारी परिवार" : "Cultured, family-centric background valuing integrity and mutual respect"),
+  };
+
+  // Remedies for Marriage
+  const remediesForMarriage = [
+    {
+      name: lang === 'hi' ? "माता कात्यायनी मंत्र" : "Maa Katyayani Stotram",
+      mantraOrAction: lang === 'hi' ? "ॐ कात्यायनि महामाये महायोगिन्यधीश्वरि। नन्दगोपसुतं देवि पतिं मे कुरु ते नमः॥" : "Om Katyayani Mahamaye Mahayoginyadheeshwari, Nandgopsutam Devi Patim Me Kuru Te Namah.",
+      purpose: lang === 'hi' ? "शीघ्र व मनोनुकूल जीवनसाथी की प्राप्ति तथा वैवाहिक बाधाओं का निवारण।" : "Attracts compatible, noble life partner and removes unforeseen delays in marriage."
+    },
+    {
+      name: lang === 'hi' ? "शिव-पार्वती (गौरी-शंकर) पूजन" : "Gauri-Shankar / Shiva-Parvati Upasana",
+      mantraOrAction: lang === 'hi' ? "सोमवार या शुक्रवार को शिवलिंग पर दुग्ध व श्वेत पुष्प अर्पित करें।" : "Offer milk and white flowers to Shiva Lingam on Mondays or Fridays.",
+      purpose: lang === 'hi' ? "दांपत्य जीवन में आजीवन परस्पर अनुराग, मधुरता और सुख-शांति की रक्षा।" : "Fosters lifelong mutual devotion, tender understanding, and marital longevity."
+    },
+    {
+      name: lang === 'hi' ? "उपपद लग्न शांति / व्रत" : "Upapada Lagna Fasting (UL Vrata)",
+      mantraOrAction: lang === 'hi' ? `उपपद लग्न के स्वामी (${ulLord || (lang === 'hi' ? "शुक्र" : "Venus")}) के वार को सात्विक आहार या उपवास रखें।` : `Observe a satvik diet or partial fasting on the weekday ruled by UL lord (${ulLord || "Venus"}).`,
+      purpose: lang === 'hi' ? "महर्षि जैमिनी के नियमानुसार उपपद व्रत दांपत्य के किसी भी संकट को दूर कर अटूट स्थायित्व देता है।" : "As per Sage Jaimini, fasting on the UL lord's day neutralizes marital afflictions and anchors lifelong bond."
+    }
+  ];
+
   // Marital Stability Rating
   let maritalStabilityRating: 'High Stability & Concord' | 'Balanced with Periodic Adjustments' | 'Challenging / Shastric Remedies Recommended' = 'High Stability & Concord';
   if (maritalHarmonyRating === 'Very Good' || maritalHarmonyRating === 'Good') {
@@ -746,7 +994,7 @@ export function getMarriagePrediction(
   return {
     maritalHarmonyRating,
     favorableAgeRange,
-    predictedTimingYears: sortedYears.length > 0 ? sortedYears : [currentYear + 2, currentYear + 3],
+    predictedTimingYears: sortedYears,
     currentDashaFavorableForMarriage: currentDashaFavorable,
     dashaSupportExplanation,
     partnerCharacteristics: {
@@ -767,5 +1015,10 @@ export function getMarriagePrediction(
     navamshaSpouseInsight,
     maritalStabilityRating,
     darapadaInsight,
+    vivahaVilambaFactors,
+    upapadaLagnaDetails,
+    navamshaSpouseDetails,
+    spouseCareerAndBackground,
+    remediesForMarriage,
   };
 }

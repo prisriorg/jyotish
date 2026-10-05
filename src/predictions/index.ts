@@ -12,6 +12,7 @@ import { getRemedies } from "./remedies";
 import { getChalitAnalysis, getKpAnalysis, getLalKitabAnalysis } from "./multisystem";
 import { getJaiminiKarakas } from "./jaimini";
 import { getGemstoneRecommendation } from "./gemstones";
+import { getGrowthPrediction } from "./growth";
 import { ComprehensiveReport, PredictionOptions } from "./types";
 import { Language } from "../i18n/types";
 import { getLocalizedPlanet, getLocalizedRashi } from "../i18n/index";
@@ -31,6 +32,7 @@ export * from "./remedies";
 export * from "./multisystem";
 export * from "./jaimini";
 export * from "./gemstones";
+export * from "./growth";
 
 /**
  * Generates an exhaustive A-to-Z Vedic life prediction report synthesizing:
@@ -56,19 +58,20 @@ export function getComprehensiveReport(kundli: Kundli, options?: PredictionOptio
 
   const career = getCareerPrediction(kundli, { lang });
   const wealth = getWealthPrediction(kundli, { lang });
-  const marriage = getMarriagePrediction(kundli, { lang });
+  const marriage = getMarriagePrediction(kundli, { ...options, lang });
   const health = getHealthPrediction(kundli, { lang });
   const education = getEducationPrediction(kundli, { lang });
   const progeny = getProgenyPrediction(kundli, { lang });
   const yogas = getYogasAndDoshas(kundli, { lang });
-  const dashaTimeline = getDashaTimelinePrediction(kundli, { lang });
-  const transits = getTransitPredictions(kundli, { lang });
+  const dashaTimeline = getDashaTimelinePrediction(kundli, { ...options, lang });
+  const transits = getTransitPredictions(kundli, { ...options, lang });
   const remedies = getRemedies(kundli, { lang });
   const chalitAnalysis = getChalitAnalysis(kundli, { lang });
   const kpAnalysis = getKpAnalysis(kundli, { lang });
   const lalKitabAnalysis = getLalKitabAnalysis(kundli, { lang });
   const jaiminiKarakas = getJaiminiKarakas(kundli, { lang });
   const gemstones = getGemstoneRecommendation(kundli, { lang });
+  const growth = getGrowthPrediction(kundli, { ...options, lang });
 
   const lagnaRashiIdx = kundli.ascendant ? kundli.ascendant.rashi - 1 : 10;
   const moonRashiIdx = kundli.planets?.Moon ? (kundli.planets.Moon.rashi ? kundli.planets.Moon.rashi - 1 : rashiNames.indexOf(kundli.planets.Moon.rashiName || "")) : 0;
@@ -156,13 +159,23 @@ export function getComprehensiveReport(kundli: Kundli, options?: PredictionOptio
     md += `- **जीवनसाथी आयु अंतर:** **${marriage.spouseAgeDifference.relativeAge}** (${marriage.spouseAgeDifference.estimatedDifferenceYears}) | परिपक्वता: ${marriage.spouseAgeDifference.maturityLevel}\n`;
     md += `- **दांपत्य सामंजस्य स्थिति:** **${marriage.maritalHarmonyRating}** (${marriage.maritalStabilityRating || ""})\n`;
     md += `- **अनुकूल आयु वर्ग:** ${marriage.favorableAgeRange}\n`;
-    md += `- **ज्योतिषीय समर्थित विवाह वर्ष:** ${marriage.predictedTimingYears.join(", ")}\n`;
+    md += `- **ज्योतिषीय समर्थित विवाह वर्ष:** ${(marriage.predictedTimingYears.join(", ") || marriage.favorableAgeRange)}\n`;
     md += `- **दशा सहयोग:** ${marriage.dashaSupportExplanation}\n`;
     md += `- **मांगलिक दोष विश्लेषण:** ${marriage.mangalDosha.description}\n`;
     if (marriage.upapadaLagnaInsight) md += `- **जैमिनी उपपद लग्न (UL):** ${marriage.upapadaLagnaInsight}\n`;
     if (marriage.navamshaSpouseInsight) md += `- **नवमांश (D9):** ${marriage.navamshaSpouseInsight}\n`;
     if (marriage.seventhLordPlacementResult) md += `- **सप्तमेश शास्त्रीय फल:** ${marriage.seventhLordPlacementResult}\n`;
-    if (marriage.darakarakaInsight) md += `- **जैमिनी दाराकारक (DK):** ${marriage.darakarakaInsight}\n\n`;
+    if (marriage.darakarakaInsight) md += `- **जैमिनी दाराकारक (DK):** ${marriage.darakarakaInsight}\n`;
+    if (marriage.vivahaVilambaFactors?.hasDelay) {
+      md += `- **विवाह विलंब कारक:** ⏳ ${marriage.vivahaVilambaFactors.causes.join(" ")} *(उपाय: ${marriage.vivahaVilambaFactors.mitigation})*\n`;
+    }
+    if (marriage.upapadaLagnaDetails) {
+      md += `- **उपपद से द्वितीय भाव (वैवाहिक स्थायित्व):** ${marriage.upapadaLagnaDetails.sustenanceVerdict}\n`;
+    }
+    if (marriage.spouseCareerAndBackground) {
+      md += `- **जीवनसाथी की संभावित आजीविका:** ${marriage.spouseCareerAndBackground.probableProfessions.join(", ")} (${marriage.spouseCareerAndBackground.financialStatus})\n`;
+    }
+    md += `\n`;
 
     md += `### जीवनसाथी के स्वाभाविक गुण:\n`;
     md += `- **सामान्य स्वभाव:** ${marriage.partnerCharacteristics.nature}\n`;
@@ -252,6 +265,45 @@ export function getComprehensiveReport(kundli: Kundli, options?: PredictionOptio
       yogas.inauspiciousDoshas.forEach((d) => {
         md += `- **${d.name} (${d.severity}):** ${d.description} *(उपाय: ${d.remedy})*\n`;
       });
+    }
+
+    // 8. Growth Trajectory
+    md += `\n## 🚀 8. सर्वांगीण करियर, व्यवसाय एवं वित्तीय विकास (Life & Growth Trajectory)\n\n`;
+    md += `- **विकास प्रक्षेपवक्र एवं गति:** **${growth.overallGrowthVelocity}** (समग्र विकास सूचकांक: **${growth.growthScore}/100**)\n`;
+    md += `- **आयामी विकास स्कोर:** करियर: **${growth.careerGrowthScore}/100** | वित्तीय संचय: **${growth.financialGrowthScore}/100** | उद्यमशीलता: **${growth.entrepreneurialGrowthScore}/100**\n`;
+    md += `- **विकास स्वरूप (Archetype):** **${growth.growthArchetype.title}** — *${growth.growthArchetype.description}*\n`;
+    if (growth.d10DashamshaGrowthInsight) md += `- **दशांश (D10):** ${growth.d10DashamshaGrowthInsight}\n`;
+    if (growth.amatyakarakaGrowthInsight) md += `- **अमात्यकारक:** ${growth.amatyakarakaGrowthInsight}\n`;
+    if (growth.induLagnaWealthGrowthInsight) md += `- **धन अधिशेष:** ${growth.induLagnaWealthGrowthInsight}\n\n`;
+
+    if (growth.keyGrowthDrivers.length > 0) {
+      md += `### मुख्य विकास चालक (Key Growth Drivers):\n`;
+      growth.keyGrowthDrivers.forEach((dr) => {
+        md += `- **${dr.driver}:** ${dr.impact}\n`;
+      });
+      md += `\n`;
+    }
+
+    if (growth.growthBlockersAndFriction.length > 0) {
+      md += `### विकास अवरोधक एवं समाधान:\n`;
+      growth.growthBlockersAndFriction.forEach((b) => {
+        md += `- ⚠️ **${b.challenge}:** *${b.mitigationStrategy}*\n`;
+      });
+      md += `\n`;
+    }
+
+    md += `### आयु अनुसार जीवन विकास रोडमैप (Life Growth Roadmap):\n`;
+    growth.lifeGrowthRoadmap.forEach((rm) => {
+      md += `- **आयु ${rm.ageSpan} वर्ष (${rm.phaseName}):** ${rm.focusArea} — *कार्रवाई: ${rm.growthAction}*\n`;
+    });
+    md += `\n`;
+
+    if (growth.upcomingPeakGrowthPeriods.length > 0) {
+      md += `### आगामी शीर्ष विकास काल (Peak Growth Periods):\n`;
+      growth.upcomingPeakGrowthPeriods.forEach((pg) => {
+        md += `- **${pg.periodSpan} (${pg.dashaPlanets}):** ${pg.growthTheme}\n`;
+      });
+      md += `\n`;
     }
 
     // 8. Dasha Timeline
@@ -368,13 +420,23 @@ export function getComprehensiveReport(kundli: Kundli, options?: PredictionOptio
     md += `- **Spouse Age Difference:** **${marriage.spouseAgeDifference.relativeAge}** (${marriage.spouseAgeDifference.estimatedDifferenceYears}) | Demeanor: ${marriage.spouseAgeDifference.maturityLevel}\n`;
     md += `- **Marital Harmony Status:** **${marriage.maritalHarmonyRating}** (${marriage.maritalStabilityRating || ""})\n`;
     md += `- **Optimal Age Window:** ${marriage.favorableAgeRange}\n`;
-    md += `- **Astrologically Supported Timing Years:** ${marriage.predictedTimingYears.join(", ")}\n`;
+    md += `- **Astrologically Supported Timing Years:** ${(marriage.predictedTimingYears.join(", ") || marriage.favorableAgeRange)}\n`;
     md += `- **Dasha Support:** ${marriage.dashaSupportExplanation}\n`;
     md += `- **Mangal Dosha Analysis:** ${marriage.mangalDosha.description}\n`;
     if (marriage.upapadaLagnaInsight) md += `- **Jaimini Upapada Lagna (UL):** ${marriage.upapadaLagnaInsight}\n`;
     if (marriage.navamshaSpouseInsight) md += `- **Navamsha (D9):** ${marriage.navamshaSpouseInsight}\n`;
     if (marriage.seventhLordPlacementResult) md += `- **7th Lord Shastra Verdict:** ${marriage.seventhLordPlacementResult}\n`;
-    if (marriage.darakarakaInsight) md += `- **Jaimini Darakaraka (DK):** ${marriage.darakarakaInsight}\n\n`;
+    if (marriage.darakarakaInsight) md += `- **Jaimini Darakaraka (DK):** ${marriage.darakarakaInsight}\n`;
+    if (marriage.vivahaVilambaFactors?.hasDelay) {
+      md += `- **Marriage Delay Factors Analysis:** ⏳ ${marriage.vivahaVilambaFactors.causes.join(" ")} *(Mitigation: ${marriage.vivahaVilambaFactors.mitigation})*\n`;
+    }
+    if (marriage.upapadaLagnaDetails) {
+      md += `- **2nd from Upapada (Longevity Anchor):** ${marriage.upapadaLagnaDetails.sustenanceVerdict}\n`;
+    }
+    if (marriage.spouseCareerAndBackground) {
+      md += `- **Spouse Probable Career:** ${marriage.spouseCareerAndBackground.probableProfessions.join(", ")} (${marriage.spouseCareerAndBackground.financialStatus})\n`;
+    }
+    md += `\n`;
 
     md += `### Partner Characteristics:\n`;
     md += `- **General Nature:** ${marriage.partnerCharacteristics.nature}\n`;
@@ -466,6 +528,45 @@ export function getComprehensiveReport(kundli: Kundli, options?: PredictionOptio
       });
     }
 
+    // 8. Growth Trajectory
+    md += `\n## 🚀 8. Comprehensive Career & Financial Growth Trajectory\n\n`;
+    md += `- **Overall Growth Velocity:** **${growth.overallGrowthVelocity}** (Composite Growth Index: **${growth.growthScore}/100**)\n`;
+    md += `- **Dimensional Scores:** Career: **${growth.careerGrowthScore}/100** | Financial Wealth: **${growth.financialGrowthScore}/100** | Entrepreneurship: **${growth.entrepreneurialGrowthScore}/100**\n`;
+    md += `- **Growth Archetype:** **${growth.growthArchetype.title}** — *${growth.growthArchetype.description}*\n`;
+    if (growth.d10DashamshaGrowthInsight) md += `- **Dashamsha (D10):** ${growth.d10DashamshaGrowthInsight}\n`;
+    if (growth.amatyakarakaGrowthInsight) md += `- **Amatyakaraka:** ${growth.amatyakarakaGrowthInsight}\n`;
+    if (growth.induLagnaWealthGrowthInsight) md += `- **Wealth Surplus:** ${growth.induLagnaWealthGrowthInsight}\n\n`;
+
+    if (growth.keyGrowthDrivers.length > 0) {
+      md += `### Key Growth Drivers:\n`;
+      growth.keyGrowthDrivers.forEach((dr) => {
+        md += `- **${dr.driver}:** ${dr.impact}\n`;
+      });
+      md += `\n`;
+    }
+
+    if (growth.growthBlockersAndFriction.length > 0) {
+      md += `### Growth Blockers & Mitigations:\n`;
+      growth.growthBlockersAndFriction.forEach((b) => {
+        md += `- ⚠️ **${b.challenge}:** *${b.mitigationStrategy}*\n`;
+      });
+      md += `\n`;
+    }
+
+    md += `### Life Growth Roadmap by Age Milestones:\n`;
+    growth.lifeGrowthRoadmap.forEach((rm) => {
+      md += `- **Ages ${rm.ageSpan} (${rm.phaseName}):** ${rm.focusArea} — *Action: ${rm.growthAction}*\n`;
+    });
+    md += `\n`;
+
+    if (growth.upcomingPeakGrowthPeriods.length > 0) {
+      md += `### Upcoming Peak Growth Periods:\n`;
+      growth.upcomingPeakGrowthPeriods.forEach((pg) => {
+        md += `- **${pg.periodSpan} (${pg.dashaPlanets}):** ${pg.growthTheme}\n`;
+      });
+      md += `\n`;
+    }
+
     // 8. Dasha Timeline
     md += `\n## ⏳ 8. Vimshottari Dasha Timeline & Milestone Predictions\n\n`;
     md += `- **Current Mahadasha:** **${dashaTimeline.currentMahadasha.planet}** (${dashaTimeline.currentMahadasha.startDate} to ${dashaTimeline.currentMahadasha.endDate}) — *${dashaTimeline.currentMahadasha.prediction}*\n`;
@@ -541,6 +642,7 @@ export function getComprehensiveReport(kundli: Kundli, options?: PredictionOptio
     lalKitabAnalysis,
     jaiminiKarakas,
     gemstones,
+    growth,
     formattedMarkdown: md.trim(),
   };
 }

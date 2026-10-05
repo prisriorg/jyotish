@@ -1,3 +1,4 @@
+import { predictionDate, validatePredictionChart } from "./validation";
 import { Kundli } from "../kundli/types";
 import { RASHI_LORDS } from "../matching/constants";
 import { rashiNames } from "../core/constants";
@@ -9,6 +10,7 @@ import { careerI18n } from "../i18n/dictionaries/predictions";
 import { getLocalizedPlanet, getLocalizedRashi } from "../i18n/index";
 
 export function getCareerPrediction(kundli: Kundli, options?: PredictionOptions): CareerPrediction {
+  validatePredictionChart(kundli);
   const lang: Language = options?.lang || 'en';
   const houses = kundli.houses || [];
   const planets = kundli.planets || {};
@@ -275,6 +277,28 @@ export function getCareerPrediction(kundli: Kundli, options?: PredictionOptions)
     ? `सरकारी सेवा / उच्च प्रशासनिक प्राधिकार की संभावना: ${govLikelihood} (${govScore}/100)। ${govScore >= 75 ? 'सूर्य और मंगल का दशम भाव से सशक्त संबंध राजकार्य, सिविल सेवा या पीएसयू में उच्च पद का सशक्त योग बनाता है।' : 'कॉरपोरेट नेतृत्व, बहुराष्ट्रीय उद्यम अथवा स्वतंत्र परामर्श में अधिक त्वरित सफलता मिलेगी।'}`
     : `Public Sector / Civil Services / Executive Authority Aptitude: ${govLikelihood} (${govScore}/100). ${govScore >= 75 ? 'Sun and Mars synergy with the 10th house creates an illustrious signature for government, civil service, or sovereign public institutions.' : 'Private corporate hierarchies, global tech firms, or independent enterprise offer faster upward mobility.'}`;
 
+  const growthVelocity = tenthSAVBindus >= 32
+    ? (lang === 'hi' ? "द्रुतगति एवं तीव्र घातीय वृद्धि (Fast-Paced & Exponential)" : "Fast-Paced & Exponential")
+    : tenthSAVBindus >= 28
+    ? (lang === 'hi' ? "उच्च प्रक्षेपवक्र एवं निरंतर चक्रवृद्धि विकास (High-Trajectory & Compounding)" : "High-Trajectory & Compounding")
+    : (lang === 'hi' ? "क्रमिक एवं परिपक्वता उपरांत स्थायी विकास (Progressive with Mature Zenith)" : "Progressive with Mature Zenith");
+
+  const peakCareerAgeWindows = tenthSAVBindus >= 30
+    ? (lang === 'hi' ? ["26 - 32 वर्ष (त्वरित पदोन्नति)", "35 - 46 वर्ष (कार्यकारी सत्ता)"] : ["Ages 26 - 32 (Rapid Ascension)", "Ages 35 - 46 (Executive Zenith)"])
+    : (lang === 'hi' ? ["28 - 34 वर्ष (व्यावसायिक स्थायित्व)", "38 - 50 वर्ष (वरिष्ठ नेतृत्व)"] : ["Ages 28 - 34 (Domain Establishment)", "Ages 38 - 50 (Senior Leadership)"]);
+
+  const growthFactors: string[] = [];
+  if (tenthSAVBindus >= 30) growthFactors.push(lang === 'hi' ? `दशम भाव अष्टकवर्ग (${tenthSAVBindus} बिंदु) उच्च प्रशासनिक सहनशीलता देता है।` : `10th House Ashtakavarga (${tenthSAVBindus} bindus) empowers executive resilience.`);
+  if (tenthPlanets.length > 0) growthFactors.push(lang === 'hi' ? `दशम भाव में ${tenthPlanets.join(", ")} की उपस्थिति कर्म को गति प्रदान करती है।` : `10th house occupants (${tenthPlanets.join(", ")}) power career momentum.`);
+  if ([1, 4, 7, 10, 5, 9, 11].includes(tenthLordPlacement)) growthFactors.push(lang === 'hi' ? `दशमेश का भाव ${tenthLordPlacement} में संस्थित होना निरंतर उन्नति कराता है।` : `10th Lord placed in House ${tenthLordPlacement} triggers continuous advancement.`);
+  if (growthFactors.length === 0) growthFactors.push(lang === 'hi' ? "अनुशासित कार्यशैली और निरंतर कौशल उन्नयन।" : "Disciplined execution and continuous skill advancement.");
+
+  const careerGrowthTrajectory = {
+    growthVelocity,
+    peakCareerAgeWindows,
+    growthFactors,
+  };
+
   return {
     recommendation,
     jobScore,
@@ -304,5 +328,6 @@ export function getCareerPrediction(kundli: Kundli, options?: PredictionOptions)
       score: govScore,
       description: govDescription,
     },
+    careerGrowthTrajectory,
   };
 }

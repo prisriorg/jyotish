@@ -537,14 +537,27 @@ console.log('2nd Lord Placement:', wealth.secondLordPlacementResult);
 console.log('11th Lord Placement:', wealth.eleventhLordPlacementResult);
 console.log('Vipreet Raj Yogas:', wealth.vipreetRajYogas);
 
-// 3. Marriage: Type (Love vs Arranged), Age Gap (+ -), Jaimini Darakaraka (DK), KP 7th Sub-Lord
+// 3. Marriage: Timing Years, Delay Analysis, Upapada Lagna, Spouse Career, Kuja Dosha, Remedies
 const marriage = getMarriagePrediction(kundli);
 console.log('Marriage Type:', marriage.marriageType.recommendation);
+console.log('Supported Timing Years:', marriage.predictedTimingYears);
 console.log('Spouse Age Gap:', marriage.spouseAgeDifference.relativeAge, `(${marriage.spouseAgeDifference.estimatedDifferenceYears})`);
-console.log('7th Lord Placement:', marriage.seventhLordPlacementResult);
-console.log('Jaimini Darakaraka (Spouse):', marriage.darakarakaInsight);
+console.log('Delay Factors:', marriage.vivahaVilambaFactors?.causes);
+console.log('Upapada Lagna Sustenance:', marriage.upapadaLagnaDetails?.sustenanceVerdict);
+console.log('Spouse Probable Career:', marriage.spouseCareerAndBackground?.probableProfessions);
+console.log('Marriage Remedies:', marriage.remediesForMarriage);
 
-// 4. Jaimini Chara Karakas (AK, AmK, BK, MK, PK, GK, DK)
+// 4. Growth Engine: Overall Velocity, Career & Financial Scores, Archetype, 4-Quadrant Roadmap
+import { getGrowthPrediction } from '@prisri/jyotish';
+const growth = getGrowthPrediction(kundli);
+console.log('Growth Velocity:', growth.overallGrowthVelocity);
+console.log('Composite Growth Score:', growth.growthScore, '/ 100');
+console.log('Career Score:', growth.careerGrowthScore, '| Financial Score:', growth.financialGrowthScore);
+console.log('Growth Archetype:', growth.growthArchetype.title);
+console.log('Life Growth Roadmap:', growth.lifeGrowthRoadmap);
+console.log('Upcoming Peak Periods:', growth.upcomingPeakGrowthPeriods);
+
+// 5. Jaimini Chara Karakas (AK, AmK, BK, MK, PK, GK, DK)
 const jaimini = getJaiminiKarakas(kundli);
 console.log('Atmakaraka (Soul):', jaimini.atmakaraka.planet, `(${jaimini.atmakaraka.formattedDegree})`);
 console.log('Amatyakaraka (Career):', jaimini.amatyakaraka.planet, `(${jaimini.amatyakaraka.formattedDegree})`);
@@ -768,3 +781,14 @@ Feel free to open an issue or submit a Pull Request on [GitHub](https://github.c
 
 ISC License © [Priyansh Srivastava](https://github.com/prisriorg)
 
+
+
+## Prediction reliability
+
+Prediction scores are traditional rule scores, not calibrated probabilities or measured accuracy percentages. These changes do not establish real-world predictive accuracy or guarantee future events.
+
+Time-sensitive predictions accept `{ asOf: new Date('2026-10-05T00:00:00Z') }`, including comprehensive reports. Periods use inclusive starts and exclusive ends; marriage timing uses UTC years within the next ten years and returns at most four earliest indicated years. No supported timing returns an empty array, and optimal marriage age is reported as not established. Indicated years are not ranked probabilities.
+
+Career, wealth, marriage, transit, and dasha timeline entry points reject incomplete core planetary house placements. Dasha timeline throws when the requested date has no active mahadasha/antardasha; comprehensive reports propagate this error. Callers should display unavailable data or regenerate the chart instead of substituting invented periods. This intentionally tightens behavior for incomplete inputs.
+
+Run `npm test` for regression checks. Measuring prediction accuracy additionally requires consented, dated outcome data, predefined event criteria, and a held-out evaluation against a baseline. No such accuracy measurement is provided here.

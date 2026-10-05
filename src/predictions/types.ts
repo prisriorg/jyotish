@@ -2,6 +2,8 @@ import { Language } from '../i18n/types';
 
 export interface PredictionOptions {
   lang?: Language;
+  /** Date used for time-sensitive predictions; defaults to now. */
+  asOf?: Date;
 }
 
 export interface CareerPrediction {
@@ -32,6 +34,11 @@ export interface CareerPrediction {
     likelihood: 'High' | 'Moderate' | 'Low' | (string & {});
     score: number; // 0 - 100
     description: string;
+  };
+  careerGrowthTrajectory?: {
+    growthVelocity: string;
+    peakCareerAgeWindows: string[];
+    growthFactors: string[];
   };
 }
 
@@ -125,6 +132,36 @@ export interface MarriagePrediction {
   navamshaSpouseInsight?: string;
   maritalStabilityRating?: 'High Stability & Concord' | 'Balanced with Periodic Adjustments' | 'Challenging / Shastric Remedies Recommended' | (string & {});
   darapadaInsight?: string;
+  vivahaVilambaFactors?: {
+    hasDelay: boolean;
+    delayYearsEstimate?: number;
+    causes: string[];
+    mitigation: string;
+  };
+  upapadaLagnaDetails?: {
+    rashi: string;
+    lord: string;
+    secondFromUlRashi: string;
+    secondFromUlOccupants: string[];
+    sustenanceVerdict: string;
+  };
+  navamshaSpouseDetails?: {
+    d9House7Rashi: string;
+    d9House7Lord: string;
+    d9House7Occupants: string[];
+    venusD9Dignity: string;
+    explanation: string;
+  };
+  spouseCareerAndBackground?: {
+    probableProfessions: string[];
+    financialStatus: string;
+    socialStanding: string;
+  };
+  remediesForMarriage?: {
+    name: string;
+    mantraOrAction: string;
+    purpose: string;
+  }[];
 }
 
 export interface HealthPrediction {
@@ -353,7 +390,53 @@ export interface ComprehensiveReport {
   lalKitabAnalysis: LalKitabAnalysis;
   jaiminiKarakas: JaiminiKarakas;
   gemstones?: GemstoneReport;
+  growth?: GrowthPrediction;
   formattedMarkdown: string;
+}
+
+export interface GrowthPrediction {
+  overallGrowthVelocity: 'Fast-Paced & Exponential' | 'High-Trajectory & Steadily Compounding' | 'Progressive with Cyclical Leaps' | 'Late-Blooming High Zenith' | (string & {});
+  growthScore: number; // 0 - 100 overall composite growth index
+  careerGrowthScore: number; // 0 - 100
+  financialGrowthScore: number; // 0 - 100
+  entrepreneurialGrowthScore: number; // 0 - 100
+  growthArchetype: {
+    title: string;
+    description: string;
+    keyStrengths: string[];
+  };
+  keyGrowthDrivers: {
+    driver: string;
+    planetaryBasis: string;
+    impact: string;
+  }[];
+  growthBlockersAndFriction: {
+    challenge: string;
+    astrologicalSource: string;
+    mitigationStrategy: string;
+  }[];
+  lifeGrowthRoadmap: {
+    ageSpan: string;
+    phaseName: string;
+    focusArea: string;
+    astrologicalCycle: string;
+    growthAction: string;
+  }[];
+  upcomingPeakGrowthPeriods: {
+    periodSpan: string;
+    dashaPlanets: string;
+    growthTheme: string;
+    favorableInitiatives: string[];
+  }[];
+  growthSectorsAndDomains: string[];
+  strategicGrowthAccelerators: string[];
+  astrologicalRemediesForGrowth: {
+    remedy: string;
+    purpose: string;
+  }[];
+  d10DashamshaGrowthInsight?: string;
+  amatyakarakaGrowthInsight?: string;
+  induLagnaWealthGrowthInsight?: string;
 }
 
 

@@ -390,3 +390,76 @@ export const jaiminiI18n: Record<Language, Record<string, { title: string; signi
     "Darakaraka": { title: "दाराकारक (जीवनसाथी व साझेदारी का कारक)", signification: "जीवनसाथी का स्वभाव, दांपत्य आकर्षण और साझेदारी की प्रगाढ़ता को दर्शाता है।" }
   }
 };
+
+export const growthI18n = {
+  velocity: {
+    en: {
+      "Fast-Paced & Exponential": "Fast-Paced & Exponential",
+      "High-Trajectory & Steadily Compounding": "High-Trajectory & Steadily Compounding",
+      "Progressive with Cyclical Leaps": "Progressive with Cyclical Leaps",
+      "Late-Blooming High Zenith": "Late-Blooming High Zenith",
+    },
+    hi: {
+      "Fast-Paced & Exponential": "द्रुतगति एवं तीव्र घातीय वृद्धि (Fast-Paced & Exponential)",
+      "High-Trajectory & Steadily Compounding": "उच्च प्रक्षेपवक्र एवं निरंतर चक्रवृद्धि विकास (High-Trajectory & Compounding)",
+      "Progressive with Cyclical Leaps": "प्रगतिशील एवं चक्रीय छलांग युक्त विकास (Progressive with Cyclical Leaps)",
+      "Late-Blooming High Zenith": "विलंबित किंतु सर्वोच्च शिखर साधक विकास (Late-Blooming High Zenith)",
+    },
+  },
+  archetypes: {
+    en: {
+      pioneer: {
+        title: "Pioneer Innovator & Exponential Scaler",
+        description: "Driven by fiery leadership and non-linear vision. Best suited for high-impact innovation, aggressive venture scaling, and bold market disruption.",
+        strengths: ["Fearless strategic execution", "High risk-reward tolerance", "Magnetic executive charisma"],
+      },
+      titan: {
+        title: "Sovereign Enterprise Titan & Industry Anchor",
+        description: "Built for institutional authority and long-term organizational dominance. Ascends corporate or business hierarchies through unshakeable reliability.",
+        strengths: ["Executive governance", "Systemic operational scaling", "Enduring industry reputation"],
+      },
+      architect: {
+        title: "Strategic Systems Architect & High-Agility Operator",
+        description: "Powered by sharp analytical intellect and commercial dexterity. Excels in fintech, AI/software architecture, high-value consulting, and digital products.",
+        strengths: ["Algorithmic thinking", "Rapid monetization of specialized intellect", "Adaptive multi-domain pivoting"],
+      },
+      lateBloomer: {
+        title: "Late-Blooming High Zenith & Resilient Master",
+        description: "Karmic testing in early phases builds formidable grit and rare mastery. Experiences an unstoppable, sustained rise to pinnacle authority in mature years.",
+        strengths: ["Indomitable perseverance", "Deep domain authority", "Immunity to short-term market turbulence"],
+      },
+      compounding: {
+        title: "Steadily Compounding Value Builder",
+        description: "Focuses on steady, reliable asset and reputation creation with disciplined execution and solid risk management.",
+        strengths: ["Financial prudence", "Continuous incremental excellence", "Dependable strategic delivery"],
+      },
+    },
+    hi: {
+      pioneer: {
+        title: "प्रणेता अन्वेषक एवं तीव्र घातीय विस्तारक",
+        description: "अदम्य नेतृत्व और दूरदर्शी दृष्टि से संचालित। उच्च-प्रभाव नवाचार, नए उपक्रमों के तीव्र विस्तार और बाजार में अग्रणी भूमिका हेतु श्रेष्ठ।",
+        strengths: ["साहसिक रणनीतिक क्रियान्वयन", "जोखिम से अवसर निर्मित करने की क्षमता", "प्रभावशाली नेतृत्व आकर्षण"],
+      },
+      titan: {
+        title: "सार्वभौमिक उद्यम निर्माता एवं उद्योग स्तंभ",
+        description: "दीर्घकालिक संगठनात्मक प्रभुत्व और प्रशासनिक सत्ता हेतु निर्मित। अपनी अटूट विश्वसनीयता से उद्योग जगत में सर्वोच्च प्रतिष्ठा प्राप्त करते हैं।",
+        strengths: ["प्रशासनिक संचालन एवं नियंत्रण", "संस्थागत विस्तार व अनुशासन", "स्थायी औद्योगिक साख"],
+      },
+      architect: {
+        title: "रणनीतिक तंत्र वास्तुकार एवं दक्ष विश्लेषक",
+        description: "तीक्ष्ण बौद्धिक विश्लेषण और व्यापारिक सूझबूझ से युक्त। फिनटेक, सॉफ्टवेयर आर्किटेक्चर, उच्च परामर्श और डिजिटल उद्यम में अभूतपूर्व सफलता।",
+        strengths: ["एल्गोरिथमिक व तार्किक सोच", "विशिष्ट ज्ञान का तीव्र मुद्रीकरण", "लचीला और बहु-क्षेत्रीय अनुकूलन"],
+      },
+      lateBloomer: {
+        title: "विलंबित किंतु सर्वोच्च शिखर साधक व कर्म-सिद्ध",
+        description: "आरंभिक संघर्ष अप्रतिम धैर्य और अद्वितीय ज्ञान का निर्माण करता है। परिपक्व वर्षों (32+ आयु) में अजेय गति से सर्वोच्च पद व प्रतिष्ठा प्राप्त होती है।",
+        strengths: ["अटल सहनशीलता व धैर्य", "गहन विषय विशेषज्ञता", "बाजार के उतार-चढ़ाव में अडिग स्थिरता"],
+      },
+      compounding: {
+        title: "निरंतर चक्रवृद्धि मूल्य एवं संपदा निर्माता",
+        description: "अनुशासित कार्यशैली और संतुलित जोखिम प्रबंधन के साथ निरंतर संपत्ति और सामाजिक प्रतिष्ठा के निर्माण में दक्ष।",
+        strengths: ["वित्तीय दूरदर्शिता", "लगातार उत्तरोत्तर सुधार", "विश्वसनीय और समयबद्ध निष्पादन"],
+      },
+    },
+  },
+};
