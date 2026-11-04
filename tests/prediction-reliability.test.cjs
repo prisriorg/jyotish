@@ -68,7 +68,7 @@ test('complete reports support reproducible reference dates in both languages', 
   }
 });
 
-test('accurate marriage prediction computes delay, Upapada, partner profile, and remedies', () => {
+test('marriage report computes delay indicators, Upapada, partner profile, and remedies', () => {
   const k = chart();
   const mEn = api.getMarriagePrediction(k, { asOf, lang: 'en' });
   const mHi = api.getMarriagePrediction(k, { asOf, lang: 'hi' });

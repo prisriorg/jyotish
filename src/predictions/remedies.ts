@@ -1,4 +1,5 @@
 import { Kundli } from "../kundli/types";
+import { predictionSav, validatePredictionChart } from "./validation";
 import { rashiNames } from "../core/constants";
 import { PredictionOptions, RemediesPrediction, RemedyItem } from "./types";
 import { getLalKitabAnalysis } from "./multisystem";
@@ -7,8 +8,9 @@ import { remediesI18n } from "../i18n/dictionaries/predictions";
 import { getLocalizedRashi } from "../i18n/index";
 
 export function getRemedies(kundli: Kundli, options?: PredictionOptions): RemediesPrediction {
+  validatePredictionChart(kundli);
   const lang: Language = options?.lang || 'en';
-  const sav = kundli.ashtakavarga?.sav;
+  const sav = predictionSav(kundli);
   const houses = kundli.houses || [];
   const planets = kundli.planets || {};
 

@@ -17,7 +17,7 @@ export function getTransitPredictions(kundli: Kundli, options?: PredictionOption
   const moonRashiName = rashiNames[moonRashiIdx];
 
   // Calculate current transit positions using astronomy engine
-  const transits = getTransitPositions(now);
+  const transits = getTransitPositions(now, undefined, kundli.calculationConfig?.ayanamsa || 'lahiri');
   const saturnTransitRashi = transits["Saturn"] ? (transits["Saturn"].rashi || 11) : 11;
   const jupiterTransitRashi = transits["Jupiter"] ? (transits["Jupiter"].rashi || 2) : 2;
   const rahuTransitRashi = transits["Rahu"] ? (transits["Rahu"].rashi || 12) : 12;
@@ -107,9 +107,16 @@ export function getTransitPredictions(kundli: Kundli, options?: PredictionOption
 
   transitScore = Math.max(30, Math.min(95, transitScore));
 
+  const saturnSummary = isSadeSati
+    ? (lang === 'hi' ? 'शनि साढ़ेसाती के तहत धैर्य और सुनियोजित कर्म से कार्य करें।' : 'Navigate Sade Sati with disciplined patience.')
+    : isAshtamaShani
+      ? (lang === 'hi' ? 'अष्टम शनि का गोचर सावधानी का संकेत देता है।' : 'Ashtama Shani indicates a period requiring caution.')
+      : isKantakaShani
+        ? (lang === 'hi' ? 'कंटक शनि में कार्य और घर के मामलों में धैर्य रखें।' : 'Kantaka Shani calls for patience with work and domestic matters.')
+        : (lang === 'hi' ? `शनि चंद्र से भाव ${saturnHouseFromMoon} में है।` : `Saturn is in House ${saturnHouseFromMoon} from Moon.`);
   const summary = lang === 'hi'
-    ? `वर्तमान गोचर सूचकांक: ${transitScore}/100। ${hasGuruBalam ? 'बृहस्पति का शुभ गुरु बल आपको संरक्षण एवं उन्नति प्रदान कर रहा है।' : ''} ${isSadeSati ? 'शनि साढ़ेसाती के तहत धैर्य और सुनियोजित कर्म से कार्य करें।' : 'शनि का गोचर सामान्य व स्थिर है।'}`
-    : `Current Transit Index: ${transitScore}/100. ${hasGuruBalam ? 'Protected by auspicious Jupiterian Guru Balam.' : ''} ${isSadeSati ? 'Navigate Sade Sati with disciplined patience.' : 'Saturn transit provides unhindered operational stability.'}`;
+    ? `वर्तमान गोचर सूचकांक: ${transitScore}/100। ${hasGuruBalam ? 'बृहस्पति का शुभ गुरु बल सक्रिय है।' : ''} ${saturnSummary}`
+    : `Current Transit Index: ${transitScore}/100. ${hasGuruBalam ? 'Favorable Jupiterian Guru Balam.' : ''} ${saturnSummary}`;
 
   return {
     saturnTransit: {

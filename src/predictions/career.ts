@@ -1,4 +1,4 @@
-import { predictionDate, validatePredictionChart } from "./validation";
+import { predictionSav, predictionVarga, validatePredictionChart } from "./validation";
 import { Kundli } from "../kundli/types";
 import { RASHI_LORDS } from "../matching/constants";
 import { rashiNames } from "../core/constants";
@@ -14,7 +14,7 @@ export function getCareerPrediction(kundli: Kundli, options?: PredictionOptions)
   const lang: Language = options?.lang || 'en';
   const houses = kundli.houses || [];
   const planets = kundli.planets || {};
-  const sav = kundli.ashtakavarga?.sav;
+  const sav = predictionSav(kundli);
 
   // Helper to find which house a planet is located in (1 to 12)
   const getPlanetHouse = (pName: string): number => {
@@ -116,7 +116,7 @@ export function getCareerPrediction(kundli: Kundli, options?: PredictionOptions)
   // Jaimini Amatyakaraka (Career Indicator)
   const jaimini = getJaiminiKarakas(kundli, { lang });
   const amatyakarakaInsight = lang === 'hi'
-    ? `जैमिनी अमात्यकारक (AmK): ${getLocalizedPlanet(jaimini.amatyakaraka.planet, lang)} (अंश ${jaimini.amatyakaraka.formattedDegree}, ${getLocalizedRashi(rashiNames.indexOf(jaimini.amatyakaraka.rashiName), lang)}, भाव ${jaimini.amatyakaraka.house}) - ${jaimini.amatyakaraka.signification}`
+    ? `जैमिनी अमात्यकारक (AmK): ${getLocalizedPlanet(jaimini.amatyakaraka.planet, lang)} (अंश ${jaimini.amatyakaraka.formattedDegree}, ${jaimini.amatyakaraka.rashiName}, भाव ${jaimini.amatyakaraka.house}) - ${jaimini.amatyakaraka.signification}`
     : `Jaimini Amatyakaraka (AmK) is ${jaimini.amatyakaraka.planet} (at ${jaimini.amatyakaraka.formattedDegree} in ${jaimini.amatyakaraka.rashiName}, House ${jaimini.amatyakaraka.house}): ${jaimini.amatyakaraka.signification}`;
 
   // Dominant traits list
@@ -224,20 +224,21 @@ export function getCareerPrediction(kundli: Kundli, options?: PredictionOptions)
 
   // D10 Dashamsha Analysis
   let d10Insight: string | undefined;
-  if (kundli.vargas?.D10) {
-    const d10Asc = kundli.vargas.D10.ascendant;
-    const d10H10 = kundli.vargas.D10.houses?.find((h: any) => h.number === 10);
+  const d10 = predictionVarga(kundli, 'd10');
+  if (d10) {
+    const d10Asc = d10.ascendant;
+    const d10H10 = d10.houses?.find((h: any) => h.number === 10);
     const d10AscRashi = d10Asc ? rashiNames[(d10Asc.rashi - 1 + 12) % 12] : "";
     const d10PlanetsIn10 = d10H10?.planets || [];
     d10Insight = lang === 'hi'
-      ? `दशांश (D10) चक्र विश्लेषण: दशमांश लग्न ${d10AscRashi} है एवं कर्म भाव में ${d10PlanetsIn10.length > 0 ? d10PlanetsIn10.join(", ") : "शुभ दृष्टि"} स्थित है। यह सार्वजनिक क्षेत्र व उद्यम में दीर्घकालिक स्थायित्व की पुष्टि करता है।`
-      : `Dashamsha (D10) Career Confirmation: D10 Ascendant in ${d10AscRashi} with 10th house activated by ${d10PlanetsIn10.length > 0 ? d10PlanetsIn10.join(", ") : "auspicious planetary aspects"}, cementing long-term professional stature.`;
+      ? `दशांश (D10): लग्न ${d10AscRashi}; दशम भाव के ग्रह: ${d10PlanetsIn10.join(", ") || "कोई नहीं"}। निष्कर्ष हेतु दशमेश और वास्तविक दृष्टियों का भी मूल्यांकन करें।`
+      : `Dashamsha (D10): Ascendant in ${d10AscRashi}; 10th house occupants: ${d10PlanetsIn10.join(", ") || "none"}. Also assess the 10th lord and actual aspects before drawing a career conclusion.`;
   }
 
   // Karakamsha (Navamsha of Atmakaraka)
   let karakamshaInsight: string | undefined;
   const akPlanet = jaimini.atmakaraka.planet;
-  const akNavamshaRashi = kundli.vargas?.D9?.planets?.[akPlanet]?.rashi;
+  const akNavamshaRashi = predictionVarga(kundli, 'd9').planets[akPlanet]?.rashi;
   if (akNavamshaRashi) {
     const karakamshaName = rashiNames[(akNavamshaRashi - 1 + 12) % 12];
     karakamshaInsight = lang === 'hi'

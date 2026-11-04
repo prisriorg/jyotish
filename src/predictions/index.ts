@@ -17,6 +17,7 @@ import { ComprehensiveReport, PredictionOptions } from "./types";
 import { Language } from "../i18n/types";
 import { getLocalizedPlanet, getLocalizedRashi } from "../i18n/index";
 import { rashiNames } from "../core/constants";
+import { predictionDate, validatePredictionChart } from "./validation";
 
 export * from "./types";
 export * from "./career";
@@ -54,6 +55,8 @@ export * from "./growth";
  * @returns ComprehensiveReport containing structured sub-predictions and formatted Markdown
  */
 export function getComprehensiveReport(kundli: Kundli, options?: PredictionOptions): ComprehensiveReport {
+  validatePredictionChart(kundli);
+  options = { ...options, asOf: predictionDate(options) };
   const lang: Language = options?.lang || 'en';
 
   const career = getCareerPrediction(kundli, { lang });
@@ -70,7 +73,7 @@ export function getComprehensiveReport(kundli: Kundli, options?: PredictionOptio
   const kpAnalysis = getKpAnalysis(kundli, { lang });
   const lalKitabAnalysis = getLalKitabAnalysis(kundli, { lang });
   const jaiminiKarakas = getJaiminiKarakas(kundli, { lang });
-  const gemstones = getGemstoneRecommendation(kundli, { lang });
+  const gemstones = getGemstoneRecommendation(kundli, { ...options, lang });
   const growth = getGrowthPrediction(kundli, { ...options, lang });
 
   const lagnaRashiIdx = kundli.ascendant ? kundli.ascendant.rashi - 1 : 10;

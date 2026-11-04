@@ -1,4 +1,4 @@
-import { predictionDate, validatePredictionChart } from "./validation";
+import { predictionSav, validatePredictionChart } from "./validation";
 import { Kundli } from "../kundli/types";
 import { RASHI_LORDS } from "../matching/constants";
 import { rashiNames } from "../core/constants";
@@ -13,7 +13,7 @@ export function getWealthPrediction(kundli: Kundli, options?: PredictionOptions)
   const lang: Language = options?.lang || 'en';
   const houses = kundli.houses || [];
   const planets = kundli.planets || {};
-  const sav = kundli.ashtakavarga?.sav;
+  const sav = predictionSav(kundli);
 
   const house2 = houses.find((h) => h.number === 2) || houses[1];
   const house11 = houses.find((h) => h.number === 11) || houses[10];
@@ -185,14 +185,6 @@ export function getWealthPrediction(kundli: Kundli, options?: PredictionOptions)
   }
   incomePotential = Math.max(20, Math.min(99, incomePotential));
 
-  // Determine Wealth Rating
-  let rawRating: 'Exceptional' | 'High' | 'Moderate' | 'Fluctuating' = "Moderate";
-  if (incomePotential >= 85) rawRating = "Exceptional";
-  else if (incomePotential >= 70) rawRating = "High";
-  else if (surplusRatio < 0) rawRating = "Fluctuating";
-
-  const wealthRating = wealthI18n.rating[lang]?.[rawRating] || rawRating;
-
   // Saving Capacity
   let rawSaving: 'Strong' | 'Average' | 'Challenging' = "Average";
   if (surplusRatio >= 4 && bindus2 >= 25) {
@@ -243,8 +235,8 @@ export function getWealthPrediction(kundli: Kundli, options?: PredictionOptions)
   const lalKitab = getLalKitabAnalysis(kundli, { lang });
 
   const chalitInsight = lang === 'hi'
-    ? `चलित चक्र में द्वितीय भाव में ${chalit.actualHouseOccupants[2]?.length ? chalit.actualHouseOccupants[2].map(p => getLocalizedPlanet(p, lang)).join(", ") : "स्पष्ट स्थिति"} है, जो संपत्ति संचय को सुदृढ़ करता है। एकादश भाव सतत लाभ का समर्थन करता है।`
-    : `Chalit Bhava 2 has ${chalit.actualHouseOccupants[2]?.length ? chalit.actualHouseOccupants[2].join(", ") : "clear status"}, stabilizing asset compounding. Chalit Bhava 11 supports scalable gains.`;
+    ? `चलित द्वितीय भाव के ग्रह: ${chalit.actualHouseOccupants[2]?.map(p => getLocalizedPlanet(p, lang)).join(", ") || "कोई नहीं"}; एकादश भाव: ${chalit.actualHouseOccupants[11]?.map(p => getLocalizedPlanet(p, lang)).join(", ") || "कोई नहीं"}।`
+    : `Chalit House 2 occupants: ${chalit.actualHouseOccupants[2]?.join(", ") || "none"}; House 11 occupants: ${chalit.actualHouseOccupants[11]?.join(", ") || "none"}.`;
 
   const kpInsight = kp.wealthCusps.financialSignification;
   const lalKitabInsight = lang === 'hi'
@@ -295,8 +287,8 @@ export function getWealthPrediction(kundli: Kundli, options?: PredictionOptions)
   }
 
   const induLagnaInsight = lang === 'hi'
-    ? `महर्षि पाराशर इंदु लग्न (धन लग्न): इंदु लग्न ${induRashiName} राशि में स्थित है (स्वामी: ${getLocalizedPlanet(induLord, lang)}, किरणें: ${totalKalas})। ${induOccupants.length > 0 ? `इंदु लग्न में ${induOccupants.map(p => getLocalizedPlanet(p, lang)).join(", ")} स्थित हैं।` : "इंदु लग्न शुभ ग्रहों से दृष्टिगत है।"} धन क्षमता: ${wealthMagnitude}।`
-    : `BPHS Indu Lagna (Wealth Ascendant): Falls in ${induRashiName} (Lord: ${induLord}, Rays: ${totalKalas}). ${induOccupants.length > 0 ? `Occupied by ${induOccupants.join(", ")}.` : "Aspected by financial benefics."} Financial Magnitude: ${wealthMagnitude}.`;
+    ? `इंदु लग्न: ${induRashiName} (स्वामी: ${getLocalizedPlanet(induLord, lang)}, किरणें: ${totalKalas})। ग्रह: ${induOccupants.map(p => getLocalizedPlanet(p, lang)).join(", ") || "कोई नहीं"}। दृष्टियों का अलग मूल्यांकन आवश्यक है। पारंपरिक संकेत: ${wealthMagnitude}।`
+    : `Indu Lagna: ${induRashiName} (Lord: ${induLord}, Rays: ${totalKalas}). Occupants: ${induOccupants.join(", ") || "none"}. Aspects require a separate assessment. Traditional indicator: ${wealthMagnitude}.`;
 
   // Arudha Wealth Padas (A2 & A11)
   let arudhaWealthInsight: string | undefined;
@@ -353,6 +345,12 @@ export function getWealthPrediction(kundli: Kundli, options?: PredictionOptions)
     daridraYogas.push(lang === 'hi' ? "एकादशेश का त्रिक भाव में होना: आय स्रोतों में नियमितता हेतु कई वैकल्पिक आय धाराएं विकसित करें।" : "11th Lord in Dusthana: Advised to build diversified income streams to guard against dry spells.");
   }
 
+  // Classify after all income adjustments, including Indu Lagna.
+  let rawRating: 'Exceptional' | 'High' | 'Moderate' | 'Fluctuating' = 'Moderate';
+  if (incomePotential >= 85) rawRating = 'Exceptional';
+  else if (incomePotential >= 70) rawRating = 'High';
+  else if (surplusRatio < 0) rawRating = 'Fluctuating';
+  const wealthRating = wealthI18n.rating[lang]?.[rawRating] || rawRating;
   return {
     wealthRating,
     incomePotential,

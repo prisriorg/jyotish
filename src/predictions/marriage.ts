@@ -1,4 +1,4 @@
-import { predictionDate, validatePredictionChart } from "./validation";
+import { predictionDate, predictionSav, predictionVarga, validDashaPeriod, validatePredictionChart } from "./validation";
 import { Kundli } from "../kundli/types";
 import { RASHI_LORDS } from "../matching/constants";
 import { rashiNames } from "../core/constants";
@@ -40,7 +40,7 @@ export function getMarriagePrediction(
   };
 
   // Navamsha (D9) 7th House & Occupants
-  const d9 = kundli.vargas?.D9;
+  const d9 = predictionVarga(kundli, 'd9');
   const d9AscendantRashi = d9?.ascendant?.rashi || 1;
   const d9House7Rashi = ((d9AscendantRashi + 6 - 1) % 12) + 1;
   const d9House7RashiName = rashiNames[d9House7Rashi - 1] || "";
@@ -80,7 +80,9 @@ export function getMarriagePrediction(
   const horizonEnd = new Date(now.getTime());
   horizonEnd.setUTCFullYear(horizonEnd.getUTCFullYear() + 10);
   for (const maha of dashaTree) {
+    if (!validDashaPeriod(maha)) continue;
     for (const antar of maha.antars || []) {
+      if (!validDashaPeriod(antar, maha)) continue;
       const start = Math.max(new Date(maha.startTime).getTime(), new Date(antar.startTime).getTime());
       const end = Math.min(new Date(maha.endTime).getTime(), new Date(antar.endTime).getTime());
       if (!Number.isFinite(start) || !Number.isFinite(end) || start >= end) continue;
@@ -492,7 +494,7 @@ export function getMarriagePrediction(
   };
 
   // Relationship advice & harmony rating
-  const sav7 = kundli.ashtakavarga?.sav?.byHouse[6] ?? 28;
+  const sav7 = predictionSav(kundli).byHouse[6];
   let rawHarmony: 'Very Good' | 'Good' | 'Average' | 'Needs Caution' = "Good";
   const relationshipAdvice: string[] = [];
 
@@ -807,13 +809,13 @@ export function getMarriagePrediction(
 
   // Navamsha (D9) Spouse Insight
   let navamshaSpouseInsight: string | undefined;
-  if (kundli.vargas?.D9) {
-    const d9Asc = kundli.vargas.D9.ascendant;
-    const d9House7 = kundli.vargas.D9.houses?.find((h: any) => h.number === 7);
+  if (d9) {
+    const d9Asc = d9.ascendant;
+    const d9House7 = d9.houses?.find((h: any) => h.number === 7);
     const d9AscName = d9Asc ? rashiNames[(d9Asc.rashi - 1 + 12) % 12] : "";
     navamshaSpouseInsight = lang === 'hi'
-      ? `नवमांश (D9) चक्र सत्यापन: नवमांश लग्न ${d9AscName} एवं सप्तम भाव दांपत्य जीवन के आंतरिक सद्भाव एवं जीवनसाथी के नैतिक गुणों की पुष्टि करता है।`
-      : `Navamsha (D9) Verification: Navamsha Ascendant in ${d9AscName} affirms the inner spiritual harmony and enduring core values of the life partner.`;
+      ? `नवमांश (D9): लग्न ${d9AscName}; सप्तम भाव के ग्रह: ${d9House7?.planets.join(", ") || "कोई नहीं"}। दांपत्य विश्लेषण में सप्तमेश के बल और संबंध भी देखें।`
+      : `Navamsha (D9): Ascendant in ${d9AscName}; 7th house occupants: ${d9House7?.planets.join(", ") || "none"}. Assess the 7th lord's strength and associations for relationship interpretation.`;
   }
 
   // Vivaha Vilamba (Delay) Analysis
@@ -895,10 +897,11 @@ export function getMarriagePrediction(
         secondFromUlOccupants.push(lang === 'hi' ? getLocalizedPlanet(pName, lang) : pName);
       }
     }
-    const hasBenefics = secondFromUlOccupants.some(p => ["Jupiter", "Venus", "Mercury", "Moon", "बृहस्पति", "शुक्र", "बुध", "चन्द्र"].includes(p));
+    const hasBenefics = Object.entries(planets).some(([name, p]) => p.rashi === secondFromUlRashiIdx + 1 &&
+      ["Jupiter", "Venus", "Mercury", "Moon"].includes(name));
     const sustenanceVerdict = hasBenefics
-      ? (lang === 'hi' ? "उपपद से द्वितीय भाव में शुभ ग्रहों का प्रभाव दांपत्य के अखंड स्थायित्व एवं पारिवारिक सहयोग की पुष्टि करता है।" : "Benefic presence in 2nd from Upapada guarantees marital endurance and lifelong mutual devotion.")
-      : (lang === 'hi' ? "उपपद से द्वितीय भाव सामान्य है; सामंजस्य बनाए रखने हेतु उपपद व्रत (उपपद स्वामी वार को व्रत) कल्याणकारी है।" : "2nd from Upapada is balanced; fasting on the day of the UL lord enhances long-term harmony.");
+      ? (lang === 'hi' ? "उपपद से द्वितीय भाव में नैसर्गिक शुभ ग्रह का समर्थन है; इससे दांपत्य स्थायित्व निश्चित नहीं होता।" : "A natural benefic occupies the 2nd from Upapada; this is a traditional supporting indicator, not a guarantee of marital endurance.")
+      : (lang === 'hi' ? "उपपद से द्वितीय भाव में नैसर्गिक शुभ ग्रह नहीं है; भाव स्वामी, दृष्टि और दशा का भी मूल्यांकन करें।" : "No natural benefic occupies the 2nd from Upapada; also assess its lord, aspects and dasha.");
 
     upapadaLagnaDetails = {
       rashi: lang === 'hi' ? getLocalizedRashi(ulRashiIdx, lang) : ulPada.rashiName,
@@ -915,7 +918,7 @@ export function getMarriagePrediction(
   if (venusD9Rashi === 12) venusD9Dignity = lang === 'hi' ? "उच्च (मीन नवमांश - परम सौभाग्य)" : "Exalted (Pisces Navamsha - Peak Bliss)";
   else if ([2, 7].includes(venusD9Rashi || 0)) venusD9Dignity = lang === 'hi' ? "स्वक्षेत्री (वृषभ/तुला नवमांश)" : "Own Sign (Taurus/Libra Navamsha)";
   else if (venusD9Rashi === 6) venusD9Dignity = lang === 'hi' ? "नीच (कन्या नवमांश - अपेक्षाओं पर नियंत्रण रखें)" : "Debilitated (Virgo Navamsha - Manage expectations)";
-  else venusD9Dignity = lang === 'hi' ? "शुभ व अनुकूल" : "Harmonious";
+  else venusD9Dignity = lang === 'hi' ? "सम (Neutral)" : "Neutral";
 
   const navamshaSpouseDetails = {
     d9House7Rashi: lang === 'hi' ? getLocalizedRashi(d9House7Rashi - 1, lang) : d9House7RashiName,
@@ -923,8 +926,8 @@ export function getMarriagePrediction(
     d9House7Occupants: d9PlanetsIn7.map(p => lang === 'hi' ? getLocalizedPlanet(p, lang) : p),
     venusD9Dignity,
     explanation: lang === 'hi'
-      ? `नवमांश चक्र में सप्तम भाव ${getLocalizedRashi(d9House7Rashi - 1, lang)} राशि का है जिसके स्वामी ${getLocalizedPlanet(d9House7Lord, lang)} हैं। शुक्र की स्थिति (${venusD9Dignity}) जीवनसाथी के आंतरिक संस्कारों और दांपत्य निष्ठा का प्रमाण है।`
-      : `D9 Navamsha 7th house falls in ${d9House7RashiName} ruled by ${d9House7Lord}. Venus dignity (${venusD9Dignity}) confirms the spouse's core moral integrity and enduring emotional commitment.`,
+      ? `नवमांश चक्र में सप्तम भाव ${getLocalizedRashi(d9House7Rashi - 1, lang)} राशि का है जिसके स्वामी ${getLocalizedPlanet(d9House7Lord, lang)} हैं। शुक्र का राशि बल: ${venusD9Dignity}। यह किसी व्यक्ति के चरित्र का प्रमाण नहीं है।`
+      : `D9 Navamsha 7th house falls in ${d9House7RashiName} ruled by ${d9House7Lord}. Venus sign dignity: ${venusD9Dignity}. These chart factors do not establish a person's character.`,
   };
 
   // Spouse Career & Background

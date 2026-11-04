@@ -59,7 +59,7 @@ export function getChalitChart(kundli: Kundli, system: 'sripati' | 'equal_house'
         try {
             if (kundli.birthDetails && kundli.birthDetails.lat !== undefined && kundli.birthDetails.lon !== undefined) {
                 const observer = new Observer(kundli.birthDetails.lat, kundli.birthDetails.lon, 0);
-                let dateObj: Date | null = kundli.birthDetails.rawDate || null;
+                let dateObj: Date | null = kundli.birthDetails.rawDate ? new Date(kundli.birthDetails.rawDate) : null;
 
                 if (!dateObj && kundli.birthDetails.date) {
                     const dStr = kundli.birthDetails.date;
@@ -94,7 +94,7 @@ export function getChalitChart(kundli: Kundli, system: 'sripati' | 'equal_house'
                 }
 
                 if (dateObj) {
-                    const ayanamsa = getAyanamsa(dateObj);
+                    const ayanamsa = getAyanamsa(dateObj, kundli.calculationConfig?.ayanamsa || 'lahiri');
                     mcLon = getMidheaven(dateObj, observer, ayanamsa);
                 }
             }

@@ -1,167 +1,112 @@
-import { predictionDate, validatePredictionChart } from "./validation";
+import { activeDashaPeriods, predictionDate, validDashaPeriod, validatePredictionChart } from "./validation";
 import { Kundli } from "../kundli/types";
+import { DashaPeriodInfo } from "../core/types";
 import { RASHI_LORDS } from "../matching/constants";
-import { rashiNames } from "../core/constants";
 import { DashaTimelinePrediction, PredictionOptions } from "./types";
-import { Language } from "../i18n/types";
 import { getLocalizedPlanet } from "../i18n/index";
 
 export function getDashaTimelinePrediction(kundli: Kundli, options?: PredictionOptions): DashaTimelinePrediction {
   validatePredictionChart(kundli);
-  const lang: Language = options?.lang || 'en';
-  const houses = kundli.houses || [];
-  const planets = kundli.planets || {};
-
-  const getPlanetHouse = (pName: string): number => {
-    for (const h of houses) {
-      if (h.planets && h.planets.includes(pName)) {
-        return h.number;
-      }
-    }
-    return 1;
-  };
-
-  const lagnaRashi = kundli.ascendant ? kundli.ascendant.rashi : 1;
-
-  // Determine which houses each planet rules in D1
-  const planetRuledHouses: Record<string, number[]> = {
-    Sun: [], Moon: [], Mars: [], Mercury: [], Jupiter: [], Venus: [], Saturn: [], Rahu: [], Ketu: []
-  };
-
-  for (let i = 1; i <= 12; i++) {
-    const h = houses.find((house) => house.number === i) || { rashi: ((lagnaRashi + i - 2) % 12) + 1 };
-    const lord = RASHI_LORDS[(h.rashi - 1 + 12) % 12];
-    if (planetRuledHouses[lord]) {
-      planetRuledHouses[lord].push(i);
-    }
-  }
-
-  // 1. Current Active Dasha details
+  const lang = options?.lang || 'en';
+  const hi = lang === 'hi';
   const now = predictionDate(options);
-  const active = (period: { startTime: Date; endTime: Date }) =>
-    now.getTime() >= new Date(period.startTime).getTime() &&
-    now.getTime() < new Date(period.endTime).getTime();
-  const md = kundli.dasha?.mahadashas?.find(active);
-  const ad = md?.antars?.find(active);
+  const { maha: md, antar: ad, pratyantar: pd } = activeDashaPeriods(kundli, now);
   if (!md || !ad) {
     throw new Error('No active mahadasha/antardasha available for the prediction date.');
   }
-  const pd = ad.pratyantars?.find(active);
-  const mdPlanet = md.planet;
-  const adPlanet = ad.planet;
-  const pdPlanet = pd?.planet;
-  const mdStart = new Date(md.startTime).toISOString().split('T')[0];
-  const mdEnd = new Date(md.endTime).toISOString().split('T')[0];
-  const adStart = new Date(ad.startTime).toISOString().split('T')[0];
-  const adEnd = new Date(ad.endTime).toISOString().split('T')[0];
-
-  const mdHouse = getPlanetHouse(mdPlanet);
-  const adHouse = getPlanetHouse(adPlanet);
-  const mdRuled = planetRuledHouses[mdPlanet] || [1];
-  const adRuled = planetRuledHouses[adPlanet] || [1];
-
-  // 2. Nature & Functional Status of MD Lord
-  let mdNature = "";
-  if (mdRuled.includes(1)) {
-    mdNature = lang === 'hi' ? "लग्नेश (सर्वाधिक शुभ व जीवनोन्नति कारक)" : "Lagna Lord (Supreme Life Benefic)";
-  } else if (mdRuled.includes(9) || mdRuled.includes(5)) {
-    mdNature = lang === 'hi' ? "त्रिकोणेश (भाग्य एवं पुण्य कारक)" : "Trikona Lord (Fortune & Merit Dispenser)";
-  } else if (mdRuled.includes(10)) {
-    mdNature = lang === 'hi' ? "दशमेश (कर्म व अधिकार कारक)" : "Karmesh (Professional Authority Lord)";
-  } else if (mdRuled.includes(11) || mdRuled.includes(2)) {
-    mdNature = lang === 'hi' ? "धनेश / लाभेश (आर्थिक समृद्धि कारक)" : "Dhana / Labha Lord (Financial Wealth Driver)";
-  } else if (mdRuled.includes(6) || mdRuled.includes(8) || mdRuled.includes(12)) {
-    mdNature = lang === 'hi' ? "त्रिकेश (परिवर्तन एवं साधना कारक)" : "Dusthana Lord (Karmic Transformation & Healing)";
-  } else {
-    mdNature = lang === 'hi' ? "केंद्रेश (स्थिरता कारक)" : "Kendra Lord (Stability & Action Anchor)";
-  }
-
-  const mdPrediction = lang === 'hi'
-    ? `${getLocalizedPlanet(mdPlanet, lang)} की महादशा (भाव ${mdHouse} में स्थित, स्वामी भाव ${mdRuled.join(", ")})। यह समय आपके जीवन में ${mdNature} का सक्रिय काल है। यह अवधि व्यक्तिगत परिपक्वता, सामाजिक प्रतिष्ठा के विस्तार और जीवन के आधारभूत ढांचे को सुदृढ़ करने के अवसर लेकर आती है।`
-    : `Mahadasha of ${mdPlanet} (placed in House ${mdHouse}, ruling Houses ${mdRuled.join(", ")}). Operating as ${mdNature}, this macro-cycle focuses energies on structural realignments, authority expansion, and long-term self-realization.`;
-
-  const adPrediction = lang === 'hi'
-    ? `${getLocalizedPlanet(adPlanet, lang)} की अंतर्दशा (भाव ${adHouse} में स्थित, स्वामी भाव ${adRuled.join(", ")})। यह उप-अवधि दैनिक कार्यक्षेत्र में विशिष्ट बदलाव, नए अनुबंध, वित्तीय प्रवाह तथा व्यक्तिगत उत्तरदायित्वों के निर्वहन की ओर प्रेरित करती है।`
-    : `Antardasha of ${adPlanet} (placed in House ${adHouse}, ruling Houses ${adRuled.join(", ")}). This sub-period translates macro-themes into immediate daily execution, career shifts, and financial transactions.`;
-
-  // 3. Domain Specific Current Themes
-  const currentPeriodThemes = {
-    career: lang === 'hi'
-      ? `${getLocalizedPlanet(mdPlanet, lang)}-${getLocalizedPlanet(adPlanet, lang)} काल में कार्यक्षेत्र में नई जिम्मेदारियां और पदोन्नति के अवसर निर्मित होंगे। स्वतंत्र निर्णय लेने की क्षमता में वृद्धि होगी।`
-      : `The ${mdPlanet}-${adPlanet} combination fosters career elevations, executive authority, and promising professional breakthroughs through disciplined execution.`,
-    wealth: lang === 'hi'
-      ? `वित्तीय स्थिति में संतुलन बना रहेगा। आय के नए स्रोत बनेंगे, किंतु दीर्घकालिक निवेश (Mutual funds/Real estate) में समझदारी से कदम बढ़ाएं।`
-      : `Financial stability remains protected. Multiple income conduits open up, with optimal rewards favoring calculated long-term asset accumulation over speculation.`,
-    relationships: lang === 'hi'
-      ? `पारिवारिक संबंधों में आपसी संवाद और सामंजस्य बनाए रखना आवश्यक होगा। जीवनसाथी के साथ नए साझा लक्ष्यों पर कार्य करेंगे।`
-      : `Domestic and marital concord thrives on transparent communication. Collaborative family goals and mutual respect deepen emotional intimacy.`,
-    health: lang === 'hi'
-      ? `ऊर्जा का स्तर अच्छा रहेगा। कार्य की व्यस्तता के कारण दिनचर्या व खानपान में अनियमितता से बचें; पर्याप्त विश्राम लें।`
-      : `Vitality remains steady. Guard against workaholic sleep deficits and stress burnout; prioritize clean nutrition and structured physical mobility.`
+  const iso = (value: Date) => new Date(value).toISOString().split('T')[0];
+  const name = (planet: string) => getLocalizedPlanet(planet, lang);
+  const houseOf = (planet: string) => kundli.houses.find(h => h.planets.includes(planet))!.number;
+  // D1 sign ownership is counted from Lagna; shifted Bhava cusps do not change it.
+  const ruledBy = (planet: string) => Array.from({ length: 12 }, (_, i) => i + 1)
+    .filter(h => RASHI_LORDS[(kundli.ascendant.rashi + h - 2) % 12] === planet);
+  const role = (planet: string): string => {
+    const ruled = ruledBy(planet);
+    if (planet === 'Rahu' || planet === 'Ketu') {
+      const dispositor = RASHI_LORDS[kundli.planets[planet].rashi - 1];
+      return hi ? `छाया ग्रह; राशि स्वामी ${name(dispositor)} के फल भी देखें` : `Node; also assess sign lord ${dispositor}`;
+    }
+    const labels = [];
+    if (ruled.includes(1)) labels.push(hi ? 'लग्नेश' : 'Lagna Lord');
+    if (ruled.some(h => [5, 9].includes(h))) labels.push(hi ? 'त्रिकोणेश' : 'Trikona Lord');
+    if (ruled.some(h => [4, 7, 10].includes(h))) labels.push(hi ? 'केंद्रेश' : 'Kendra Lord');
+    if (ruled.some(h => [2, 11].includes(h))) labels.push(hi ? 'धन / लाभ स्वामी' : 'Dhana / Labha Lord');
+    if (ruled.some(h => [6, 8, 12].includes(h))) labels.push(hi ? 'त्रिकेश' : 'Dusthana Lord');
+    return labels.join('; ') || (hi ? 'प्रयास भाव का स्वामी' : 'Effort House Lord');
+  };
+  const describe = (planet: string) => {
+    const p = kundli.planets[planet];
+    const ruled = ruledBy(planet);
+    return hi
+      ? `${name(planet)}: भाव ${houseOf(planet)}, स्वामी भाव ${ruled.join(', ') || 'कोई नहीं'}। ${role(planet)}। राशि बल: ${p.dignity}${p.isCombust ? '; अस्त' : ''}।`
+      : `${planet}: placed in House ${houseOf(planet)}, ruling Houses ${ruled.join(', ') || 'none'}. ${role(planet)}. Sign dignity: ${p.dignity}${p.isCombust ? '; combust' : ''}.`;
+  };
+  const theme = (relatedHouses: number[]): string => {
+    const details = [md.planet, ad.planet].map(planet => {
+      const p = kundli.planets[planet];
+      const placement = houseOf(planet);
+      const ruled = ruledBy(planet);
+      const linked = relatedHouses.some(h => ruled.includes(h) || placement === h);
+      const challenged = [6, 8, 12].includes(placement) || p.dignity === 'debilitated' || p.isCombust ||
+        ruled.some(h => [6, 8, 12].includes(h));
+      const assessment = linked
+        ? (challenged ? (hi ? 'मिश्रित संकेत' : 'mixed indications') : (hi ? 'सहायक संकेत' : 'supportive indications'))
+        : (challenged ? (hi ? 'सावधानी के संकेत' : 'cautionary indications') : (hi ? 'सीमित प्रत्यक्ष संबंध' : 'limited direct connection'));
+      return hi
+        ? `${name(planet)}: ${assessment} (स्थिति भाव ${placement}, स्वामित्व ${ruled.join(', ') || 'कोई नहीं'})`
+        : `${planet}: ${assessment} (placement ${placement}, lordship ${ruled.join(', ') || 'none'})`;
+    });
+    return details.join('; ') + (hi ? '। यह नियम आधारित संकेत है, घटना की गारंटी नहीं।' : '. These are rule-based indicators, not guaranteed events.');
   };
 
-  // 4. Upcoming Major Periods
-  const upcomingMajorPeriods = lang === 'hi' ? [
-    {
-      planet: getLocalizedPlanet(adPlanet, lang),
-      periodSpan: `${adStart} से ${adEnd}`,
-      keyForecast: "वर्तमान उप-दशा: व्यावसायिक प्रगति, वित्तीय योजना एवं नए संपर्कों के विस्तार हेतु महत्वपूर्ण चरण।"
-    },
-    {
-      planet: "आगामी प्रमुख चक्र",
-      periodSpan: `वर्ष ${now.getUTCFullYear() + 1} - ${now.getUTCFullYear() + 3}`,
-      keyForecast: "आगामी अंतर्दशाएं संपत्ति विस्तार, पारिवारिक मांगलिक कार्य एवं कार्यक्षेत्र में नई ऊंचाइयों की ओर अग्रसर करेंगी।"
+  const upcomingMajorPeriods: DashaTimelinePrediction['upcomingMajorPeriods'] = [];
+  for (const maha of kundli.dasha.mahadashas) {
+    if (!validDashaPeriod(maha)) continue;
+    for (const antar of maha.antars || []) {
+      if (!validDashaPeriod(antar, maha) || new Date(antar.startTime).getTime() <= now.getTime()) continue;
+      upcomingMajorPeriods.push({
+        planet: name(antar.planet),
+        periodSpan: `${iso(antar.startTime)} ${hi ? 'से' : 'to'} ${iso(antar.endTime)}`,
+        keyForecast: `${name(maha.planet)} / ${name(antar.planet)}: ${describe(antar.planet)}`,
+      });
     }
-  ] : [
-    {
-      planet: adPlanet,
-      periodSpan: `${adStart} to ${adEnd}`,
-      keyForecast: "Active sub-period: Critical window for strategic networking, financial consolidation, and career elevation."
-    },
-    {
-      planet: "Next Major Sub-Cycle",
-      periodSpan: `Years ${now.getUTCFullYear() + 1} - ${now.getUTCFullYear() + 3}`,
-      keyForecast: "Transition into subsequent antardasha triggers asset acquisition, celebratory family milestones, and executive empowerment."
+  }
+  upcomingMajorPeriods.sort((a, b) => a.periodSpan.localeCompare(b.periodSpan));
+
+  const criticalMilestoneAges: DashaTimelinePrediction['criticalMilestoneAges'] = [];
+  const rawBirth = kundli.birthDetails?.rawDate;
+  const birth = rawBirth ? new Date(rawBirth) : undefined;
+  if (birth && Number.isFinite(birth.getTime())) {
+    const futureMahas = kundli.dasha.mahadashas.filter(p => validDashaPeriod(p) &&
+      new Date(p.startTime).getTime() > Math.max(now.getTime(), birth.getTime()))
+      .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
+    for (const maha of futureMahas.slice(0, 4)) {
+      const start = new Date(maha.startTime);
+      let age = start.getUTCFullYear() - birth.getUTCFullYear();
+      const anniversary = new Date(birth.getTime());
+      anniversary.setUTCFullYear(start.getUTCFullYear());
+      if (start < anniversary) age--;
+      criticalMilestoneAges.push({
+        age,
+        astrologicalCycle: hi ? `${name(maha.planet)} महादशा प्रारंभ (${iso(start)})` : `${maha.planet} Mahadasha begins (${iso(start)})`,
+        significance: describe(maha.planet),
+      });
     }
-  ];
+  }
 
-  // 5. Critical Milestone Ages
-  const birthYear = kundli.birthDetails?.date ? new Date(kundli.birthDetails.date).getFullYear() : 2000;
-  const criticalMilestoneAges = lang === 'hi' ? [
-    { age: 28, astrologicalCycle: "शनि प्रथम चक्र पूर्णता (First Saturn Return)", significance: "करियर में परिपक्वता, वास्तविक जीवन पथ का चयन एवं आर्थिक स्वावलंबन का प्रस्थान बिंदु।" },
-    { age: 36, astrologicalCycle: "बृहस्पति तृतीय चक्र (Jupiter Expansion Cycle)", significance: "सामाजिक प्रतिष्ठा में उल्लेखनीय उछाल, पारिवारिक समृद्धि एवं संपत्ति अर्जन का स्वर्णिम समय।" },
-    { age: 42, astrologicalCycle: "राहु परिपक्वता चक्र (Rahu Maturation Age)", significance: "कैरियर का शिखर, नए व्यवसाय/पहल में साहसिक विस्तार एवं वैश्विक अवसरों का आगमन।" },
-    { age: 54, astrologicalCycle: "सूर्य-गुरु चक्र (Wisdom & Legacy Phase)", significance: "वरिष्ठ नेतृत्व, मार्गदर्शक भूमिका एवं जीवनभर की उपलब्धियों का सम्मान।" }
-  ] : [
-    { age: 28, astrologicalCycle: "First Saturn Return (Karmic Realignment)", significance: "Foundational maturity, shedding illusions, and cementing authentic long-term career trajectory." },
-    { age: 36, astrologicalCycle: "Jupiter Third Cycle (Scholarly & Material Expansion)", significance: "Golden apex for social prominence, real estate wealth, and familial celebrations." },
-    { age: 42, astrologicalCycle: "Rahu Maturation Phase", significance: "Audacious breakthroughs in enterprise, global networking, and legacy milestones." },
-    { age: 54, astrologicalCycle: "Solar-Jupiterian Legacy Era", significance: "Senior advisory governance, mentoring upcoming generations, and financial sovereignty." }
-  ];
-
+  const periodDates = (p: DashaPeriodInfo) => ({ planet: p.planet, startDate: iso(p.startTime), endDate: iso(p.endTime) });
   return {
     currentMahadasha: {
-      planet: mdPlanet,
-      startDate: mdStart,
-      endDate: mdEnd,
-      nature: mdNature,
-      lordOfHouses: mdRuled,
-      placementHouse: mdHouse,
-      prediction: mdPrediction,
+      ...periodDates(md), nature: role(md.planet), lordOfHouses: ruledBy(md.planet),
+      placementHouse: houseOf(md.planet), prediction: describe(md.planet),
     },
-    currentAntardasha: {
-      planet: adPlanet,
-      startDate: adStart,
-      endDate: adEnd,
-      prediction: adPrediction,
+    currentAntardasha: { ...periodDates(ad), prediction: describe(ad.planet) },
+    currentPratyantardasha: pd ? periodDates(pd) : undefined,
+    currentPeriodThemes: {
+      career: theme([2, 6, 10, 11]), wealth: theme([2, 5, 9, 11]),
+      relationships: theme([2, 7, 11]), health: theme([1, 6, 8, 12]),
     },
-    currentPratyantardasha: pdPlanet ? {
-      planet: pdPlanet,
-      startDate: adStart,
-      endDate: adEnd,
-    } : undefined,
-    currentPeriodThemes,
-    upcomingMajorPeriods,
+    upcomingMajorPeriods: upcomingMajorPeriods.slice(0, 3),
     criticalMilestoneAges,
   };
 }

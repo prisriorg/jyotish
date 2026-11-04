@@ -75,6 +75,13 @@ export function getKundli(
   observer: Observer,
   config: KundliConfig = {},
 ): Kundli {
+  if (!(date instanceof Date) || !Number.isFinite(date.getTime())) {
+    throw new Error('Birth date must be a valid Date.');
+  }
+  if (!observer || !Number.isFinite(observer.latitude) || Math.abs(observer.latitude) > 90 ||
+      !Number.isFinite(observer.longitude) || Math.abs(observer.longitude) > 180) {
+    throw new Error('Birth location must have valid latitude and longitude.');
+  }
   const ayanamsa = getAyanamsa(date, config.ayanamsa || "lahiri");
 
   // 1. Calculate Ascendant (Lagna)
@@ -175,6 +182,7 @@ export function getKundli(
   const vargas = getAllVargas(lagnaLon, planets);
 
   const kundliResult: Kundli = {
+    calculationConfig: { ayanamsa: config.ayanamsa || 'lahiri', houseSystem },
     birthDetails: {
       date: date.toLocaleDateString("en-IN", {
         timeZone: "Asia/Kolkata",

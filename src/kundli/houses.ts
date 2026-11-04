@@ -1,6 +1,7 @@
 import { Bhava, KundliConfig } from "./types";
 import { Observer } from "astronomy-engine";
 import { getMidheaven } from "../core/calculations";
+import { getKpChart } from "./kp";
 
 /**
  * Calculates the House (Bhava) cusps and spans based on the given system.
@@ -117,6 +118,26 @@ export function getHouses(
         planets: [],
       });
     }
+  }
+
+  else if (system === 'placidus') {
+    if (!date || !observer || ayanamsa === undefined) {
+      throw new Error('Placidus houses require date, observer and ayanamsa.');
+    }
+    const kp = getKpChart(date, observer, {
+      ayanamsa: 'lahiri', includeSignificators: false, includeRulingPlanets: false,
+    });
+    // Reuse the Placidus geometry; convert cusps to the caller's sidereal frame.
+    const norm = (lon: number) => ((lon % 360) + 360) % 360;
+    return kp.cusps.map(cusp => {
+      const start = norm(cusp.longitude + kp.ayanamsa - ayanamsa);
+      const end = norm(cusp.endLongitude + kp.ayanamsa - ayanamsa);
+      return {
+        number: cusp.houseNumber, rashi: Math.floor(start / 30) + 1,
+        longitude: start, startLongitude: start, endLongitude: end,
+        span: norm(end - start), planets: [],
+      };
+    });
   }
 
   // Fallback to whole_sign if unknown

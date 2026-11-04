@@ -1,4 +1,6 @@
 import { Kundli } from "../kundli/types";
+import { getHouses } from "../kundli/houses";
+import { validatePredictionChart } from "./validation";
 import { RASHI_LORDS } from "../matching/constants";
 import { rashiNames } from "../core/constants";
 import { YogasAndDoshasReport, PredictionOptions } from "./types";
@@ -6,9 +8,14 @@ import { Language } from "../i18n/types";
 import { getLocalizedPlanet, getLocalizedRashi } from "../i18n/index";
 
 export function getYogasAndDoshas(kundli: Kundli, options?: PredictionOptions): YogasAndDoshasReport {
+  validatePredictionChart(kundli);
   const lang: Language = options?.lang || 'en';
-  const houses = kundli.houses || [];
   const planets = kundli.planets || {};
+  // Rashi yogas use sign relationships, even when the input uses Bhava cusps.
+  const houses = getHouses(kundli.ascendant.longitude, 'whole_sign');
+  for (const h of houses) {
+    h.planets = Object.keys(planets).filter(p => planets[p].rashi === h.rashi);
+  }
 
   const getPlanetHouse = (pName: string): number => {
     for (const h of houses) {
@@ -322,24 +329,27 @@ export function getYogasAndDoshas(kundli: Kundli, options?: PredictionOptions): 
   const corePlanets = ["Sun", "Moon", "Mars", "Mercury", "Jupiter", "Venus", "Saturn"];
   let side1Count = 0;
   let side2Count = 0;
+  let onAxisCount = 0;
 
   for (const cp of corePlanets) {
-    const pHouse = getPlanetHouse(cp);
-    // Relative position from Rahu forward to Ketu
-    const distFromRahu = ((pHouse - rahuHouse + 12) % 12);
-    if (distFromRahu > 0 && distFromRahu < 6) {
+    // House/sign buckets lose which side of a node a planet occupies.
+    const distFromRahu = (planets[cp].longitude - planets.Rahu.longitude + 360) % 360;
+    if (distFromRahu < 1e-8 || Math.abs(distFromRahu - 180) < 1e-8 || distFromRahu > 360 - 1e-8) {
+      onAxisCount++;
+    } else if (distFromRahu < 180) {
       side1Count++;
-    } else if (distFromRahu > 6) {
+    } else {
       side2Count++;
     }
   }
 
   const isFullKaalSarp = side1Count === 7 || side2Count === 7;
-  const isPartialKaalSarp = (side1Count === 6 && side2Count === 0) || (side2Count === 6 && side1Count === 0);
+  const isPartialKaalSarp = onAxisCount > 0 &&
+    ((side1Count > 0 && side2Count === 0) || (side2Count > 0 && side1Count === 0));
   const hasKaalSarp = isFullKaalSarp || isPartialKaalSarp;
 
   // Cancellation rule: Jupiter in Kendra significantly cancels Kaal Sarp
-  const isKaalSarpCancelled = [1, 4, 7, 10].includes(jupiterHouse);
+  const isKaalSarpCancelled = hasKaalSarp && [1, 4, 7, 10].includes(jupiterHouse);
   const kaalSarpTypeName = kaalSarpTypes[rahuHouse] || "Kaal Sarp Dosha";
 
   const kaalSarpRemedy = lang === 'hi'
@@ -358,8 +368,9 @@ export function getYogasAndDoshas(kundli: Kundli, options?: PredictionOptions): 
   // No planet (except Sun, Rahu, Ketu) in 2nd or 12th from Moon
   const house2FromMoon = ((moonHouse) % 12) + 1;
   const house12FromMoon = ((moonHouse + 10) % 12) + 1;
-  const pIn2FromMoon = (houses.find(h => h.number === house2FromMoon)?.planets || []).filter(p => !["Sun", "Rahu", "Ketu"].includes(p));
-  const pIn12FromMoon = (houses.find(h => h.number === house12FromMoon)?.planets || []).filter(p => !["Sun", "Rahu", "Ketu"].includes(p));
+  const supportingPlanets = ['Mars', 'Mercury', 'Jupiter', 'Venus', 'Saturn'];
+  const pIn2FromMoon = (houses.find(h => h.number === house2FromMoon)?.planets || []).filter(p => supportingPlanets.includes(p));
+  const pIn12FromMoon = (houses.find(h => h.number === house12FromMoon)?.planets || []).filter(p => supportingPlanets.includes(p));
 
   const rawKemadruma = pIn2FromMoon.length === 0 && pIn12FromMoon.length === 0;
   // Cancellation: Planets in Kendra from Moon OR Kendra from Lagna
@@ -370,7 +381,7 @@ export function getYogasAndDoshas(kundli: Kundli, options?: PredictionOptions): 
     for (const k of [1, 4, 7, 10]) {
       const hp = houses.find(h => h.number === k)?.planets || [];
       for (const p of hp) {
-        if (!["Rahu", "Ketu"].includes(p)) planetsInKendraFromLagna.push(p);
+        if (corePlanets.includes(p)) planetsInKendraFromLagna.push(p);
       }
     }
     if (planetsInKendraFromLagna.length > 0 || [1, 4, 7, 10].includes(distMoonToJup)) {

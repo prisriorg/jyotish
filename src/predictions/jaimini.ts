@@ -1,4 +1,5 @@
 import { Kundli } from "../kundli/types";
+import { validatePredictionChart } from "./validation";
 import { KarakaInfo, JaiminiKarakas, PredictionOptions } from "./types";
 import { Language } from "../i18n/types";
 import { jaiminiI18n } from "../i18n/dictionaries/predictions";
@@ -14,6 +15,7 @@ import { rashiNames } from "../core/constants";
  * @returns JaiminiKarakas object with detailed real-world significations
  */
 export function getJaiminiKarakas(kundli: Kundli, options?: PredictionOptions): JaiminiKarakas {
+  validatePredictionChart(kundli);
   const lang: Language = options?.lang || 'en';
   const planets = kundli.planets || {};
   const houses = kundli.houses || [];
@@ -37,7 +39,7 @@ export function getJaiminiKarakas(kundli: Kundli, options?: PredictionOptions): 
   for (const pName of eligiblePlanets) {
     const p = planets[pName];
     if (p) {
-      const degInSign = (p.degree ?? 0) + (p.minute ?? 0) / 60 + (p.second ?? 0) / 3600;
+      const degInSign = p.longitude % 30;
       const rIdx = p.rashi ? p.rashi - 1 : (rashiNames.indexOf(p.rashiName || "") >= 0 ? rashiNames.indexOf(p.rashiName || "") : 0);
       planetDegrees.push({
         planet: pName,
@@ -52,9 +54,10 @@ export function getJaiminiKarakas(kundli: Kundli, options?: PredictionOptions): 
   planetDegrees.sort((a, b) => b.degInSign - a.degInSign);
 
   const formatDeg = (deg: number): string => {
-    const d = Math.floor(deg);
-    const m = Math.floor((deg - d) * 60);
-    const s = Math.round(((deg - d) * 60 - m) * 60);
+    const seconds = Math.min(30 * 3600 - 1, Math.round(deg * 3600));
+    const d = Math.floor(seconds / 3600);
+    const m = Math.floor(seconds / 60) % 60;
+    const s = seconds % 60;
     return `${d}° ${m}' ${s}"`;
   };
 

@@ -1,4 +1,5 @@
 import { Kundli } from "../kundli/types";
+import { predictionSav, predictionVarga, validatePredictionChart } from "./validation";
 import { RASHI_LORDS } from "../matching/constants";
 import { rashiNames } from "../core/constants";
 import { ProgenyPrediction, PredictionOptions } from "./types";
@@ -7,10 +8,11 @@ import { Language } from "../i18n/types";
 import { getLocalizedPlanet, getLocalizedRashi } from "../i18n/index";
 
 export function getProgenyPrediction(kundli: Kundli, options?: PredictionOptions): ProgenyPrediction {
+  validatePredictionChart(kundli);
   const lang: Language = options?.lang || 'en';
   const houses = kundli.houses || [];
   const planets = kundli.planets || {};
-  const sav = kundli.ashtakavarga?.sav;
+  const sav = predictionSav(kundli);
 
   const getPlanetHouse = (pName: string): number => {
     for (const h of houses) {
@@ -63,6 +65,8 @@ export function getProgenyPrediction(kundli: Kundli, options?: PredictionOptions
   let doshaType = "";
   let doshaDesc = "";
   const doshaRemedies: string[] = [];
+  const doshaTypes: string[] = [];
+  const doshaDescriptions: string[] = [];
 
   if (planetsIn5th.includes("Rahu") || planetsIn5th.includes("Ketu")) {
     hasDosha = true;
@@ -79,7 +83,9 @@ export function getProgenyPrediction(kundli: Kundli, options?: PredictionOptions
         : "Perform Sarpa Shanti / Nagbali puja or offer symbolic silver serpent pairs to Shiva temple."
     );
     score -= 12;
-  } else if (planetsIn5th.includes("Saturn")) {
+    doshaTypes.push(doshaType); doshaDescriptions.push(doshaDesc);
+  }
+  if (planetsIn5th.includes("Saturn")) {
     hasDosha = true;
     doshaType = "Shani Prabhav (Saturnian Delay)";
     doshaDesc = lang === 'hi'
@@ -91,7 +97,9 @@ export function getProgenyPrediction(kundli: Kundli, options?: PredictionOptions
         : "Light a mustard oil lamp under a Peepal tree on Saturdays and practice selfless charity."
     );
     score -= 6;
-  } else if (planetsIn5th.includes("Mars")) {
+    doshaTypes.push(doshaType); doshaDescriptions.push(doshaDesc);
+  }
+  if (planetsIn5th.includes("Mars")) {
     hasDosha = true;
     doshaType = "Kuja / Pitta Dosha in 5th";
     doshaDesc = lang === 'hi'
@@ -103,7 +111,10 @@ export function getProgenyPrediction(kundli: Kundli, options?: PredictionOptions
         : "Chant Sundarkand on Tuesdays and donate red lentils/sweet jaggery."
     );
     score -= 6;
+    doshaTypes.push(doshaType); doshaDescriptions.push(doshaDesc);
   }
+  doshaType = doshaTypes.join('; ');
+  doshaDesc = doshaDescriptions.join(' ');
 
   // Jupiter in Kendras/Trikonas boosts score
   if ([1, 4, 5, 7, 9, 10, 11].includes(jupiterHouse)) score += 10;
@@ -125,12 +136,13 @@ export function getProgenyPrediction(kundli: Kundli, options?: PredictionOptions
 
   // Saptamsha D7 insight
   let saptamshaD7Insight: string | undefined;
-  if (kundli.vargas?.D7) {
-    const d7Asc = kundli.vargas.D7.ascendant;
-    const d7House5 = kundli.vargas.D7.houses?.find((h: any) => h.number === 5);
+  const d7 = predictionVarga(kundli, 'd7');
+  if (d7) {
+    const d7Asc = d7.ascendant;
+    const d7House5 = d7.houses?.find((h: any) => h.number === 5);
     saptamshaD7Insight = lang === 'hi'
-      ? `सप्तमांश (D7) चक्र पुष्टि: सप्तमांश लग्न ${d7Asc ? rashiNames[(d7Asc.rashi - 1 + 12) % 12] : ""} एवं पंचम भाव में ${d7House5?.planets?.join(", ") || "शुभ ग्रहों की दृष्टि"} संतान सुख की पुष्टि करता है।`
-      : `Saptamsha (D7) Cross-Verification: D7 Ascendant in ${d7Asc ? rashiNames[(d7Asc.rashi - 1 + 12) % 12] : ""} and 5th house alignment with ${d7House5?.planets?.join(", ") || "benefic planetary aspects"} confirms vitality in progeny lineage.`;
+      ? `सप्तमांश (D7): लग्न ${d7Asc ? rashiNames[(d7Asc.rashi - 1 + 12) % 12] : ""}, पंचम भाव के ग्रह: ${d7House5?.planets?.join(", ") || "कोई नहीं"}। पंचमेश और वास्तविक दृष्टियों का भी मूल्यांकन करें।`
+      : `Saptamsha (D7): Ascendant in ${d7Asc ? rashiNames[(d7Asc.rashi - 1 + 12) % 12] : ""}; 5th house occupants: ${d7House5?.planets?.join(", ") || "none"}. Also evaluate the 5th lord and actual aspects.`;
   }
 
   // Favorable Conception Windows

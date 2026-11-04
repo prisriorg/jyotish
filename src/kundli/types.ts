@@ -98,6 +98,8 @@ export interface ArudhaPadasResult {
 }
 
 export interface Kundli {
+    /** Calculation settings retained so natal and transit zodiacs stay consistent. */
+    calculationConfig?: Pick<KundliConfig, 'ayanamsa' | 'houseSystem'>;
     // Basic Details
     birthDetails: {
         date: string;

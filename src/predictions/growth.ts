@@ -1,4 +1,4 @@
-import { predictionDate, validatePredictionChart } from "./validation";
+import { predictionDate, predictionSav, predictionVarga, validDashaPeriod, validatePredictionChart } from "./validation";
 import { Kundli } from "../kundli/types";
 import { RASHI_LORDS } from "../matching/constants";
 import { rashiNames } from "../core/constants";
@@ -25,7 +25,7 @@ export function getGrowthPrediction(kundli: Kundli, options?: PredictionOptions)
   const lang: Language = options?.lang || 'en';
   const houses = kundli.houses || [];
   const planets = kundli.planets || {};
-  const sav = kundli.ashtakavarga?.sav;
+  const sav = predictionSav(kundli);
   const now = predictionDate(options);
 
   const getPlanetHouse = (pName: string): number => {
@@ -303,7 +303,9 @@ export function getGrowthPrediction(kundli: Kundli, options?: PredictionOptions)
   horizonEnd.setUTCFullYear(horizonEnd.getUTCFullYear() + 12);
 
   for (const maha of dashaTree) {
+    if (!validDashaPeriod(maha)) continue;
     for (const antar of maha.antars || []) {
+      if (!validDashaPeriod(antar, maha)) continue;
       const start = Math.max(new Date(maha.startTime).getTime(), new Date(antar.startTime).getTime());
       const end = Math.min(new Date(maha.endTime).getTime(), new Date(antar.endTime).getTime());
       if (!Number.isFinite(start) || !Number.isFinite(end) || start >= end) continue;
@@ -418,12 +420,13 @@ export function getGrowthPrediction(kundli: Kundli, options?: PredictionOptions)
 
   // Multi-System Insights
   let d10DashamshaGrowthInsight: string | undefined;
-  if (kundli.vargas?.D10) {
-    const d10Asc = kundli.vargas.D10.ascendant;
+  const d10 = predictionVarga(kundli, 'd10');
+  if (d10) {
+    const d10Asc = d10.ascendant;
     const d10AscRashi = d10Asc ? rashiNames[(d10Asc.rashi - 1 + 12) % 12] : "";
     d10DashamshaGrowthInsight = lang === 'hi'
-      ? `दशांश (D10) चक्र सत्यापन: दशमांश लग्न ${d10AscRashi} में संस्थित होकर करियर के दीर्घकालिक विस्तार, पद-प्रतिष्ठा और सार्वजनिक प्रभाव को प्रमाणित करता है।`
-      : `Dashamsha (D10) Growth Confirmation: D10 Ascendant in ${d10AscRashi} validates sustained long-term leadership authority and resilient professional status.`;
+      ? `दशांश (D10): लग्न ${d10AscRashi}। करियर की व्याख्या हेतु दशम भाव, दशमेश और दशा को साथ देखें।`
+      : `Dashamsha (D10): Ascendant in ${d10AscRashi}. Assess the 10th house, its lord and the dasha together for career interpretation.`;
   }
 
   const amatyakarakaGrowthInsight = lang === 'hi'
@@ -431,8 +434,8 @@ export function getGrowthPrediction(kundli: Kundli, options?: PredictionOptions)
     : `Jaimini Amatyakaraka (${amkPlanet}): Positioned at ${jaimini.amatyakaraka.formattedDegree} in House ${jaimini.amatyakaraka.house}, operating as your primary vocational engine.`;
 
   const induLagnaWealthGrowthInsight = lang === 'hi'
-    ? `अष्टकवर्ग अधिशेष (+${surplusRatio}): एकादश भाव (${sav11} बिंदु) का द्वादश भाव (${sav12} बिंदु) पर आधिक्य निरंतर धन संचय सुनिश्चित करता है।`
-    : `Ashtakavarga Surplus (+${surplusRatio}): 11th house (${sav11} bindus) outperforming 12th house (${sav12} bindus) guarantees continuous wealth expansion.`;
+    ? `अष्टकवर्ग अंतर (${surplusRatio > 0 ? '+' : ''}${surplusRatio}): एकादश भाव ${sav11}, द्वादश भाव ${sav12} बिंदु। ${surplusRatio > 0 ? 'आय भाव को अधिक समर्थन है।' : surplusRatio < 0 ? 'व्यय भाव को अधिक समर्थन है; बजट पर ध्यान दें।' : 'दोनों भाव बराबर हैं।'}`
+    : `Ashtakavarga difference (${surplusRatio > 0 ? '+' : ''}${surplusRatio}): 11th house ${sav11}, 12th house ${sav12} bindus. ${surplusRatio > 0 ? 'Greater support for the income house.' : surplusRatio < 0 ? 'Greater support for the expenditure house; review budgeting.' : 'The two houses are evenly supported.'}`;
 
   return {
     overallGrowthVelocity,

@@ -169,7 +169,8 @@ export interface HealthPrediction {
   healthRating: 'Robust & Vibrant' | 'Good with Minor Sensitivities' | 'Moderate / Routine Care Needed' | 'Vulnerable / Medical Vigilance Advised' | (string & {});
   vitalityAndImmunity: string;
   longevityAssessment: {
-    category: 'Deerghayu (Long Life: 75+ yrs)' | 'Madhyayu (Medium Life: 50-75 yrs)' | 'Alpayu (Caution: <50 yrs)' | (string & {});
+    /** No numerical lifespan estimate is established by this rule engine. */
+    category: 'Lifespan not established' | (string & {});
     description: string;
     astrologicalBasis: string;
   };
@@ -655,6 +656,7 @@ export interface GemstoneRecommendationItem {
 
 export interface GemstoneOptions extends PredictionOptions {
   userWeightKg?: number;
+  /** Filter positive suggestions to active dasha windows; prohibitions stay visible. */
   currentDashaOnly?: boolean;
 }
 

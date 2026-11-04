@@ -52,6 +52,12 @@ function yearsBetweenMs(ms: number): number {
  * moonLon in degrees (0..360), birthDate is Date object
  */
 export function getVimshottariDasha(moonLon: number, birthDate: Date, asOf: Date = new Date()): DashaResult {
+    if (!Number.isFinite(moonLon)) throw new Error('Moon longitude must be finite.');
+    if (!(birthDate instanceof Date) || !Number.isFinite(birthDate.getTime()) ||
+        !(asOf instanceof Date) || !Number.isFinite(asOf.getTime())) {
+        throw new Error('Dasha birthDate and asOf must be valid Dates.');
+    }
+    moonLon = ((moonLon % 360) + 360) % 360;
     // 1. Nakshatra + pada + starting mahadasha lord index and balance
     const lonMinutes = moonLon * 60;
     const nakshatraDurationMin = 800;
@@ -237,14 +243,14 @@ export function getVimshottariDasha(moonLon: number, birthDate: Date, asOf: Date
         birthNakshatra: nakshatraNames[nakshatraIndex],
         nakshatraPada: getNakshatraPada(moonLon),
         mahadashas,
-        currentMahadasha: {
+        currentMahadasha: currentMahadasha ? {
             ...currentMahadasha,
             antars: undefined
-        },
-        currentAntar: {
+        } : undefined,
+        currentAntar: currentAntar ? {
             ...currentAntar,
             pratyantars: undefined
-        },
+        } : undefined,
         currentPratyantar
     };
 }

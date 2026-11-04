@@ -1,4 +1,5 @@
 import { Kundli } from "../kundli/types";
+import { natalDetails, validatePredictionChart } from "./validation";
 import { getChalitChart } from "../kundli/chalit";
 import { getKpChart } from "../kundli/kp";
 import { Observer } from "astronomy-engine";
@@ -11,6 +12,8 @@ import { getLocalizedPlanet } from "../i18n/index";
  * and actual bhava cuspal occupants.
  */
 export function getChalitAnalysis(kundli: Kundli, options?: PredictionOptions): ChalitAnalysis {
+  validatePredictionChart(kundli);
+  if (!kundli.chalit) natalDetails(kundli);
   const lang: Language = options?.lang || 'en';
   const chalit = kundli.chalit || getChalitChart(kundli);
   const actualHouseOccupants: Record<number, string[]> = {
@@ -134,132 +137,64 @@ export function getChalitAnalysis(kundli: Kundli, options?: PredictionOptions): 
  * Computes Krishnamurti Paddhati (KP) 4-fold cuspal rulers and sub-lord significations.
  */
 export function getKpAnalysis(kundli: Kundli, options?: PredictionOptions): KpAnalysis {
+  validatePredictionChart(kundli);
   const lang: Language = options?.lang || 'en';
-  const date = kundli.birthDetails?.rawDate || new Date();
-  const lat = kundli.birthDetails?.lat ?? 25.872;
-  const lon = kundli.birthDetails?.lon ?? 82.685;
-  const observer = new Observer(lat, lon, 0);
-
-  const kp = kundli.kp || getKpChart(date, observer, { ayanamsa: "kp" });
-  const cusps = kp.cusps || [];
-
-  const cuspSubLords = cusps.map((c) => ({
-    cuspNumber: c.houseNumber,
-    subLord: c.subLord,
-    starLord: c.nakshatraLord,
-  }));
-
-  // 10th Cusp (Career) Sub-Lord
-  const cusp10 = cusps[9] || cusps.find((c) => c.houseNumber === 10) || cusps[0];
-  const sub10 = cusp10.subLord;
-  const star10 = cusp10.nakshatraLord;
-  const locSub10 = getLocalizedPlanet(sub10, lang);
-  const locStar10 = getLocalizedPlanet(star10, lang);
-
-  let careerVerdict = "";
-  if (lang === 'hi') {
-    if (sub10 === "Rahu" || star10 === "Rahu") {
-      careerVerdict = `केपी दशम भाव उप-स्वामी (Sub-Lord) ${locSub10} (नक्षत्र स्वामी: ${locStar10}): आधुनिक नवाचार, सॉफ्टवेयर, एआई, डिजिटल तकनीक, गहन शोध और उच्च तकनीकी परामर्श में विशिष्ट सफलता।`;
-    } else if (sub10 === "Saturn" || star10 === "Saturn") {
-      careerVerdict = `केपी दशम भाव उप-स्वामी ${locSub10}: बड़े पैमाने की व्यवस्था, औद्योगिक संचालन, बुनियादी ढांचा और संगठनात्मक दृढ़ता के अनुकूल।`;
-    } else if (sub10 === "Mercury" || star10 === "Mercury") {
-      careerVerdict = `केपी दशम भाव उप-स्वामी ${locSub10}: प्रखर विश्लेषणात्मक क्षमता, वाणिज्य, डेटा साइंस, मीडिया और स्वतंत्र व्यापार।`;
-    } else if (sub10 === "Jupiter") {
-      careerVerdict = `केपी दशम भाव उप-स्वामी ${locSub10}: उच्च संस्थागत परामर्श, विधि, वित्तीय प्रबंधन और सम्मानित नेतृत्व पद।`;
-    } else if (sub10 === "Mars") {
-      careerVerdict = `केपी दशम भाव उप-स्वामी ${locSub10}: गतिशील नेतृत्व, तकनीकी इंजीनियरिंग, रक्षा और साहसिक स्वतंत्र उद्यम।`;
-    } else {
-      careerVerdict = `केपी दशम भाव उप-स्वामी ${locSub10}: रणनीतिक योजना और व्यक्तिगत बौद्धिक क्षमता से आजीविका में वृद्धि।`;
-    }
-  } else {
-    if (sub10 === "Rahu" || star10 === "Rahu") {
-      careerVerdict = `KP 10th Cusp Sub-Lord is ${sub10} (Star: ${star10}): Strong promise of unconventional domains, software engineering, AI, digital networks, deep research, and high-tech consulting.`;
-    } else if (sub10 === "Saturn" || star10 === "Saturn") {
-      careerVerdict = `KP 10th Cusp Sub-Lord is ${sub10}: Favors large-scale systems, enterprise architecture, long-term engineering, industrial operations, and structural persistence.`;
-    } else if (sub10 === "Mercury" || star10 === "Mercury") {
-      careerVerdict = `KP 10th Cusp Sub-Lord is ${sub10}: Signals high analytical mastery, commerce, trading, data structures, and media entrepreneurship.`;
-    } else if (sub10 === "Jupiter") {
-      careerVerdict = `KP 10th Cusp Sub-Lord is ${sub10}: High executive advisory, institutional consulting, financial management, and leadership.`;
-    } else if (sub10 === "Mars") {
-      careerVerdict = `KP 10th Cusp Sub-Lord is ${sub10}: Dynamic leadership, executive drive, technical engineering, and independent venture.`;
-    } else {
-      careerVerdict = `KP 10th Cusp Sub-Lord is ${sub10}: Governs professional growth through strategic planning and individual expertise.`;
-    }
+  const hi = lang === 'hi';
+  let kp = kundli.kp;
+  if (!kp) {
+    const { date, lat, lon } = natalDetails(kundli);
+    kp = getKpChart(date, new Observer(lat, lon, 0), { ayanamsa: 'kp' });
   }
-
-  // 7th Cusp (Marriage) Sub-Lord
-  const cusp7 = cusps[6] || cusps.find((c) => c.houseNumber === 7) || cusps[0];
-  const sub7 = cusp7.subLord;
-  const star7 = cusp7.nakshatraLord;
-  const locSub7 = getLocalizedPlanet(sub7, lang);
-  const locStar7 = getLocalizedPlanet(star7, lang);
-
-  let marriagePromise = "";
-  let typeIndication = "";
-
-  if (lang === 'hi') {
-    if (["Jupiter", "Venus", "Moon"].includes(sub7)) {
-      marriagePromise = `केपी सप्तम भाव उप-स्वामी ${locSub7} (नक्षत्र स्वामी: ${locStar7}): शुभ उप-स्वामी जो सुखद वैवाहिक जीवन, नैतिक सामंजस्य और सुदृढ़ दांपत्य संबंध सुनिश्चित करता है।`;
-    } else if (sub7 === "Saturn") {
-      marriagePromise = `केपी सप्तम भाव उप-स्वामी ${locSub7}: गंभीर, परिपक्व और अत्यंत निष्ठावान वैवाहिक संबंध का संकेत देता है (26 वर्ष के बाद विवाह अधिक फलदायी)।`;
-    } else {
-      marriagePromise = `केपी सप्तम भाव उप-स्वामी ${locSub7}: आपसी बौद्धिक समझ और सक्रिय साझेदारी का उत्तम संकेत।`;
-    }
-
-    if (["Venus", "Mars", "Rahu"].includes(sub7) || ["Venus", "Mars", "Rahu"].includes(star7)) {
-      typeIndication = "केपी संकेत: प्रगाढ़ आकर्षण एवं व्यक्तिगत पसंद का सशक्त प्रभाव (प्रेम-सह-पारंपरिक विवाह का पूर्ण समर्थन)।";
-    } else if (["Jupiter", "Sun"].includes(sub7)) {
-      typeIndication = "केपी संकेत: वरिष्ठों का आशीर्वाद, प्रतिष्ठित पारिवारिक पृष्ठभूमि और मर्यादित विवाह (पारंपरिक / परिवार की सहमति से विवाह)।";
-    } else {
-      typeIndication = "केपी संकेत: बौद्धिक तालमेल और आपसी समझ पर आधारित संतुलित दांपत्य जीवन।";
-    }
-  } else {
-    if (["Jupiter", "Venus", "Moon"].includes(sub7)) {
-      marriagePromise = `KP 7th Cusp Sub-Lord is ${sub7} (Star: ${star7}): Auspicious sub-lord ensuring fruitful marriage, moral alignment, and strong matrimonial bonding.`;
-    } else if (sub7 === "Saturn") {
-      marriagePromise = `KP 7th Cusp Sub-Lord is ${sub7}: Indicates serious, mature, and deeply loyal union, favoring marriage after age 26.`;
-    } else {
-      marriagePromise = `KP 7th Cusp Sub-Lord is ${sub7}: Active partnership promise with mutual intellectual focus.`;
-    }
-
-    if (["Venus", "Mars", "Rahu"].includes(sub7) || ["Venus", "Mars", "Rahu"].includes(star7)) {
-      typeIndication = "KP indicates strong romantic chemistry and personal courtship (Love-cum-Arranged supported).";
-    } else if (["Jupiter", "Sun"].includes(sub7)) {
-      typeIndication = "KP highlights elder blessings, high family status, and traditional dignity (Arranged / Self-choice with family consent).";
-    } else {
-      typeIndication = "KP indicates balanced partnership through mutual intellectual wavelength.";
-    }
+  const chart = kp;
+  const cusps = chart.cusps;
+  if (!Array.isArray(cusps) || cusps.length !== 12 ||
+      new Set(cusps.map(c => c.houseNumber)).size !== 12 ||
+      cusps.some(c => !Number.isInteger(c.houseNumber) || c.houseNumber < 1 || c.houseNumber > 12 ||
+        !kundli.planets[c.subLord] || !kundli.planets[c.nakshatraLord])) {
+    throw new Error('KP analysis requires 12 valid, distinct cusps with valid star and sub lords.');
   }
-
-  // 2nd & 11th Cusps (Wealth & Net Inflow)
-  const cusp2 = cusps[1] || cusps[0];
-  const cusp11 = cusps[10] || cusps[0];
-  const sub2 = cusp2.subLord;
-  const sub11 = cusp11.subLord;
-  const locSub2 = getLocalizedPlanet(sub2, lang);
-  const locSub11 = getLocalizedPlanet(sub11, lang);
-
-  const financialSignification = lang === 'hi'
-    ? `द्वितीय भाव उप-स्वामी (${locSub2}) धन संचय व पारिवारिक संपत्ति को स्थिर करता है। एकादश भाव उप-स्वामी (${locSub11}) तीव्र वित्तीय लाभ, व्यावसायिक नेटवर्क और महत्वाकांक्षाओं की पूर्ति को सक्रिय करता है।`
-    : `Cusp 2 Sub-Lord (${sub2}) stabilizes wealth accumulation and family assets. Cusp 11 Sub-Lord (${sub11}) activates exponential financial gains, scalable networks, and fulfillment of high ambitions.`;
-
+  const cusp = (n: number) => cusps.find(c => c.houseNumber === n)!;
+  const housesOf = (planet: string) => chart.significators?.planets[planet]?.allHouses;
+  const assessment = (planet: string, supportive: number[], challenging: number[]) => {
+    const houses = housesOf(planet);
+    if (!houses) return hi ? 'भाव संकेतक उपलब्ध नहीं; निष्कर्ष स्थापित नहीं' : 'House significators unavailable; conclusion not established';
+    const support = houses.filter(h => supportive.includes(h));
+    const caution = houses.filter(h => challenging.includes(h));
+    const label = support.length
+      ? (caution.length ? (hi ? 'मिश्रित संकेत' : 'Mixed indications') : (hi ? 'सहायक संकेत' : 'Supportive indications'))
+      : (hi ? 'प्रत्यक्ष समर्थन स्थापित नहीं' : 'Direct support not established');
+    return hi
+      ? `${label}; संबंधित भाव ${houses.join(', ') || 'कोई नहीं'}, सहायक ${support.join(', ') || 'कोई नहीं'}, चुनौती ${caution.join(', ') || 'कोई नहीं'}`
+      : `${label}; signified houses ${houses.join(', ') || 'none'}, supporting ${support.join(', ') || 'none'}, challenging ${caution.join(', ') || 'none'}`;
+  };
+  const explain = (n: number, supportive: number[], challenging: number[]) => {
+    const c = cusp(n);
+    return hi
+      ? `केपी भाव ${n}: उप-स्वामी ${getLocalizedPlanet(c.subLord, lang)}, नक्षत्र स्वामी ${getLocalizedPlanet(c.nakshatraLord, lang)}। ${assessment(c.subLord, supportive, challenging)}।`
+      : `KP cusp ${n}: sub-lord ${c.subLord}, star lord ${c.nakshatraLord}. ${assessment(c.subLord, supportive, challenging)}.`;
+  };
+  const seventhHouses = housesOf(cusp(7).subLord);
+  const romance = seventhHouses?.includes(5) && seventhHouses.includes(7);
+  const typeIndication = romance
+    ? (hi ? 'पंचम-सप्तम भाव का संबंध प्रेम-संबंध का संकेत दे सकता है; विवाह का प्रकार निश्चित नहीं।'
+      : 'A 5th-7th house connection may indicate a romantic relationship; marriage type is not established.')
+    : (hi ? 'इन संकेतकों से प्रेम अथवा पारंपरिक विवाह का निश्चित निर्णय स्थापित नहीं।'
+      : 'These significators do not establish love versus arranged marriage.');
   return {
-    cuspSubLords,
+    cuspSubLords: [...cusps].sort((a, b) => a.houseNumber - b.houseNumber).map(c => ({
+      cuspNumber: c.houseNumber, subLord: c.subLord, starLord: c.nakshatraLord,
+    })),
     careerCusp10: {
-      subLord: sub10,
-      starLord: star10,
-      significationVerdict: careerVerdict,
+      subLord: cusp(10).subLord, starLord: cusp(10).nakshatraLord,
+      significationVerdict: explain(10, [2, 6, 10, 11], [5, 8, 12]),
     },
     marriageCusp7: {
-      subLord: sub7,
-      starLord: star7,
-      marriagePromise,
-      typeIndication,
+      subLord: cusp(7).subLord, starLord: cusp(7).nakshatraLord,
+      marriagePromise: explain(7, [2, 7, 11], [1, 6, 10]), typeIndication,
     },
     wealthCusps: {
-      cusp2SubLord: sub2,
-      cusp11SubLord: sub11,
-      financialSignification,
+      cusp2SubLord: cusp(2).subLord, cusp11SubLord: cusp(11).subLord,
+      financialSignification: `${explain(2, [2, 6, 10, 11], [8, 12])} ${explain(11, [2, 6, 10, 11], [8, 12])}`,
     },
   };
 }
@@ -270,6 +205,7 @@ export function getKpAnalysis(kundli: Kundli, options?: PredictionOptions): KpAn
  * Karmic Debts (Rin), and practical time-tested Lal Kitab totke.
  */
 export function getLalKitabAnalysis(kundli: Kundli, options?: PredictionOptions): LalKitabAnalysis {
+  validatePredictionChart(kundli);
   const lang: Language = options?.lang || 'en';
   const houses = kundli.houses || [];
   const planets = kundli.planets || {};

@@ -1,4 +1,6 @@
 import { Kundli } from "../kundli/types";
+import { activeDashaPeriods, natalDetails, predictionDate, predictionVarga, validDashaPeriod, validatePredictionChart } from "./validation";
+import { getAshtakavarga } from "../ashtakavarga";
 import { getChalitChart } from "../kundli/chalit";
 import { getKpChart } from "../kundli/kp";
 import { Observer } from "astronomy-engine";
@@ -387,9 +389,9 @@ function formatDashaDate(d: Date | string | undefined): string {
   if (!d) return "";
   const dateObj = typeof d === "string" ? new Date(d) : d;
   if (isNaN(dateObj.getTime())) return "";
-  const day = String(dateObj.getDate()).padStart(2, "0");
-  const month = String(dateObj.getMonth() + 1).padStart(2, "0");
-  const year = dateObj.getFullYear();
+  const day = String(dateObj.getUTCDate()).padStart(2, "0");
+  const month = String(dateObj.getUTCMonth() + 1).padStart(2, "0");
+  const year = dateObj.getUTCFullYear();
   return `${day}/${month}/${year}`;
 }
 
@@ -399,12 +401,12 @@ function formatDashaDate(d: Date | string | undefined): string {
 function calculateGemstoneDashaTiming(
   planet: string,
   kundli: Kundli,
-  lang: Language
+  lang: Language,
+  now: Date
 ): GemstoneDashaTiming | undefined {
   const dasha = kundli.dasha;
   if (!dasha) return undefined;
 
-  const now = new Date();
   const planetHi = getLocalizedPlanet(planet, "hi");
   const planetEn = planet;
 
@@ -415,8 +417,9 @@ function calculateGemstoneDashaTiming(
   let isActiveNow = false;
 
   // 1. Check if the current Mahadasha is this planet
-  const currMaha = dasha.currentMahadasha;
-  const currMahaPlanet = currMaha?.planet || currMaha?.lord;
+  const active = activeDashaPeriods(kundli, now);
+  const currMaha = active.maha;
+  const currMahaPlanet = currMaha?.planet;
 
   if (currMahaPlanet === planet && currMaha?.startTime && currMaha?.endTime) {
     isActiveNow = true;
@@ -427,8 +430,8 @@ function calculateGemstoneDashaTiming(
   }
 
   // 2. Check if the current Antardasha is this planet
-  const currAntar = dasha.currentAntar;
-  const currAntarPlanet = currAntar?.planet || currAntar?.lord;
+  const currAntar = active.antar;
+  const currAntarPlanet = currAntar?.planet;
   if (!isActiveNow && currAntarPlanet === planet && currAntar?.startTime && currAntar?.endTime) {
     isActiveNow = true;
     const parentMahaHi = getLocalizedPlanet(currMahaPlanet || "", "hi");
@@ -449,6 +452,7 @@ function calculateGemstoneDashaTiming(
     const candidates: UpcomingWindow[] = [];
 
     for (const m of dasha.mahadashas) {
+      if (!validDashaPeriod(m)) continue;
       const mStart = new Date(m.startTime);
       const mEnd = new Date(m.endTime);
 
@@ -464,6 +468,7 @@ function calculateGemstoneDashaTiming(
       // Check Antardashas within this Mahadasha
       if (m.antars && Array.isArray(m.antars)) {
         for (const a of m.antars) {
+          if (!validDashaPeriod(a, m)) continue;
           const aStart = new Date(a.startTime);
           const aEnd = new Date(a.endTime);
           if (a.planet === planet && aEnd.getTime() > now.getTime()) {
@@ -497,13 +502,7 @@ function calculateGemstoneDashaTiming(
     }
   }
 
-  // Fallback if no upcoming window found in 120-year cycle
-  if (!startDateStr) {
-    applicableDasha = `${planetEn} Mahadasha / Antardasha`;
-    applicableDashaHi = `${planetHi} महादशा / अंतर्दशा`;
-    startDateStr = lang === "hi" ? "दशा प्रारंभ होने पर" : "At Dasha Start";
-    endDateStr = lang === "hi" ? "दशा समाप्ति पर" : "At Dasha End";
-  }
+  if (!startDateStr) return undefined;
 
   const wearingWindow = `Wear exclusively during ${applicableDasha} (${startDateStr} to ${endDateStr}). Mandatory to remove immediately upon dasha completion.`;
   const wearingWindowHi = `केवल ${applicableDashaHi} के दौरान (${startDateStr} से ${endDateStr} तक) ही धारण करें। दशा समाप्त होते ही उतार देना अनिवार्य है।`;
@@ -908,6 +907,8 @@ export function getGemstoneRecommendation(
   kundli: Kundli,
   options?: GemstoneOptions
 ): GemstoneReport {
+  validatePredictionChart(kundli);
+  const now = predictionDate(options);
   const lang: Language = options?.lang || "en";
   const userWeightKg = options?.userWeightKg;
 
@@ -959,11 +960,12 @@ export function getGemstoneRecommendation(
   const planetRashiMap: Record<string, number> = {};
   if (kundli.planets) {
     for (const [pName, pData] of Object.entries(kundli.planets)) {
-      planetRashiMap[pName] = pData.rashi; // 0 to 11
+      planetRashiMap[pName] = pData.rashi - 1; // 0 to 11
     }
   }
 
   // 2. Bhava Chalit Setup
+  if (!kundli.chalit) natalDetails(kundli);
   const chalit = kundli.chalit || getChalitChart(kundli);
   const chalitPlanetMap = new Map<string, { house: number; shifted: number; rashiHouse: number }>();
   if (chalit?.planets) {
@@ -979,18 +981,17 @@ export function getGemstoneRecommendation(
   // 3. KP Chart Setup
   let kp = kundli.kp;
   if (!kp) {
-    const date = kundli.birthDetails?.rawDate || new Date();
-    const lat = kundli.birthDetails?.lat ?? 25.872;
-    const lon = kundli.birthDetails?.lon ?? 82.685;
+    const { date, lat, lon } = natalDetails(kundli);
     const observer = new Observer(lat, lon, 0);
     kp = getKpChart(date, observer, { ayanamsa: "kp" });
   }
 
   // 4. Navamsha (D9) Setup
-  const d9 = kundli.vargas?.d9;
+  const d9 = predictionVarga(kundli, 'd9');
+  const ashtakavarga = kundli.ashtakavarga || getAshtakavarga(kundli);
 
   // Active Dasha Lord
-  const currentMahadasha = kundli.dasha?.currentMahadasha?.planet || kundli.dasha?.currentMahadasha?.lord;
+  const currentMahadasha = activeDashaPeriods(kundli, now).maha?.planet;
 
   // Containers for 3 tiers
   const recommendedStones: GemstoneRecommendationItem[] = [];
@@ -1004,8 +1005,8 @@ export function getGemstoneRecommendation(
     const meta = GEMSTONE_CATALOG[planet];
     if (!meta) continue;
 
-    const pPos = kundli.planets ? kundli.planets[planet] : undefined;
-    const d1Rashi = pPos ? pPos.rashi : 0; // 0-indexed rashi in PlanetaryPosition (0=Aries, 11=Pisces)
+    const pPos = kundli.planets[planet];
+    const d1Rashi = pPos.rashi - 1; // Internal lookup tables use 0=Aries, 11=Pisces.
     const houseFound = kundli.houses?.find((h) => h.planets?.includes(planet));
     const d1House = houseFound ? houseFound.number : (((d1Rashi - lagnaRashiIdx + 12) % 12) + 1);
     const isCombust = pPos?.isCombust ?? false;
@@ -1125,7 +1126,7 @@ export function getGemstoneRecommendation(
     if (isDebilitatedInD1) {
       const dispName = DEBILITATION_DISPOSITORS[planet];
       const dispPos = kundli.planets ? kundli.planets[dispName] : undefined;
-      const dispRashi = dispPos ? dispPos.rashi : -1;
+      const dispRashi = dispPos ? dispPos.rashi - 1 : -1;
       const dispHouseFromLagna = dispRashi >= 0 ? (((dispRashi - lagnaRashiIdx + 12) % 12) + 1) : -1;
 
       // Check cancellation conditions (NBRY)
@@ -1402,8 +1403,8 @@ export function getGemstoneRecommendation(
 
     // I. Ashtakavarga (BAV) Bindus Analysis
     let ashtakavargaVerdict: string | undefined = undefined;
-    if (kundli.ashtakavarga?.bav) {
-      const bavMap = kundli.ashtakavarga.bav as Record<string, any>;
+    if (ashtakavarga.bav) {
+      const bavMap = ashtakavarga.bav as Record<string, any>;
       const pBav = bavMap[planet];
       if (pBav && Array.isArray(pBav.byRashi)) {
         const bindus = pBav.byRashi[d1Rashi];
@@ -1505,8 +1506,10 @@ export function getGemstoneRecommendation(
     };
 
     const timing = (suitability === "conditional" || suitability === "recommended")
-      ? calculateGemstoneDashaTiming(planet, kundli, lang)
+      ? calculateGemstoneDashaTiming(planet, kundli, lang, now)
       : undefined;
+    // Keep prohibitions visible; restrict positive suggestions to active periods.
+    if (options?.currentDashaOnly && suitability !== 'prohibited' && !timing?.isActiveNow) continue;
 
     const { lifeAreaImpacts, adverseAlert, beneficHighlights } = calculateLifeAreaImpactsAndAlerts(
       planet,

@@ -1,4 +1,5 @@
 import { Kundli } from "../kundli/types";
+import { predictionSav, validatePredictionChart } from "./validation";
 import { RASHI_LORDS } from "../matching/constants";
 import { rashiNames } from "../core/constants";
 import { HealthPrediction, PredictionOptions } from "./types";
@@ -6,10 +7,11 @@ import { Language } from "../i18n/types";
 import { getLocalizedPlanet, getLocalizedRashi } from "../i18n/index";
 
 export function getHealthPrediction(kundli: Kundli, options?: PredictionOptions): HealthPrediction {
+  validatePredictionChart(kundli);
   const lang: Language = options?.lang || 'en';
   const houses = kundli.houses || [];
   const planets = kundli.planets || {};
-  const sav = kundli.ashtakavarga?.sav;
+  const sav = predictionSav(kundli);
 
   // Helper to find which house a planet is located in (1 to 12)
   const getPlanetHouse = (pName: string): number => {
@@ -107,40 +109,15 @@ export function getHealthPrediction(kundli: Kundli, options?: PredictionOptions)
   else if (healthScore >= 52) healthRating = 'Moderate / Routine Care Needed';
   else healthRating = 'Vulnerable / Medical Vigilance Advised';
 
-  // 4. Longevity Assessment (Ayurdaya category)
-  let longevityCategory: 'Deerghayu (Long Life: 75+ yrs)' | 'Madhyayu (Medium Life: 50-75 yrs)' | 'Alpayu (Caution: <50 yrs)' = 'Deerghayu (Long Life: 75+ yrs)';
-  let longevityDesc = "";
-  let longevityBasis = "";
-
-  const saturnHouse = getPlanetHouse("Saturn");
-  const isLagneshStrong = [1, 4, 5, 9, 10, 11].includes(lagnaLordHouse);
-  const isEighthLordStrong = [1, 4, 5, 8, 9, 10, 11].includes(eighthLordHouse);
-
-  if (isLagneshStrong && isEighthLordStrong && eighthSAV >= 26) {
-    longevityCategory = 'Deerghayu (Long Life: 75+ yrs)';
-    longevityBasis = lang === 'hi'
-      ? `लग्नेश (${getLocalizedPlanet(lagnaLord, lang)}) और अष्टमेश (${getLocalizedPlanet(eighthLord, lang)}) दोनों शुभ भावों में स्थित हैं एवं अष्टम भाव में ${eighthSAV} अष्टकवर्ग बिंदु हैं।`
-      : `Both Lagna Lord (${lagnaLord}) and 8th Lord (${eighthLord}) occupy supportive positions with ${eighthSAV} SAV bindus in the 8th house.`;
-    longevityDesc = lang === 'hi'
-      ? `दीर्घायु योग: प्राकृतिक जीवन शक्ति और रोग प्रतिरोधक क्षमता उत्कृष्ट है, जो सुदीर्घ एवं सक्रिय जीवन का संकेत देती है।`
-      : `Purna Ayurdaya (Deerghayu): Outstanding natural endurance and cellular recovery capacity indicating a long, active life.`;
-  } else if (isLagneshStrong || eighthSAV >= 28) {
-    longevityCategory = 'Madhyayu (Medium Life: 50-75 yrs)';
-    longevityBasis = lang === 'hi'
-      ? `लग्नेश अथवा अष्टमेश में से एक सशक्त है एवं शनि भाव ${saturnHouse} में स्थित होकर मध्यम से दीर्घायु की पुष्टि करता है।`
-      : `Balanced planetary endurance supported by Saturn in House ${saturnHouse} and stable Ashtakavarga metrics.`;
-    longevityDesc = lang === 'hi'
-      ? `मध्यायु से दीर्घायु योग: नियमित दिनचर्या, योग और समय पर स्वास्थ्य जांच से सुदीर्घ और निरोगी जीवन प्राप्त होता है।`
-      : `Madhyayu into Deerghayu: Stable longevity potential which flourishes with disciplined lifestyle, balanced nutrition, and preventive medical care.`;
-  } else {
-    longevityCategory = 'Madhyayu (Medium Life: 50-75 yrs)';
-    longevityBasis = lang === 'hi'
-      ? `रोग व अष्टम भाव का प्रभाव अधिक है। महामृत्युंजय जप एवं सात्विक जीवनशैली स्वास्थ्य संवर्धन में सहायक हैं।`
-      : `Lagna and 8th lord need remedial reinforcement through Ayurvedic habits and protective mantras.`;
-    longevityDesc = lang === 'hi'
-      ? `सतर्कता एवं सावधानी अपेक्षित: स्वास्थ्य के प्रति संवेदनशील समय में चिकित्सीय परामर्श व वैदिक शांति का सहारा लें।`
-      : `Vigilance Advised: Proactive health screening and stress management recommended during testing dasha transits.`;
-  }
+  // These placements are traditional indicators, not a validated lifespan model.
+  const saturnHouse = getPlanetHouse('Saturn');
+  const longevityCategory = lang === 'hi' ? 'आयु अनुमान स्थापित नहीं' : 'Lifespan not established';
+  const longevityBasis = lang === 'hi'
+    ? `लग्नेश ${getLocalizedPlanet(lagnaLord, lang)} भाव ${lagnaLordHouse}, अष्टमेश ${getLocalizedPlanet(eighthLord, lang)} भाव ${eighthLordHouse}; अष्टम भाव में ${eighthSAV} SAV बिंदु।`
+    : `Lagna lord ${lagnaLord} in House ${lagnaLordHouse}, 8th lord ${eighthLord} in House ${eighthLordHouse}; 8th house SAV ${eighthSAV}.`;
+  const longevityDesc = lang === 'hi'
+    ? 'इन नियमों से जीवन की अवधि या चिकित्सीय रोग-प्रतिरोधक क्षमता का विश्वसनीय अनुमान नहीं निकलता।'
+    : 'These rules do not establish lifespan or clinical immunity.';
 
   // 5. Ayurvedic Tridosha Assessment
   // Signs: Fire(1,5,9) -> Pitta, Earth(2,6,10) -> Vata/Kapha, Air(3,7,11) -> Vata, Water(4,8,12) -> Kapha
@@ -287,10 +264,8 @@ export function getHealthPrediction(kundli: Kundli, options?: PredictionOptions)
     ? `द्वितीयेश (${getLocalizedPlanet(secondLord, lang)}) और सप्तमेश (${getLocalizedPlanet(seventhLord, lang)}) मारक स्वामी हैं। इनकी दशा-अंतर्दशा में शरीर की ऊर्जा संरक्षण एवं सात्विक दिनचर्या आवश्यक है।`
     : `Primary Maraka lords are 2nd lord (${secondLord}) and 7th lord (${seventhLord}). Conserve vitality and manage stress proactively when their antardashas run.`;
 
-  // Critical Age Windows
-  const criticalAgeWindows = lang === 'hi'
-    ? ["आयु 28-30 वर्ष (शनि प्रथम चक्र पूर्णता - शारीरिक व मानसिक अनुशासन की परीक्षा)", "आयु 42-45 वर्ष (राहु परिपक्वता चक्र - जीवनशैली व हृदय/पाचन जांच अनिवार्य)", "आयु 56-60 वर्ष (शनि द्वितीय चक्र - जोड़ों व हड्डियों का विशेष ध्यान रखें)"]
-    : ["Ages 28-30 (Saturn Return: Physical endurance restructuring & postural discipline)", "Ages 42-45 (Rahu Maturation: Metabolic, cardiovascular and lifestyle screening essential)", "Ages 56-60 (Second Saturn Return: Bone density, joint flexibility & cardiac care)"];
+  // No individualized age windows are computed by this model.
+  const criticalAgeWindows: string[] = [];
 
   // Remedies and precautions
   const remediesAndPrecautions = lang === 'hi'

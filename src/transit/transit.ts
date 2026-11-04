@@ -85,7 +85,7 @@ export function getGocharAnalysis(
   const natalLagnaRashiName = kundli.ascendant?.rashiName || rashiNames[natalLagnaRashi - 1];
 
   // 2. Fetch Transit Planetary Positions
-  const transitPositions = getTransitPositions(transitDate, obs);
+  const transitPositions = getTransitPositions(transitDate, obs, kundli.calculationConfig?.ayanamsa || 'lahiri');
 
   // 3. Compute Houses from Janma Rashi for all 9 planets
   const planetNames = ["Sun", "Moon", "Mars", "Mercury", "Jupiter", "Venus", "Saturn", "Rahu", "Ketu"];

@@ -1,4 +1,5 @@
 import { Kundli } from "../kundli/types";
+import { predictionSav, validatePredictionChart } from "./validation";
 import { RASHI_LORDS } from "../matching/constants";
 import { rashiNames } from "../core/constants";
 import { EducationPrediction, PredictionOptions } from "./types";
@@ -6,10 +7,11 @@ import { Language } from "../i18n/types";
 import { getLocalizedPlanet } from "../i18n/index";
 
 export function getEducationPrediction(kundli: Kundli, options?: PredictionOptions): EducationPrediction {
+  validatePredictionChart(kundli);
   const lang: Language = options?.lang || 'en';
   const houses = kundli.houses || [];
   const planets = kundli.planets || {};
-  const sav = kundli.ashtakavarga?.sav;
+  const sav = predictionSav(kundli);
 
   const getPlanetHouse = (pName: string): number => {
     for (const h of houses) {
@@ -182,11 +184,11 @@ export function getEducationPrediction(kundli: Kundli, options?: PredictionOptio
   const foreignEducationPotential = foreignEduScore >= 65;
   const foreignEduDesc = foreignEducationPotential
     ? (lang === 'hi'
-        ? `विदेश में उच्च शिक्षा (MS/PhD/MBA) की अत्यधिक प्रबल संभावना है (संभावना: ${foreignEduScore}%)। नवम और द्वादश भाव का संबंध वैश्विक विश्वविद्यालयों में अध्ययन एवं शोध का वरदान देता है।`
-        : `High potential for international higher education (MS, PhD, or Global MBA: ${foreignEduScore}% probability). 9th and 12th house alignment supports academic migration and international research fellowships.`)
+        ? `विदेश में उच्च शिक्षा के सहायक नियम आधारित संकेत (स्कोर: ${foreignEduScore}/100)। यह प्रवेश अथवा वीज़ा मिलने की संभावना का प्रतिशत नहीं है।`
+        : `Supportive rule-based indicators for international higher education (score ${foreignEduScore}/100). This is not an admission or visa probability.`)
     : (lang === 'hi'
-        ? `उच्च शिक्षा देश के शीर्षस्थ संस्थानों में अधिक फलदायी रहेगी, यद्यपि अल्पकालिक अंतर्राष्ट्रीय प्रोजेक्ट्स व कार्यशालाएं संभव हैं (संभावना: ${foreignEduScore}%)।`
-        : `Premier domestic institutions provide optimal academic momentum, though specialized foreign collaborative projects and certifications remain accessible (${foreignEduScore}% probability).`);
+        ? `विदेश में उच्च शिक्षा हेतु सीमित नियम आधारित समर्थन (स्कोर: ${foreignEduScore}/100)। यह शिक्षा की उपलब्धि का पूर्वानुमान नहीं है।`
+        : `Limited rule-based support for foreign study (score ${foreignEduScore}/100). This does not predict educational attainment.`);
 
   // 4. Competitive Exams (UPSC, JEE, GATE, GMAT, Banking, State PCS)
   let examScore = 50;

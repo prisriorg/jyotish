@@ -86,7 +86,7 @@ export interface DashaResult {
 
 export interface PlanetaryPosition {
     longitude: number;      // Longitude in degrees (0-360)
-    rashi: number;         // Rashi index (0-11: Aries to Pisces)
+    rashi: number;         // Rashi number (1=Aries, 12=Pisces)
     rashiName: string;     // Rashi name
     rashiLord: string;     // Rashi lord name
     nakshatra: string;

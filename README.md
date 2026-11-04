@@ -9,6 +9,10 @@
 
 A high-performance, developer-friendly TypeScript/JavaScript library for **Jyotish (Vedic Astrology)** and **Panchangam** calculations, powered by high-precision ephemeris algorithms via `astronomy-engine`.
 
+Prediction scores are rule-based indicators, not calibrated probabilities. See
+the [prediction audit](docs/PREDICTION_AUDIT.md) for verified fixes, reference
+calculations, API behavior changes and remaining interpretation limits.
+
 ---
 
 ## 📑 Table of Contents
@@ -587,7 +591,7 @@ console.log(report.formattedMarkdown); // Full multi-system formatted Markdown r
 
 ### 14. Advanced Vedic Gemstone Recommendation Engine (Multi-Chart, Dasha Timelines & Life Impacts)
 
-A classical, multi-chart gemstone engine built on rigorous Vedic Shastra and empirical research that moves far beyond basic "Lagna friend" logic:
+A multi-chart gemstone rule engine combining several traditional interpretation systems. Its suitability scores and claimed effects have not been empirically validated:
 
 - **Multi-Chart Cross-Verification**: Evaluates **Rashi (D1)** (Lagnesh, Yogakaraka, Trikona vs Dusthana/Trishadaya/Maraka/Badhaka), **Sripati Bhava Chalit** (detects actual house shifts), **KP Astrology** (Cusp Sub-Lord & 6-8-12 significations), **Navamsha (D9)** (Vargottama, internal exaltation/debilitation), and **Ashtakavarga BAV points** (≥ 5 points = fertile, < 4 = barren).
 - **Dignity & Cancellation Rules**:
