@@ -7,7 +7,6 @@ export function getAyanamsa(date: Date, type: AyanamsaType = 'lahiri'): number {
 
     // Formula based on standard epochs
     // Epoch J2000.0 = 2000 Jan 1 12:00 TT = JD 2451545.0
-    // Lahiri Ayanamsa at J2000.0 is approx 23° 51' 25.532"
     // Rate is approx 5029 arcsec per CENTURY (approx 50.29 arcsec per year)
 
     const time = date.getTime();
@@ -15,10 +14,31 @@ export function getAyanamsa(date: Date, type: AyanamsaType = 'lahiri'): number {
 
     const T = (JD - 2451545.0) / 36525.0; // Julian centuries since J2000
 
-    // 23 deg 51' 25.532" (Standard Swiss Ephemeris Lahiri)
-    // We strictly use the standard value for astronomical accuracy.
+    // Lahiri (Chitrapaksha) is DEFINED as 23°15'00" at JD 2435553.5
+    // (21 March 1956, 0h) — the Indian Calendar Reform Committee value,
+    // and the definition Swiss Ephemeris encodes for SE_SIDM_LAHIRI.
+    //
+    // The previous J2000 anchor of 23°51'25.532" does not satisfy that
+    // definition: propagated back through the polynomial below it gives
+    // 23°14'43.889" at the defining epoch, 16.111 arcsec low. The anchor
+    // used here is derived by requiring the polynomial to reproduce
+    // 23°15'00.000" exactly at JD 2435553.5, so the series is traceable
+    // to the definition rather than to an unsourced constant:
+    //
+    //   T_1956  = (2435553.5 - 2451545.0) / 36525 = -0.43776865...
+    //   offset  = 5029.0966*T + 1.11161*T^2       = -2201.357"
+    //   anchor  = 23°15'00" + 2201.357"           =  23°51'41.643"
+    //
+    // tests/ayanamsa.test.cjs asserts the defining epoch directly, so a
+    // future change to the polynomial cannot silently break it again.
+    //
+    // Caveat: this is still a quadratic approximation. Swiss Ephemeris
+    // propagates Lahiri with the Vondrák (2011) precession model, so
+    // values here drift from SE as |T| grows — they now agree at the
+    // definition instead of being offset everywhere. Callers needing
+    // SE-identical values across millennia want the full model.
     const offsetSeconds = 5029.0966 * T + 1.11161 * T * T;
-    const initialAyanamsaSeconds = (23 * 3600) + (51 * 60) + 25.532;
+    const initialAyanamsaSeconds = (23 * 3600) + (51 * 60) + 41.643;
 
     const lahiriSeconds = initialAyanamsaSeconds + offsetSeconds;
     const lahiriAyanamsa = lahiriSeconds / 3600;
